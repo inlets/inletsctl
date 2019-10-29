@@ -66,6 +66,26 @@
   version = "v0.8.1"
 
 [[projects]]
+  digest = "1:de3fd970da3e0fb0d77db37112da9ecd2e96b70505ddc4e9123303a4bfd1155c"
+  name = "github.com/scaleway/scaleway-sdk-go"
+  packages = [
+    "api/instance/v1",
+    "api/marketplace/v1",
+    "internal/async",
+    "internal/auth",
+    "internal/errors",
+    "internal/marshaler",
+    "internal/parameter",
+    "internal/uuid",
+    "logger",
+    "namegenerator",
+    "scw",
+  ]
+  pruneopts = "UT"
+  revision = "0a62912ef11a57001d90cc54678b99694a8b466c"
+  version = "v1.0.0-beta.4"
+
+[[projects]]
   digest = "1:044c51736e2688a3e4f28f72537f8a7b3f9c188fab4477d5334d92dfe2c07ed5"
   name = "github.com/sethvargo/go-password"
   packages = ["password"]
@@ -127,6 +147,14 @@
   revision = "971852bfffca25b069c31162ae8f247a3dba083b"
   version = "v1.6.5"
 
+[[projects]]
+  digest = "1:59f10c1537d2199d9115d946927fe31165959a95190849c82ff11e05803528b0"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
+  version = "v2.2.4"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -134,8 +162,11 @@
     "github.com/inlets/inlets-operator/pkg/provision",
     "github.com/morikuni/aec",
     "github.com/pkg/errors",
+    "github.com/scaleway/scaleway-sdk-go/api/instance/v1",
+    "github.com/scaleway/scaleway-sdk-go/scw",
     "github.com/sethvargo/go-password/password",
     "github.com/spf13/cobra",
+    "github.com/spf13/pflag",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

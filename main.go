@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/inlets/inletsctl/cmd"
 )
 
@@ -12,6 +15,7 @@ var (
 
 func main() {
 	if err := cmd.Execute(Version, GitCommit); err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		os.Exit(1)
 	}
 }
