@@ -153,9 +153,11 @@ Command:
 	--upstream $UPSTREAM
 `,
 					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken)
-			} else {
-				proPort := 8123
-				fmt.Printf(`inlets-pro exit-node summary:
+				return nil
+			}
+
+			proPort := 8123
+			fmt.Printf(`inlets-pro exit-node summary:
   IP: %s
   Auth-token: %s
 
@@ -167,8 +169,7 @@ Command:
 	--license "$LICENSE" \
 	--tcp-ports 8000
 `,
-					hostStatus.IP, inletsToken, hostStatus.IP, proPort, inletsToken)
-			}
+				hostStatus.IP, inletsToken, hostStatus.IP, proPort, inletsToken)
 
 			return nil
 		}

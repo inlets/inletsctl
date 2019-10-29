@@ -37,6 +37,28 @@ Pre-reqs:
 
 * You will need [inlets](https://inlets.dev/) on your client
 
+Workflow:
+
+* After running `inletsctl create`, the IP address of your exit-node will be returned along with a sample `inlets client` command, for instance:
+
+  ```sh
+  Inlets OSS exit-node summary:
+    IP: 209.97.131.180
+    Auth-token: qFyFzKYQvFSgtl7TM76p5SwWpmHaQGMT405HajiMzIYmwYVgJt1lvAMXfV4S3KlS
+
+  Command:
+    export UPSTREAM=http://127.0.0.1:8000
+    inlets client --remote "ws://209.97.131.180:8080" \
+          --token "qFyFzKYQvFSgtl7TM76p5SwWpmHaQGMT405HajiMzIYmwYVgJt1lvAMXfV4S3KlS" \
+          --upstream $UPSTREAM
+  ```
+
+* You can delete your exit node using the `id` given by your cloud provider
+
+  ```sh
+  inletsctl delete --access-token-file ~/Downloads/do-access-token --id 164857028
+  ```
+
 ### Example usage with DigitalOcean
 
 ```sh
