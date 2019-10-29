@@ -90,6 +90,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to get 'region' value.")
 	}
 
+	remoteTCP, _ := cmd.Flags().GetString("remoteTCP")
+
 	name := strings.Replace(pkg.GetRandomName(10), "_", "-", -1)
 	inletsControlPort := 8080
 
