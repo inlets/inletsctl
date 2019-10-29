@@ -21,7 +21,7 @@ Pending:
 * [inlets](https://github.com/inlets/inlets) - open-source L7 HTTP tunnel and reverse proxy
 * [inlets-pro](https://github.com/inlets/inlets-pro-pkg) - commercial L4 TCP load-balancer
 * [inlets-operator](https://github.com/inlets/inlets-operator) - deep integration for inlets in Kubernetes, expose Service type LoadBalancer
-* inletsctl - provision exit-nodes for use with inlets or inlets-pro
+* [inletsctl](https://github.com/inlets/inletsctl) - CLI tool to provision exit-nodes for use with inlets or inlets-pro
 
 ## Getting `inletsctl`
 
