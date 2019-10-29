@@ -1,0 +1,30 @@
+sudo: required
+language: go
+
+go:
+- "1.11"
+
+script:
+- make dist
+
+before_deploy:
+  - ./ci/hashgen.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: R181wN4fkK0LcJylzNCSZg5EeEZnLdh4YwvEBrRtTAaZ54uTApz2QB+jmrPBNgxM2/7j/f603ZHvibb6qgkKjSAhnq7O8nOdgyMyoDFrMmnq8deWmg1oFo+MPpiQ/2GaYJ2gVEukXLVSuFriL+Om4JmJbzWEJXsDToK/ffr6BlkV5589NetHyuGPHKqgneAbkpTIFOHCbE+6hBUHxFNxyMUpyYpTEENMp0k2ZIW3kN88IVyE00JzbCzac4/U0DXGJJZF/wGCFh1jRdKP5YcLpFOcNmFqtrGK77XjAorPzmk5djbl5Q8FeZJVPC9Foi6iIQZ5K+dHGJXiK86RH4QCRv4uJ1PtGfqRY6ygM92PU7zaCwhPPJydbXKGovLgPL1ht2DiTAhabT4ujjUNH5H/eAUW1D4ZJiKXgTrMpY/Cqq7egXJIvViAswv4rLOUbKyn0XxH7phYUaIeOzgue0Hzmg7w6+DDdeO86BduZ+Jz1wUlJougZLO/L2B4fuOVCH8rUXH3jXf27vwG8x9k5x1WOLKJSO8LzQTIJ69NgW3uCYIMvKe+gc6qdWf+kTVtI3nWV6+yo4q4s++I9iqhXuWECcR/0B9viMltGwnRoNB5Y43Fff/v7wI/iWHqIT12WwE3QCw6yqbQ+B5KyMiYjHYyQhv+eymii2+51nV6x2UwHp4=
+  file:
+    - ./bin/inletsctl
+    - ./bin/inletsctl-darwin
+    - ./bin/inletsctl-armhf
+    - ./bin/inletsctl-arm64
+    - ./bin/inletsctl.exe
+    - ./bin/inletsctl.sha256
+    - ./bin/inletsctl-darwin.sha256
+    - ./bin/inletsctl-armhf.sha256
+    - ./bin/inletsctl-arm64.sha256
+    - ./bin/inletsctl.exe.sha256
+  skip_cleanup: true
+  on:
+    tags: true
