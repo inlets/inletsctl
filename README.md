@@ -4,12 +4,6 @@
 
 Provision cloud hosts as exit-nodes for [inlets](https://inlets.dev/) with a single command.
 
-## Getting `inletsctl`
-
-```sh
-curl -sLSf https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sudo sh
-```
-
 ## Status
 
 Completed:
@@ -21,6 +15,19 @@ Pending:
 
 * [ ] Packet.com support
 * [ ] `inletsctl delete` command
+
+## Related projects
+
+* [inlets](https://github.com/inlets/inlets) - open-source L7 HTTP tunnel and reverse proxy
+* [inlets-pro](https://github.com/inlets/inlets-pro-pkg) - commercial L4 TCP load-balancer
+* [inlets-operator](https://github.com/inlets/inlets-operator) - deep integration for inlets in Kubernetes, expose Service type LoadBalancer
+* inletsctl - provision exit-nodes for use with inlets or inlets-pro
+
+## Getting `inletsctl`
+
+```sh
+curl -sLSf https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sudo sh
+```
 
 ## Examples
 
