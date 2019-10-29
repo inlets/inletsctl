@@ -1,19 +1,17 @@
 sudo: required
 language: go
-
 go:
-- "1.11"
-
+- '1.11'
 script:
 - make dist
-
 before_deploy:
-  - ./ci/hashgen.sh
+- "./ci/hashgen.sh"
+
 
 deploy:
   provider: releases
   api_key:
-    secure: R181wN4fkK0LcJylzNCSZg5EeEZnLdh4YwvEBrRtTAaZ54uTApz2QB+jmrPBNgxM2/7j/f603ZHvibb6qgkKjSAhnq7O8nOdgyMyoDFrMmnq8deWmg1oFo+MPpiQ/2GaYJ2gVEukXLVSuFriL+Om4JmJbzWEJXsDToK/ffr6BlkV5589NetHyuGPHKqgneAbkpTIFOHCbE+6hBUHxFNxyMUpyYpTEENMp0k2ZIW3kN88IVyE00JzbCzac4/U0DXGJJZF/wGCFh1jRdKP5YcLpFOcNmFqtrGK77XjAorPzmk5djbl5Q8FeZJVPC9Foi6iIQZ5K+dHGJXiK86RH4QCRv4uJ1PtGfqRY6ygM92PU7zaCwhPPJydbXKGovLgPL1ht2DiTAhabT4ujjUNH5H/eAUW1D4ZJiKXgTrMpY/Cqq7egXJIvViAswv4rLOUbKyn0XxH7phYUaIeOzgue0Hzmg7w6+DDdeO86BduZ+Jz1wUlJougZLO/L2B4fuOVCH8rUXH3jXf27vwG8x9k5x1WOLKJSO8LzQTIJ69NgW3uCYIMvKe+gc6qdWf+kTVtI3nWV6+yo4q4s++I9iqhXuWECcR/0B9viMltGwnRoNB5Y43Fff/v7wI/iWHqIT12WwE3QCw6yqbQ+B5KyMiYjHYyQhv+eymii2+51nV6x2UwHp4=
+    secure: aYgBmrFjqAzOBWncNQ2EKKFZJwOD2+l+a7Lll8+DVJkNyvLdzliI8iD4ro5KLEIwJjlghwM/Xy78O5oMlTPGoBf6IwbFE4nxKr0wlwFonSym5XCW2W7diGwxNvJUvBqY3wHjV13UpFNJVOqKbcaAVC+oGP6Wt4vNttroUaikpokwTfDXneksg5YIIemKkNXAvvWyRHrdOUgn8U8qLnaJ5gdpdcQOACsVXoI43ogsX49nSqXVIaBqt1Ndz+53Dsu7nSUwuwg0CnTYT05sU83RUhzRckvoE/l3mmd/FQBmVyDTfTwjrVwQLaKv2ldqlDmasV1qQ32bsEAfnGswbEZcJ0Qpx6VasAtDk69OW0RPyHs/VMw9BHVgoQyDaO2KGTKBJBBsewaIcJPBnWcDoGsv8oV/s/6tagqT+20zobGLqJfu3JxPlG7m+mC17NW8Fe9UslexyP9R1PgJfghGqQisDIrid9KixqfMpfTAqLykVGR3ra5NctKJEvpM2lyjLsxKxgzRAeIcd/i6Rt/eQX7lQAFQuP+Gq/hwxffFFUvUJPaBg5xk69S5QF6OrVof/LJjReE39u5z+q3O4f1auyZXSlE3ZNTWJEZ2DCuD5fLQm1b2O8sTAuK2HXnPr2gLvjUTO5QaRlQiVwxeYNcaMol42VFZ+XpBU+PQOuhSUmpqhOk=
   file:
     - ./bin/inletsctl
     - ./bin/inletsctl-darwin

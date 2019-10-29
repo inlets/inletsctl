@@ -11,7 +11,6 @@ inletsctl create --access-token-file $HOME/Downloads/do-access-token \
   --region="nyc1"
 ```
 
-
 ## License
 
 MIT
