@@ -117,7 +117,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	fmt.Printf("Host: %s, status: %s\n", hostRes.ID, hostRes.Status)
 
-	for i := 0; i < 500; i++ {
+	max := 500
+	for i := 0; i < max; i++ {
 		time.Sleep(1 * time.Second)
 
 		hostStatus, err := provisioner.Status(hostRes.ID)
@@ -125,7 +126,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		fmt.Printf("Host: %s, status: %s\n", hostStatus.ID, hostStatus.Status)
+		fmt.Printf("[%d/%d] Host: %s, status: %s\n",
+			i+1, max, hostStatus.ID, hostStatus.Status)
 
 		if hostStatus.Status == "active" {
 			if len(remoteTCP) == 0 {
@@ -160,7 +162,7 @@ Command:
 Command:
   export TCP_PORTS="8000"
   export LICENSE=""
-  inlets-pro client --connect "ws://%s:%d/connect" \
+  inlets-pro client --connect "wss://%s:%d/connect" \
 	--token "%s" \
 	--license "$LICENSE" \
 	--tcp-ports 8000
