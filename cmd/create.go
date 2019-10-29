@@ -28,7 +28,7 @@ func init() {
 	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway)")
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
 
-	createCmd.Flags().StringP("remote-tcp", "c", "", `Comma-separated TCP ports for inlets-pro i.e. "80,443"`)
+	createCmd.Flags().StringP("remote-tcp", "c", "", `Remote host for inlets-pro to use for forwarding TCP connections`)
 }
 
 // clientCmd represents the client sub command.
@@ -96,9 +96,10 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		return errors.Wrap(err, "failed to get 'region' value.")
 	}
 
-	remoteTCP, _ := cmd.Flags().GetString("remoteTCP")
+	remoteTCP, _ := cmd.Flags().GetString("remote-tcp")
 
 	name := strings.Replace(pkg.GetRandomName(10), "_", "-", -1)
+
 	inletsControlPort := 8080
 
 	userData := makeUserdata(inletsToken, inletsControlPort, remoteTCP)
@@ -127,7 +128,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		fmt.Printf("Host: %s, status: %s\n", hostStatus.ID, hostStatus.Status)
 
 		if hostStatus.Status == "active" {
-			fmt.Printf(`Exit-node summary:
+			if len(remoteTCP) == 0 {
+				fmt.Printf(`Inlets OSS exit-node summary:
   IP: %s
   Auth-token: %s
 
@@ -137,7 +139,35 @@ Command:
 	--token "%s" \
 	--upstream $UPSTREAM
 `,
-				hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken)
+					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken)
+				fmt.Printf(`Inlets OSS exit-node summary:
+  IP: %s
+  Auth-token: %s
+
+Command:
+  export UPSTREAM=http://127.0.0.1:8000
+  inlets client --remote "ws://%s:%d" \
+	--token "%s" \
+	--upstream $UPSTREAM
+`,
+					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken)
+			} else {
+				proPort := 8123
+				fmt.Printf(`inlets-pro exit-node summary:
+  IP: %s
+  Auth-token: %s
+
+Command:
+  export TCP_PORTS="8000"
+  export LICENSE=""
+  inlets-pro client --connect "ws://%s:%d/connect" \
+	--token "%s" \
+	--license "$LICENSE" \
+	--tcp-ports 8000
+`,
+					hostStatus.IP, inletsToken, hostStatus.IP, proPort, inletsToken)
+			}
+
 			return nil
 		}
 	}

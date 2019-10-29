@@ -33,6 +33,15 @@ inletsctl create --access-token-file $HOME/Downloads/do-access-token \
   --region="nyc1"
 ```
 
+## Example with inlets-pro
+
+Let's say we want to forward TCP connections to the IP `192.168.0.26` within our client's network, using inlets-pro, we'd run this using the `--remote-tcp` flag.
+
+```sh
+inletsctl create digitalocean --access-token-file ~/Downloads/do-access-token \
+  --remote-tcp 192.168.0.26
+```
+
 ### Example usage with Scaleway
 
 ```sh
