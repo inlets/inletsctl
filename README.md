@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/inlets/inletsctl.svg?branch=master)](https://travis-ci.org/inlets/inletsctl)
 
-Provision exit-nodes for use with inlets
+Provision cloud hosts as exit-nodes for [inlets](https://inlets.dev/) with a single command.
 
 ## Getting `inletsctl`
 
@@ -24,7 +24,11 @@ Pending:
 
 ## Examples
 
-Examples on how to run `inletsctl` to create an exit node
+Examples on how to run `inletsctl` to create an exit node.
+
+Pre-reqs:
+
+* You will need [inlets](https://inlets.dev/) on your client
 
 ### Example usage with DigitalOcean
 
