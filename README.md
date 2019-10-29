@@ -4,6 +4,12 @@
 
 Provision exit-nodes for use with inlets
 
+## Getting `inletsctl`
+
+```sh
+curl -sLSf https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sudo sh
+```
+
 ## Example usage
 
 ```sh
