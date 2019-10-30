@@ -16,10 +16,12 @@ Pending:
 * [ ] Packet.com support
 * [ ] `inletsctl delete` command
 
-## Related projects
+### Related projects
+
+Inlets is [listed on the Cloud Native Landscape](https://landscape.cncf.io/category=service-proxy&format=card-mode&grouping=category&sort=stars) as a Service Proxy
 
 * [inlets](https://github.com/inlets/inlets) - open-source L7 HTTP tunnel and reverse proxy
-* [inlets-pro](https://github.com/inlets/inlets-pro-pkg) - commercial L4 TCP load-balancer
+* [inlets-pro](https://github.com/inlets/inlets-pro-pkg) - L4 TCP load-balancer
 * [inlets-operator](https://github.com/inlets/inlets-operator) - deep integration for inlets in Kubernetes, expose Service type LoadBalancer
 * [inletsctl](https://github.com/inlets/inletsctl) - CLI tool to provision exit-nodes for use with inlets or inlets-pro
 
