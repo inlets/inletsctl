@@ -10,11 +10,11 @@ Completed:
 
 * [x] DigitalOcean support
 * [x] Scaleway support
+* [x] `inletsctl delete` command
 
 Pending:
 
-* [ ] Packet.com support
-* [ ] `inletsctl delete` command
+* [ ] Add CLI flags to support Packet.com
 
 ### Related projects
 
