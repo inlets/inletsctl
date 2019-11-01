@@ -73,9 +73,23 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	var region string
+	if cmd.Flags().Changed("region") {
+		if regionVal, err := cmd.Flags().GetString("region"); len(regionVal) > 0 {
+			if err != nil {
+				return errors.Wrap(err, "failed to get 'region' value.")
+			}
+			region = regionVal
+		}
+
+	} else if provider == "scaleway" {
+		region = "fr-par-1"
+	}
+
 	var secretKey string
 	var organisationID string
 	if provider == "scaleway" {
+
 		var secretKeyErr error
 		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
 		if secretKeyErr != nil {
@@ -88,15 +102,10 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID)
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region)
 
 	if err != nil {
 		return err
-	}
-
-	region, err := cmd.Flags().GetString("region")
-	if err != nil {
-		return errors.Wrap(err, "failed to get 'region' value.")
 	}
 
 	remoteTCP, _ := cmd.Flags().GetString("remote-tcp")
@@ -181,11 +190,11 @@ Command:
 	return err
 }
 
-func getProvisioner(provider, accessToken, secretKey, organisationID string) (provision.Provisioner, error) {
+func getProvisioner(provider, accessToken, secretKey, organisationID, region string) (provision.Provisioner, error) {
 	if provider == "digitalocean" {
 		return provision.NewDigitalOceanProvisioner(accessToken)
 	} else if provider == "scaleway" {
-		return pkg.NewScalewayProvisioner(accessToken, secretKey, organisationID)
+		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }

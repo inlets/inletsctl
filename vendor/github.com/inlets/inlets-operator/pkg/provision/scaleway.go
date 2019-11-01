@@ -1,14 +1,10 @@
-// Copyright (c) Inlets Author(s) 2019. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
-package pkg
+package provision
 
 import (
 	"log"
 	"strings"
 	"time"
 
-	"github.com/inlets/inlets-operator/pkg/provision"
 	instance "github.com/scaleway/scaleway-sdk-go/api/instance/v1"
 	"github.com/scaleway/scaleway-sdk-go/scw"
 )
@@ -19,11 +15,20 @@ type ScalewayProvisioner struct {
 }
 
 // NewScalewayProvisioner with an accessKey and secretKey
-func NewScalewayProvisioner(accessKey, secretKey, organizationID string) (*ScalewayProvisioner, error) {
+func NewScalewayProvisioner(accessKey, secretKey, organizationID, region string) (*ScalewayProvisioner, error) {
+	if region == "" {
+		region = "fr-par-1"
+	}
+
+	zone, err := scw.ParseZone(region)
+	if err != nil {
+		return nil, err
+	}
+
 	client, err := scw.NewClient(
 		scw.WithAuth(accessKey, secretKey),
 		scw.WithDefaultOrganizationID(organizationID),
-		scw.WithDefaultZone(scw.ZoneFrPar1),
+		scw.WithDefaultZone(zone),
 	)
 	if err != nil {
 		return nil, err
@@ -36,7 +41,7 @@ func NewScalewayProvisioner(accessKey, secretKey, organizationID string) (*Scale
 
 // Provision creates a new scaleway instance from the BasicHost type
 // To provision the instance we first create the server, then set its user-data and power it on
-func (s *ScalewayProvisioner) Provision(host provision.BasicHost) (*provision.ProvisionedHost, error) {
+func (s *ScalewayProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	log.Printf("Provisioning host with Scaleway\n")
 
 	if host.OS == "" {
@@ -48,9 +53,11 @@ func (s *ScalewayProvisioner) Provision(host provision.BasicHost) (*provision.Pr
 	}
 
 	res, err := s.instanceAPI.CreateServer(&instance.CreateServerRequest{
-		Name:              host.Name,
-		CommercialType:    host.Plan,
-		Image:             host.OS,
+		Name:           host.Name,
+		CommercialType: host.Plan,
+		Image:          host.OS,
+		// DynamicIPRequired is mandatory to get a public IP
+		// otherwise scaleway doesn't attach a public IP to the instance
 		DynamicIPRequired: scw.BoolPtr(true),
 	})
 
@@ -70,7 +77,7 @@ func (s *ScalewayProvisioner) Provision(host provision.BasicHost) (*provision.Pr
 		return nil, err
 	}
 
-	err = s.instanceAPI.ServerActionAndWait(&instance.ServerActionAndWaitRequest{
+	_, err = s.instanceAPI.ServerAction(&instance.ServerActionRequest{
 		ServerID: server.ID,
 		Action:   instance.ServerActionPoweron,
 	})
@@ -84,7 +91,7 @@ func (s *ScalewayProvisioner) Provision(host provision.BasicHost) (*provision.Pr
 }
 
 // Status returns the status of the scaleway instance
-func (s *ScalewayProvisioner) Status(id string) (*provision.ProvisionedHost, error) {
+func (s *ScalewayProvisioner) Status(id string) (*ProvisionedHost, error) {
 	res, err := s.instanceAPI.GetServer(&instance.GetServerRequest{
 		ServerID: id,
 	})
@@ -136,16 +143,16 @@ func (s *ScalewayProvisioner) Delete(id string) error {
 	return nil
 }
 
-func serverToProvisionedHost(server *instance.Server) *provision.ProvisionedHost {
+func serverToProvisionedHost(server *instance.Server) *ProvisionedHost {
 	var ip = ""
 	if server.PublicIP != nil {
 		ip = server.PublicIP.Address.String()
 	}
 	state := server.State.String()
-	if state == "running" {
+	if server.State.String() == "running" {
 		state = "active"
 	}
-	return &provision.ProvisionedHost{
+	return &ProvisionedHost{
 		ID:     server.ID,
 		IP:     ip,
 		Status: state,

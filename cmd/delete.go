@@ -39,13 +39,25 @@ var deleteCmd = &cobra.Command{
 }
 
 func runDelete(cmd *cobra.Command, _ []string) error {
-
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return errors.Wrap(err, "failed to get 'provider' value.")
 	}
 
 	fmt.Printf("Using provider: %s\n", provider)
+
+	var region string
+	if cmd.Flags().Changed("region") {
+		if regionVal, err := cmd.Flags().GetString("region"); len(regionVal) > 0 {
+			if err != nil {
+				return errors.Wrap(err, "failed to get 'region' value.")
+			}
+			region = regionVal
+		}
+
+	} else if provider == "scaleway" {
+		region = "fr-par-1"
+	}
 
 	inletsToken, err := cmd.Flags().GetString("inlets-token")
 	if err != nil {
@@ -80,7 +92,7 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID)
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region)
 
 	if err != nil {
 		return err
