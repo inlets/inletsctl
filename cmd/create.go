@@ -195,6 +195,8 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region str
 		return provision.NewDigitalOceanProvisioner(accessToken)
 	} else if provider == "scaleway" {
 		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
+	} else if provider == "packet" {
+		return provision.NewPacketProvisioner(accessToken)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }
@@ -219,6 +221,15 @@ func createHost(provider, name, region, userData string) (*provision.BasicHost, 
 			Name:       name,
 			OS:         "ubuntu-bionic",
 			Plan:       "DEV1-S",
+			Region:     region,
+			UserData:   userData,
+			Additional: map[string]string{},
+		}, nil
+	} else if provider == "packet" {
+		return &provision.BasicHost{
+			Name:       name,
+			OS:         "ubuntu_16_04",
+			Plan:       "baremetal_0",
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},
