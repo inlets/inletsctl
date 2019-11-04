@@ -34,12 +34,12 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:552ad7a7942c43bc07b379164145b6be54998d1309948d70d41bf25e73c7cbb2"
+  digest = "1:8325efccba09192c58158f6d9f13c9d75ae146339e109929c86661b50607260a"
   name = "github.com/inlets/inlets-operator"
   packages = ["pkg/provision"]
   pruneopts = "UT"
-  revision = "5381c4d7737735b541bf88aa828849819baa09dd"
-  version = "0.4.1"
+  revision = "c467775d40a6d1ce9de1432b95ab38329be191f1"
+  version = "0.4.3"
 
 [[projects]]
   digest = "1:906eb1ca3c8455e447b99a45237b2b9615b665608fd07ad12cce847dd9a1ec43"
