@@ -69,6 +69,37 @@ func (p *CivoProvisioner) Status(id string) (*provision.ProvisionedHost, error) 
 }
 
 func (p *CivoProvisioner) Delete(id string) error {
+
+	apiURL := fmt.Sprint("https://api.civo.com/v2/instances/", id)
+
+	req, err := http.NewRequest(http.MethodDelete, apiURL, nil)
+	if err != nil {
+		return err
+	}
+	addAuth(req, p.APIKey)
+
+	req.Header.Add("Accept", "application/json")
+	instance := CreatedInstance{}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	var body []byte
+	if res.Body != nil {
+		defer res.Body.Close()
+		body, _ = ioutil.ReadAll(res.Body)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP code: %d\n%q", res.StatusCode, string(body))
+	}
+
+	unmarshalErr := json.Unmarshal(body, &instance)
+	if unmarshalErr != nil {
+		return unmarshalErr
+	}
 	return nil
 }
 
