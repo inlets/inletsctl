@@ -11,6 +11,8 @@ Completed:
 * [x] DigitalOcean support
 * [x] Scaleway support
 * [x] `inletsctl delete` command
+* [x] Add Civo.com
+* [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
 
 Pending:
 

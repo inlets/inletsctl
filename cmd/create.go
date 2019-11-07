@@ -20,7 +20,7 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(createCmd)
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, scaleway, or civo")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 
 	createCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
@@ -32,6 +32,8 @@ func init() {
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
 
 	createCmd.Flags().StringP("remote-tcp", "c", "", `Remote host for inlets-pro to use for forwarding TCP connections`)
+
+	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds")
 }
 
 // clientCmd represents the client sub command.
@@ -66,6 +68,12 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		if passwordErr != nil {
 			return passwordErr
 		}
+	}
+
+	var poll time.Duration
+	pollOverride, pollOverrideErr := cmd.Flags().GetDuration("poll")
+	if pollOverrideErr == nil {
+		poll = pollOverride
 	}
 
 	accessToken, err := getFileOrString(cmd.Flags(), "access-token-file", "access-token", true)
@@ -131,7 +139,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	max := 500
 	for i := 0; i < max; i++ {
-		time.Sleep(1 * time.Second)
+		time.Sleep(poll)
 
 		hostStatus, err := provisioner.Status(hostRes.ID)
 		if err != nil {
@@ -193,6 +201,8 @@ Command:
 func getProvisioner(provider, accessToken, secretKey, organisationID, region string) (provision.Provisioner, error) {
 	if provider == "digitalocean" {
 		return provision.NewDigitalOceanProvisioner(accessToken)
+	} else if provider == "civo" {
+		return pkg.NewCivoProvisioner(accessToken)
 	} else if provider == "scaleway" {
 		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
 	}
@@ -219,6 +229,15 @@ func createHost(provider, name, region, userData string) (*provision.BasicHost, 
 			Name:       name,
 			OS:         "ubuntu-bionic",
 			Plan:       "DEV1-S",
+			Region:     region,
+			UserData:   userData,
+			Additional: map[string]string{},
+		}, nil
+	} else if provider == "civo" {
+		return &provision.BasicHost{
+			Name:       name,
+			OS:         "811a8dfb-8202-49ad-b1ef-1e6320b20497",
+			Plan:       "g2.small",
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},
