@@ -20,7 +20,7 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(createCmd)
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, scaleway, or civo")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, packet, scaleway, or civo")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 
 	createCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
@@ -30,6 +30,7 @@ func init() {
 	createCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway)")
 	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway)")
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
+	createCmd.Flags().String("project-id", "", "Project ID (Packet.com)")
 
 	createCmd.Flags().StringP("remote-tcp", "c", "", `Remote host for inlets-pro to use for forwarding TCP connections`)
 
@@ -92,6 +93,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	} else if provider == "scaleway" {
 		region = "fr-par-1"
+	} else if provider == "packet" {
+		region = "ams1"
 	}
 
 	var secretKey string
@@ -124,7 +127,9 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	userData := makeUserdata(inletsToken, inletsControlPort, remoteTCP)
 
-	hostReq, err := createHost(provider, name, region, userData)
+	projectID, _ := cmd.Flags().GetString("project-id")
+
+	hostReq, err := createHost(provider, name, region, projectID, userData)
 	if err != nil {
 		return err
 	}
@@ -201,6 +206,8 @@ Command:
 func getProvisioner(provider, accessToken, secretKey, organisationID, region string) (provision.Provisioner, error) {
 	if provider == "digitalocean" {
 		return provision.NewDigitalOceanProvisioner(accessToken)
+	} else if provider == "packet" {
+		return provision.NewPacketProvisioner(accessToken)
 	} else if provider == "civo" {
 		return pkg.NewCivoProvisioner(accessToken)
 	} else if provider == "scaleway" {
@@ -214,7 +221,7 @@ func generateAuth() (string, error) {
 	return pwdRes, pwdErr
 }
 
-func createHost(provider, name, region, userData string) (*provision.BasicHost, error) {
+func createHost(provider, name, region, projectID, userData string) (*provision.BasicHost, error) {
 	if provider == "digitalocean" {
 		return &provision.BasicHost{
 			Name:       name,
@@ -223,6 +230,17 @@ func createHost(provider, name, region, userData string) (*provision.BasicHost, 
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},
+		}, nil
+	} else if provider == "packet" {
+		return &provision.BasicHost{
+			Name:     name,
+			OS:       "ubuntu_16_04",
+			Plan:     "t1.small.x86",
+			Region:   region,
+			UserData: userData,
+			Additional: map[string]string{
+				"project_id": projectID,
+			},
 		}, nil
 	} else if provider == "scaleway" {
 		return &provision.BasicHost{
@@ -244,7 +262,7 @@ func createHost(provider, name, region, userData string) (*provision.BasicHost, 
 		}, nil
 	}
 
-	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
+	return nil, fmt.Errorf("no provisioner for provider: %q", provider)
 }
 
 func makeUserdata(authToken string, inletsControlPort int, remoteTCP string) string {

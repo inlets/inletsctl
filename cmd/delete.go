@@ -23,7 +23,6 @@ func init() {
 	deleteCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway)")
 	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway)")
 	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
-
 }
 
 // clientCmd represents the client sub command.
