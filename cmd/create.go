@@ -167,17 +167,6 @@ Command:
 	--upstream $UPSTREAM
 `,
 					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken)
-				fmt.Printf(`Inlets OSS exit-node summary:
-  IP: %s
-  Auth-token: %s
-
-Command:
-  export UPSTREAM=http://127.0.0.1:8000
-  inlets client --remote "ws://%s:%d" \
-	--token "%s" \
-	--upstream $UPSTREAM
-`,
-					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken)
 				return nil
 			}
 
