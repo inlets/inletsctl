@@ -33,6 +33,12 @@ Inlets is [listed on the Cloud Native Landscape](https://landscape.cncf.io/categ
 curl -sLSf https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sudo sh
 ```
 
+Or
+
+```sh
+curl -sLSf https://inletsctl.inlets.dev | sudo sh
+```
+
 ## Costs for exit-nodes
 
 See notes for [inlets-operator](https://github.com/inlets/inlets-operator#provider-pricing)
