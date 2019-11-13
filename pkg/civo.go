@@ -134,7 +134,7 @@ func provisionCivoInstance(host provision.BasicHost, key string) (CreatedInstanc
 	values.Add("template_id", host.OS)
 	values.Add("initial_user", "civo")
 	values.Add("script", host.UserData)
-	values.Add("script", "inlets")
+	values.Add("tags", "inlets")
 
 	req, err := http.NewRequest(http.MethodPost, apiURL, strings.NewReader(values.Encode()))
 	if err != nil {
