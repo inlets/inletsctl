@@ -39,6 +39,8 @@ Or
 curl -sLSf https://inletsctl.inlets.dev | sudo sh
 ```
 
+Windows users are encouraged to use [git bash](https://git-scm.com/downloads) to install the inletsctl binary.
+
 ## Costs for exit-nodes
 
 See notes for [inlets-operator](https://github.com/inlets/inlets-operator#provider-pricing)
