@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  digest = "1:918fd0f816026bb4ceb1787292fa04bf59810f3d494714fe016a7208d5485713"
+  digest = "1:5bd74021baf638b4e3493a6832c89ee554058154d17e14d2f5a5345013f5f703"
   name = "github.com/digitalocean/godo"
   packages = ["."]
   pruneopts = "UT"
-  revision = "1f632d37f6858f0532207a5f77118c097d94be89"
-  version = "v1.22.0"
+  revision = "2a154f748812b9414534b84f082cee6ec3b4c8ab"
+  version = "v1.27.0"
 
 [[projects]]
   digest = "1:573ca21d3669500ff845bdebee890eb7fc7f0f50c59f2132f2a0c6b03d85086a"
@@ -32,14 +32,6 @@
   pruneopts = "UT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
-
-[[projects]]
-  digest = "1:8325efccba09192c58158f6d9f13c9d75ae146339e109929c86661b50607260a"
-  name = "github.com/inlets/inlets-operator"
-  packages = ["pkg/provision"]
-  pruneopts = "UT"
-  revision = "c467775d40a6d1ce9de1432b95ab38329be191f1"
-  version = "0.4.3"
 
 [[projects]]
   digest = "1:906eb1ca3c8455e447b99a45237b2b9615b665608fd07ad12cce847dd9a1ec43"
@@ -118,7 +110,7 @@
     "context/ctxhttp",
   ]
   pruneopts = "UT"
-  revision = "fe3aa8a4527195a6057b3fad46619d7d090e99b5"
+  revision = "ef20fe5d793301b553005db740f730d87993f778"
 
 [[projects]]
   branch = "master"
@@ -129,7 +121,7 @@
     "internal",
   ]
   pruneopts = "UT"
-  revision = "0f29369cfe4552d0e4bcddc57cc75f4d7e672a33"
+  revision = "5d9234df094ce600ff541158d1491aa10d078a47"
 
 [[projects]]
   digest = "1:e0a1881f9e0564bebdeac98c75e59f07acdde6ed3a5396e0e613eaad31194866"
@@ -148,23 +140,27 @@
   version = "v1.6.5"
 
 [[projects]]
-  digest = "1:59f10c1537d2199d9115d946927fe31165959a95190849c82ff11e05803528b0"
+  digest = "1:b75b3deb2bce8bc079e16bb2aecfe01eb80098f5650f9e93e5643ca8b7b73737"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f221b8435cfb71e54062f6c6e99e9ade30b124d5"
-  version = "v2.2.4"
+  revision = "1f64d6156d11335c3f22d9330b0ad14fc1e789ce"
+  version = "v2.2.7"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/inlets/inlets-operator/pkg/provision",
+    "github.com/digitalocean/godo",
     "github.com/morikuni/aec",
+    "github.com/packethost/packngo",
     "github.com/pkg/errors",
+    "github.com/scaleway/scaleway-sdk-go/api/instance/v1",
+    "github.com/scaleway/scaleway-sdk-go/scw",
     "github.com/sethvargo/go-password/password",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
+    "golang.org/x/oauth2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

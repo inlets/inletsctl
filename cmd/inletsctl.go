@@ -12,10 +12,14 @@ import (
 )
 
 var (
-	Version   string
+	// Version as per git repo
+	Version string
+
+	// GitCommit as per git repo
 	GitCommit string
 )
 
+// WelcomeMessage to introduce inletsctl
 const WelcomeMessage = "Welcome to inletsctl! Find out more at https://github.com/inlets/inletsctl"
 
 func init() {
@@ -29,7 +33,10 @@ var inletsCmd = &cobra.Command{
 	Long: `
 inletsctl can create exit nodes for you on your preferred cloud provider
 so that you can run a single command and then connect with your inlets
-client.`,
+client.
+
+See also: inlets-operator for Kubernetes and inlets-pro for TCP tunnelling.
+`,
 	Run: runInlets,
 }
 

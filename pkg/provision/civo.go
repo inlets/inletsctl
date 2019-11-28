@@ -1,4 +1,7 @@
-package pkg
+// Copyright (c) Inlets Author(s) 2019. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+package provision
 
 import (
 	"encoding/json"
@@ -10,8 +13,6 @@ import (
 
 	"strings"
 	"time"
-
-	"github.com/inlets/inlets-operator/pkg/provision"
 )
 
 // CivoProvisioner creates instances on civo.com
@@ -27,8 +28,8 @@ func NewCivoProvisioner(accessKey string) (*CivoProvisioner, error) {
 	}, nil
 }
 
-func (p *CivoProvisioner) Status(id string) (*provision.ProvisionedHost, error) {
-	host := &provision.ProvisionedHost{}
+func (p *CivoProvisioner) Status(id string) (*ProvisionedHost, error) {
+	host := &ProvisionedHost{}
 
 	apiURL := fmt.Sprint("https://api.civo.com/v2/instances/", id)
 
@@ -61,7 +62,7 @@ func (p *CivoProvisioner) Status(id string) (*provision.ProvisionedHost, error) 
 		return host, unmarshalErr
 	}
 
-	return &provision.ProvisionedHost{
+	return &ProvisionedHost{
 		ID:     instance.ID,
 		IP:     instance.PublicIP,
 		Status: strings.ToLower(instance.Status),
@@ -103,7 +104,7 @@ func (p *CivoProvisioner) Delete(id string) error {
 	return nil
 }
 
-func (p *CivoProvisioner) Provision(host provision.BasicHost) (*provision.ProvisionedHost, error) {
+func (p *CivoProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 
 	log.Printf("Provisioning host with Civo\n")
 
@@ -117,12 +118,12 @@ func (p *CivoProvisioner) Provision(host provision.BasicHost) (*provision.Provis
 		return nil, err
 	}
 
-	return &provision.ProvisionedHost{
+	return &ProvisionedHost{
 		ID: res.ID,
 	}, nil
 }
 
-func provisionCivoInstance(host provision.BasicHost, key string) (CreatedInstance, error) {
+func provisionCivoInstance(host BasicHost, key string) (CreatedInstance, error) {
 	instance := CreatedInstance{}
 
 	apiURL := "https://api.civo.com/v2/instances"

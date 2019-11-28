@@ -1,6 +1,6 @@
 // Copyright (c) Docker Author(s) 2019. All rights reserved.
 
-package pkg
+package names
 
 import (
 	"fmt"

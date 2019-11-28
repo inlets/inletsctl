@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inlets/inletsctl/pkg"
+	names "github.com/inlets/inletsctl/pkg/names"
+	provision "github.com/inlets/inletsctl/pkg/provision"
 
-	provision "github.com/inlets/inlets-operator/pkg/provision"
 	"github.com/pkg/errors"
 	password "github.com/sethvargo/go-password/password"
 	"github.com/spf13/cobra"
@@ -121,7 +121,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	remoteTCP, _ := cmd.Flags().GetString("remote-tcp")
 
-	name := strings.Replace(pkg.GetRandomName(10), "_", "-", -1)
+	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
 
 	inletsControlPort := 8080
 
@@ -198,7 +198,7 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region str
 	} else if provider == "packet" {
 		return provision.NewPacketProvisioner(accessToken)
 	} else if provider == "civo" {
-		return pkg.NewCivoProvisioner(accessToken)
+		return provision.NewCivoProvisioner(accessToken)
 	} else if provider == "scaleway" {
 		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
 	}
