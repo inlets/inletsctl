@@ -73,9 +73,18 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 
 	fmt.Println(upstream, "=", port)
 
-	deployment := makeDeployment(eth, port, upstream, ns)
+	inletsToken, passwordErr := generateAuth()
+	if passwordErr != nil {
+		return passwordErr
+	}
+
+	deployment := makeDeployment(eth, port, upstream, ns, inletsToken)
 	tmpPath := path.Join(os.TempDir(), "inlets-"+upstream+".yaml")
-	ioutil.WriteFile(tmpPath, []byte(deployment), 0600)
+	err = ioutil.WriteFile(tmpPath, []byte(deployment), 0600)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s written.\n", tmpPath)
 
 	task := v1.ExecTask{
 		Command: "kubectl",
@@ -130,6 +139,7 @@ Hit Control+C to cancel.`, eth, port)
 		Args: []string{
 			"server",
 			"--port=" + fmt.Sprintf("%s", port),
+			"--token=" + inletsToken,
 		},
 	}
 	serverRes, serverErr := serverTask.Execute()
@@ -146,7 +156,7 @@ Hit Control+C to cancel.`, eth, port)
 	return nil
 }
 
-func makeDeployment(remote, port, upstream, ns string) string {
+func makeDeployment(remote, port, upstream, ns, inletsToken string) string {
 
 	return fmt.Sprintf(`apiVersion: apps/v1
 kind: Deployment
@@ -172,5 +182,6 @@ spec:
         - "client"
         - "--remote=ws://%s:%s"
         - "--upstream=http://%s:%s"
-`, upstream, ns, remote, port, upstream, port)
+        - "--token=%s"
+`, upstream, ns, remote, port, upstream, port, inletsToken)
 }
