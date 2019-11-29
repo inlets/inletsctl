@@ -1,0 +1,176 @@
+// Copyright (c) Inlets Author(s) 2019. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+package cmd
+
+import (
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/signal"
+	"path"
+	"strings"
+	"syscall"
+
+	v1 "github.com/alexellis/go-execute/pkg/v1"
+	"github.com/spf13/cobra"
+)
+
+func init() {
+	inletsCmd.AddCommand(kfwdCmd)
+
+	kfwdCmd.Flags().StringP("from", "f", "", "From service for the inlets client to forward")
+	kfwdCmd.Flags().StringP("if", "i", "", "Destination interface for the inlets server")
+	kfwdCmd.Flags().StringP("namespace", "n", "default", "Source service namespace")
+
+}
+
+// clientCmd represents the client sub command.
+var kfwdCmd = &cobra.Command{
+	Use:   "kfwd",
+	Short: "Forward a Kubernetes service to the local machine",
+	Long:  `Forward a Kubernetes service to the local machine`,
+	Example: `  inletsctl kfwd --from test-app-expressjs-k8s:8080
+  inletsctl kfwd --from test-app-expressjs-k8s:8080 --if 192.168.0.14
+`,
+	RunE:          runKfwd,
+	SilenceUsage:  true,
+	SilenceErrors: true,
+}
+
+func runKfwd(cmd *cobra.Command, _ []string) error {
+	ns, err := cmd.Flags().GetString("namespace")
+	if err != nil {
+		return err
+	}
+
+	eth, err := cmd.Flags().GetString("if")
+	if err != nil {
+		return err
+	}
+
+	if len(eth) == 0 {
+		return fmt.Errorf("give --if with the IP of your local network from ifconfig or similar")
+	}
+
+	from, err := cmd.Flags().GetString("from")
+	if err != nil {
+		return err
+	}
+
+	if len(from) == 0 {
+		return fmt.Errorf("give a --from service")
+	}
+
+	portSep := strings.Index(from, ":")
+	if portSep < 0 {
+		return fmt.Errorf("no port given in --from flag")
+	}
+
+	upstream := from[:portSep]
+	port := from[portSep+1:]
+
+	fmt.Println(upstream, "=", port)
+
+	deployment := makeDeployment(eth, port, upstream, ns)
+	tmpPath := path.Join(os.TempDir(), "inlets-"+upstream+".yaml")
+	ioutil.WriteFile(tmpPath, []byte(deployment), 0600)
+
+	task := v1.ExecTask{
+		Command: "kubectl",
+		Args:    []string{"apply", "-f", tmpPath},
+	}
+	res, err := task.Execute()
+
+	if err != nil {
+		return err
+	}
+
+	if res.ExitCode != 0 {
+		return fmt.Errorf("exit code unexpected: %d, stderr: %s", res.ExitCode, res.Stderr)
+	}
+
+	fmt.Println("Inlets client scheduled inside your cluster.")
+
+	go func() {
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGTERM)
+		signal.Notify(sig, syscall.SIGINT)
+
+		<-sig
+
+		log.Printf("Interrupt received..\n")
+
+		task := v1.ExecTask{
+			Command: "kubectl",
+			Args:    []string{"delete", "-f", tmpPath},
+		}
+		res, err := task.Execute()
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, err.Error())
+			return
+		}
+
+		if res.ExitCode != 0 {
+			fmt.Fprintf(os.Stderr, fmt.Errorf("exit code unexpected from kubectl delete: %d, stderr: %s", res.ExitCode, res.Stderr).Error())
+			return
+		}
+	}()
+
+	fmt.Printf(`Inlets server now listening.
+
+http://%s:%s
+
+Hit Control+C to cancel.`, eth, port)
+
+	serverTask := v1.ExecTask{
+		Command: "inlets",
+		Args: []string{
+			"server",
+			"--port=" + fmt.Sprintf("%s", port),
+		},
+	}
+	serverRes, serverErr := serverTask.Execute()
+
+	if serverErr != nil {
+		return fmt.Errorf("error with server: %s", serverErr.Error())
+	}
+
+	if serverRes.ExitCode != 0 {
+		return fmt.Errorf("exit code unexpected from inlets server: %d, stderr: %s, stdout: %s", serverRes.ExitCode, serverRes.Stderr, serverRes.Stdout)
+
+	}
+
+	return nil
+}
+
+func makeDeployment(remote, port, upstream, ns string) string {
+
+	return fmt.Sprintf(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inlets-%s
+  namespace: %s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: inlets
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: inlets
+    spec:
+      containers:
+      - name: inlets
+        image: inlets/inlets:2.6.3
+        imagePullPolicy: IfNotPresent
+        command: ["inlets"]
+        args:
+        - "client"
+        - "--remote=ws://%s:%s"
+        - "--upstream=http://%s:%s"
+`, upstream, ns, remote, port, upstream, port)
+}
