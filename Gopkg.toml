@@ -41,3 +41,12 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "google.golang.org/api"
+  version = "0.14.0"
+
+[[override]]
+  name = "golang.org/x/sys"
+  branch = "master"
+  
