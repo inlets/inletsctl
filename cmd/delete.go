@@ -12,7 +12,7 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider")
+	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, packet, scaleway, or civo")
 
 	deleteCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
 	deleteCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")

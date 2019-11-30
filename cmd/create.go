@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,8 +21,9 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(createCmd)
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, packet, scaleway, or civo")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, packet, scaleway, or civo")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
+	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
 	createCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
 	createCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
@@ -30,7 +32,7 @@ func init() {
 	createCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway)")
 	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway)")
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
-	createCmd.Flags().String("project-id", "", "Project ID (Packet.com)")
+	createCmd.Flags().String("project-id", "", "Project ID (Packet.com, Google Compute Engine)")
 
 	createCmd.Flags().StringP("remote-tcp", "c", "", `Remote host for inlets-pro to use for forwarding TCP connections`)
 
@@ -97,6 +99,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "ams1"
 	}
 
+	var zone string
+	if provider == "gce" {
+		zone, err = cmd.Flags().GetString("zone")
+	}
+
 	var secretKey string
 	var organisationID string
 	if provider == "scaleway" {
@@ -129,12 +136,17 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	projectID, _ := cmd.Flags().GetString("project-id")
 
-	hostReq, err := createHost(provider, name, region, projectID, userData)
+	hostReq, err := createHost(provider, name, region, zone, projectID, userData, strconv.Itoa(inletsControlPort))
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Requesting host: %s in %s, from %s\n", name, region, provider)
+	if provider == "gce" {
+		fmt.Printf("Requesting host: %s in %s, from %s\n", name, zone, provider)
+	} else {
+		fmt.Printf("Requesting host: %s in %s, from %s\n", name, region, provider)
+	}
+
 	hostRes, err := provisioner.Provision(*hostReq)
 	if err != nil {
 		return err
@@ -201,6 +213,8 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region str
 		return provision.NewCivoProvisioner(accessToken)
 	} else if provider == "scaleway" {
 		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
+	} else if provider == "gce" {
+		return provision.NewGCEProvisioner(accessToken)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }
@@ -210,7 +224,7 @@ func generateAuth() (string, error) {
 	return pwdRes, pwdErr
 }
 
-func createHost(provider, name, region, projectID, userData string) (*provision.BasicHost, error) {
+func createHost(provider, name, region, zone, projectID, userData, inletsPort string) (*provision.BasicHost, error) {
 	if provider == "digitalocean" {
 		return &provision.BasicHost{
 			Name:       name,
@@ -248,6 +262,20 @@ func createHost(provider, name, region, projectID, userData string) (*provision.
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},
+		}, nil
+	} else if provider == "gce" {
+		return &provision.BasicHost{
+			Name:     name,
+			OS:       "projects/debian-cloud/global/images/debian-9-stretch-v20191121",
+			Plan:     "f1-micro",
+			Region:   "",
+			UserData: userData,
+			Additional: map[string]string{
+				"projectid":     projectID,
+				"zone":          zone,
+				"firewall-name": "inlets",
+				"firewall-port": inletsPort,
+			},
 		}, nil
 	}
 
