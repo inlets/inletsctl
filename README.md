@@ -2,9 +2,18 @@
 
 [![Build Status](https://travis-ci.org/inlets/inletsctl.svg?branch=master)](https://travis-ci.org/inlets/inletsctl)
 
-Provision cloud hosts as exit-nodes for [inlets](https://inlets.dev/) with a single command.
+**Conceptual diagram**
 
-## Status
+![Webhook example with Inlets OSS](https://blog.alexellis.io/content/images/2019/09/inletsio--2-.png)
+
+*Case-study with receiving webhooks from https://blog.alexellis.io/webhooks-are-great-when-you-can-get-them/*
+
+Use-cases:
+
+* Setup L7 HTTP and L4 TCP tunnels for your local services using [inlets](https://inlets.dev/) with `inletsctl create`
+* Port-forward services your local Kubernetes cluster using `inletsctl kfwd`
+
+## Features/backlog
 
 Completed:
 
@@ -18,6 +27,7 @@ Completed:
 
 Pending:
 
+* [ ] Provisioner: AWS EC2
 * [ ] Enable `inletsctl delete` via `--ip` vs. instance ID [#2](https://github.com/inlets/inletsctl/issues/2)
 * [ ] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
 * [ ] Enable `inlets-pro` and TCP with `inletsctl kfwd` [#13](https://github.com/inlets/inletsctl/issues/13)
@@ -31,7 +41,7 @@ Inlets is [listed on the Cloud Native Landscape](https://landscape.cncf.io/categ
 * [inlets-operator](https://github.com/inlets/inlets-operator) - deep integration for inlets in Kubernetes, expose Service type LoadBalancer
 * [inletsctl](https://github.com/inlets/inletsctl) - CLI tool to provision exit-nodes for use with inlets or inlets-pro
 
-## Getting `inletsctl`
+## Install `inletsctl`
 
 ```sh
 curl -sLSf https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sudo sh
