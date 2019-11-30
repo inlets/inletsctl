@@ -8,15 +8,18 @@ Provision cloud hosts as exit-nodes for [inlets](https://inlets.dev/) with a sin
 
 Completed:
 
-* [x] DigitalOcean support
-* [x] Scaleway support
+* [x] Provisioner: DigitalOcean
+* [x] Provisioner: Scaleway
+* [x] Provisioner: Civo.com support
+* [x] Provisioner: Google Cloud
+* [x] Provisioner: Packet.com
 * [x] `inletsctl delete` command
-* [x] Add Civo.com
 * [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
 
 Pending:
 
-* [ ] Add CLI flags to support Packet.com
+* [ ] Enable `inletsctl delete` via `--ip` vs. instance ID [#2](https://github.com/inlets/inletsctl/issues/2)
+* [ ] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
 
 ### Related projects
 
