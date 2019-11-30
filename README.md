@@ -20,6 +20,7 @@ Pending:
 
 * [ ] Enable `inletsctl delete` via `--ip` vs. instance ID [#2](https://github.com/inlets/inletsctl/issues/2)
 * [ ] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
+* [ ] Enable `inlets-pro` and TCP with `inletsctl kfwd` [#13](https://github.com/inlets/inletsctl/issues/13)
 
 ### Related projects
 
@@ -48,7 +49,7 @@ Windows users are encouraged to use [git bash](https://git-scm.com/downloads) to
 
 See notes for [inlets-operator](https://github.com/inlets/inlets-operator#provider-pricing)
 
-## Examples
+## Examples for `inletsctl create`
 
 Examples on how to run `inletsctl` to create an exit node.
 
@@ -85,7 +86,7 @@ inletsctl create --access-token-file $HOME/Downloads/do-access-token \
   --region="nyc1"
 ```
 
-## Example with inlets-pro
+### Example with inlets-pro
 
 Let's say we want to forward TCP connections to the IP `192.168.0.26` within our client's network, using inlets-pro, we'd run this using the `--remote-tcp` flag.
 
@@ -108,6 +109,18 @@ inletsctl create --provider scaleway \
 ```
 
 The region is hard-coded to France / Paris 1.
+
+## Examples for `inletsctl kfwd`
+
+The `inletsctl kfwd` command can port-forward services from within your local Kubernetes cluster to your local network or computer.
+
+Example usage:
+
+```sh
+inletsctl kfwd --if 192.168.0.14 --from openfaas-figlet:8080
+```
+
+Then access the service via `http://127.0.0.1:8080`.
 
 ## Contributing
 
