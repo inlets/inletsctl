@@ -13,6 +13,20 @@ Use-cases:
 * Setup L7 HTTP and L4 TCP tunnels for your local services using [inlets](https://inlets.dev/) with `inletsctl create`
 * Port-forward services your local Kubernetes cluster using `inletsctl kfwd`
 
+## Video demo
+
+[![asciicast](https://asciinema.org/a/wVapSMsxpTdU9SBpRXwULaKE4.svg)](https://asciinema.org/a/wVapSMsxpTdU9SBpRXwULaKE4)
+
+In the demo we:
+
+* Create a cloud host on DigitalOcean with a single command
+* Run a local Python HTTP server
+* Connect our `inlets client`
+* Access the Python HTTP server via the DigitalOcean Public IP
+* Use the CLI to delete the host
+
+inletsctl is the quickest and easiest way to automate both `inlets` and `inlets-pro`, whilst retaining complete control.
+
 ## Features/backlog
 
 Completed:
