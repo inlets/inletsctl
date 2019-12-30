@@ -5,14 +5,13 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	inletsCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, packet, scaleway, or civo")
+	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
 
 	deleteCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
 	deleteCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
@@ -20,8 +19,8 @@ func init() {
 
 	deleteCmd.Flags().StringP("id", "i", "", "Host ID")
 
-	deleteCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway)")
-	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway)")
+	deleteCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway, EC2)")
+	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
 	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
 }
 
@@ -56,6 +55,8 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 
 	} else if provider == "scaleway" {
 		region = "fr-par-1"
+	} else if provider == "ec2" {
+		region = "eu-west-1"
 	}
 
 	inletsToken, err := cmd.Flags().GetString("inlets-token")
@@ -78,16 +79,18 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 
 	var secretKey string
 	var organisationID string
-	if provider == "scaleway" {
+	if provider == "scaleway" || provider == "ec2" {
 		var secretKeyErr error
 		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
 		if secretKeyErr != nil {
 			return secretKeyErr
 		}
 
-		organisationID, _ = cmd.Flags().GetString("organisation-id")
-		if len(organisationID) == 0 {
-			return fmt.Errorf("--organisation-id cannot be empty")
+		if provider == "scaleway" {
+			organisationID, _ = cmd.Flags().GetString("organisation-id")
+			if len(organisationID) == 0 {
+				return fmt.Errorf("--organisation-id cannot be empty")
+			}
 		}
 	}
 
