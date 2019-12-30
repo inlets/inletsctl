@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -21,7 +22,7 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(createCmd)
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, packet, scaleway, or civo")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
@@ -29,8 +30,8 @@ func init() {
 	createCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
 	createCmd.Flags().StringP("access-token-file", "f", "", "Read this file for the access token for your cloud")
 
-	createCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway)")
-	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway)")
+	createCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway, EC2)")
+	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
 	createCmd.Flags().String("project-id", "", "Project ID (Packet.com, Google Compute Engine)")
 
@@ -97,6 +98,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "fr-par-1"
 	} else if provider == "packet" {
 		region = "ams1"
+	} else if provider == "ec2" {
+		region = "eu-west-1"
 	}
 
 	var zone string
@@ -106,7 +109,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	var secretKey string
 	var organisationID string
-	if provider == "scaleway" {
+	if provider == "scaleway" || provider == "ec2" {
 
 		var secretKeyErr error
 		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
@@ -114,9 +117,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			return secretKeyErr
 		}
 
-		organisationID, _ = cmd.Flags().GetString("organisation-id")
-		if len(organisationID) == 0 {
-			return fmt.Errorf("--organisation-id cannot be empty")
+		if provider == "scaleway" {
+			organisationID, _ = cmd.Flags().GetString("organisation-id")
+			if len(organisationID) == 0 {
+				return fmt.Errorf("--organisation-id cannot be empty")
+			}
 		}
 	}
 
@@ -215,6 +220,8 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region str
 		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
 	} else if provider == "gce" {
 		return provision.NewGCEProvisioner(accessToken)
+	} else if provider == "ec2" {
+		return provision.NewEC2Provisioner(region, accessToken, secretKey)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }
@@ -275,6 +282,19 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"zone":          zone,
 				"firewall-name": "inlets",
 				"firewall-port": inletsPort,
+			},
+		}, nil
+	} else if provider == "ec2" {
+		// Ubuntu images can be found here https://cloud-images.ubuntu.com/locator/ec2/
+		// Name is used in the OS field so the ami can be lookup up in the region specified
+		return &provision.BasicHost{
+			Name:     name,
+			OS:       "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20191114",
+			Plan:     "t3.nano",
+			Region:   region,
+			UserData: base64.StdEncoding.EncodeToString([]byte(userData)),
+			Additional: map[string]string{
+				"inlets-port": inletsPort,
 			},
 		}, nil
 	}
