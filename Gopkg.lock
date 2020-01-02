@@ -2,20 +2,20 @@
 
 
 [[projects]]
-  digest = "1:72e7e0f8fdddb762535bc00934efb311db71d5ccdb4076128bac4b68f3e08e7d"
-  name = "github.com/alexellis/go-execute"
-  packages = ["pkg/v1"]
-  pruneopts = "UT"
-  revision = "d17947259f74333b6272fb04c809d5e6df7709a8"
-  version = "0.2.1"
-
-[[projects]]
   digest = "1:26ee1e365ea8f312ee11e170fc6675bac0dd3d4adf2406e753d0a43527e1afb8"
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
   pruneopts = "UT"
   revision = "d1ee711ee996fa74abaffbdb572963f368f215a9"
   version = "v0.49.0"
+
+[[projects]]
+  digest = "1:72e7e0f8fdddb762535bc00934efb311db71d5ccdb4076128bac4b68f3e08e7d"
+  name = "github.com/alexellis/go-execute"
+  packages = ["pkg/v1"]
+  pruneopts = "UT"
+  revision = "d17947259f74333b6272fb04c809d5e6df7709a8"
+  version = "0.2.1"
 
 [[projects]]
   digest = "1:5bd74021baf638b4e3493a6832c89ee554058154d17e14d2f5a5345013f5f703"
@@ -62,6 +62,17 @@
   pruneopts = "UT"
   revision = "bd5b16380fd03dc758d11cef74ba2e3bc8b0e8c2"
   version = "v2.0.5"
+
+[[projects]]
+  digest = "1:f5ccb9f942dd78395be59cf4c4762d1c013180633ec35306fffc77c9b82985f6"
+  name = "github.com/hetznercloud/hcloud-go"
+  packages = [
+    "hcloud",
+    "hcloud/schema",
+  ]
+  pruneopts = "UT"
+  revision = "f7f7f7d81d61ce1e72939c7c8a5d2aff6b7c0da3"
+  version = "v1.17.0"
 
 [[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
@@ -331,6 +342,7 @@
   input-imports = [
     "github.com/alexellis/go-execute/pkg/v1",
     "github.com/digitalocean/godo",
+    "github.com/hetznercloud/hcloud-go/hcloud",
     "github.com/morikuni/aec",
     "github.com/packethost/packngo",
     "github.com/pkg/errors",

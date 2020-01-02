@@ -21,7 +21,7 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(createCmd)
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, packet, scaleway, or civo")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, packet, scaleway, civo or hetzner")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
@@ -215,6 +215,8 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region str
 		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
 	} else if provider == "gce" {
 		return provision.NewGCEProvisioner(accessToken)
+	} else if provider == "hetzner" {
+		return provision.NewHetznerProvisioner(accessToken)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }
@@ -277,6 +279,15 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"firewall-port": inletsPort,
 			},
 		}, nil
+	} else if provider == "hetzner" {
+		return &provision.BasicHost{
+			Name:       name,
+			OS:         "ubuntu-18.04",
+			Plan:       "cx11",
+			Region:     region,
+			UserData:   userData,
+			Additional: map[string]string{},
+		}, nil
 	}
 
 	return nil, fmt.Errorf("no provisioner for provider: %q", provider)
@@ -304,11 +315,11 @@ curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-ope
 	export AUTHTOKEN="` + authToken + `"
 	export REMOTETCP="` + remoteTCP + `"
 	export IP=$(curl -sfSL https://ifconfig.co)
-	
+
 	curl -SLsf https://github.com/inlets/inlets-pro-pkg/releases/download/0.4.0/inlets-pro-linux > inlets-pro-linux && \
 	chmod +x ./inlets-pro-linux  && \
 	mv ./inlets-pro-linux /usr/local/bin/inlets-pro
-	
+
 	curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-pro.service  && \
 		mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
 		echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \

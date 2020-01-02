@@ -46,7 +46,10 @@
   name = "google.golang.org/api"
   version = "0.14.0"
 
+[[constraint]]
+  name = "github.com/hetznercloud/hcloud-go"
+  version = "1.17.0"
+
 [[override]]
   name = "golang.org/x/sys"
   branch = "master"
-  

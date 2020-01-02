@@ -36,6 +36,7 @@ Completed:
 * [x] Provisioner: Civo.com support
 * [x] Provisioner: Google Cloud
 * [x] Provisioner: Packet.com
+* [x] Provisioner: Hetzner.cloud
 * [x] `inletsctl delete` command
 * [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
 
