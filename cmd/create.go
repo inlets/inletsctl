@@ -177,8 +177,11 @@ Command:
   inlets client --remote "ws://%s:%d" \
 	--token "%s" \
 	--upstream $UPSTREAM
+
+To Delete:
+  inletsctl delete --provider %s --id "%s"
 `,
-					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken)
+					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken, provider, hostStatus.ID)
 				return nil
 			}
 
