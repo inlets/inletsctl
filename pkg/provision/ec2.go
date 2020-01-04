@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -16,7 +17,7 @@ type EC2Provisioner struct {
 	ec2Provisioner *ec2.EC2
 }
 
-// NewEC2Provioner creates an EC2Provisioner and initialises an EC2 client
+// NewEC2Provisioner creates an EC2Provisioner and initialises an EC2 client
 func NewEC2Provisioner(region, accessKey, secretKey string) (*EC2Provisioner, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region:      aws.String(region),
@@ -26,7 +27,7 @@ func NewEC2Provisioner(region, accessKey, secretKey string) (*EC2Provisioner, er
 	return &EC2Provisioner{ec2Provisioner: svc}, err
 }
 
-// Provision deploys an exit node into AWS
+// Provision deploys an exit node into AWS EC2
 func (p *EC2Provisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	image, err := p.lookupAMI(host.OS)
 	if err != nil {
@@ -124,7 +125,18 @@ func (p *EC2Provisioner) Status(id string) (*ProvisionedHost, error) {
 }
 
 // Delete removes the exit node
-func (p *EC2Provisioner) Delete(id string) error {
+func (p *EC2Provisioner) Delete(request HostDeleteRequest) error {
+	var id string
+	var err error
+	if len(request.ID) > 0 {
+		id = request.ID
+	} else {
+		id, err = p.lookupID(request)
+		if err != nil {
+			return err
+		}
+	}
+
 	i, err := p.ec2Provisioner.DescribeInstances(&ec2.DescribeInstancesInput{
 		InstanceIds: []*string{aws.String(id)},
 	})
@@ -158,6 +170,63 @@ func (p *EC2Provisioner) Delete(id string) error {
 	}
 
 	return nil
+}
+
+// List returns a list of exit nodes
+func (p *EC2Provisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
+	var inlets []*ProvisionedHost
+	var nextToken *string
+	filterValues := strings.Split(filter.Filter, ",")
+	for {
+		instances, err := p.ec2Provisioner.DescribeInstances(&ec2.DescribeInstancesInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String(filterValues[0]),
+					Values: []*string{aws.String(filterValues[1])},
+				},
+			},
+			NextToken: nextToken,
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range instances.Reservations {
+			for _, i := range r.Instances {
+				if *i.State.Name != ec2.InstanceStateNameTerminated {
+					host := &ProvisionedHost{
+						ID: *i.InstanceId,
+					}
+					if i.PublicIpAddress != nil {
+						host.IP = *i.PublicIpAddress
+					}
+					inlets = append(inlets, host)
+				}
+			}
+		}
+		nextToken = instances.NextToken
+		if nextToken == nil {
+			break
+		}
+	}
+	return inlets, nil
+}
+
+func (p *EC2Provisioner) lookupID(request HostDeleteRequest) (string, error) {
+	inlets, err := p.List(ListFilter{
+		Filter:    "tag:inlets,exit-node",
+		ProjectID: request.ProjectID,
+		Zone:      request.Zone,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, inlet := range inlets {
+		if inlet.IP == request.IP {
+			return inlet.ID, nil
+		}
+	}
+	return "", fmt.Errorf("no host with ip: %s", request.IP)
 }
 
 // creteEC2SecurityGroup creates a security group for the exit-node

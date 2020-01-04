@@ -6,6 +6,7 @@ package provision
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,12 +23,12 @@ type CivoProvisioner struct {
 
 // NewCivoProvisioner with an accessKey
 func NewCivoProvisioner(accessKey string) (*CivoProvisioner, error) {
-
 	return &CivoProvisioner{
 		APIKey: accessKey,
 	}, nil
 }
 
+// Status gets the status of the exit node
 func (p *CivoProvisioner) Status(id string) (*ProvisionedHost, error) {
 	host := &ProvisionedHost{}
 
@@ -40,7 +41,7 @@ func (p *CivoProvisioner) Status(id string) (*ProvisionedHost, error) {
 	addAuth(req, p.APIKey)
 
 	req.Header.Add("Accept", "application/json")
-	instance := CreatedInstance{}
+	instance := createdInstance{}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -69,41 +70,28 @@ func (p *CivoProvisioner) Status(id string) (*ProvisionedHost, error) {
 	}, nil
 }
 
-func (p *CivoProvisioner) Delete(id string) error {
+// Delete terminates the exit node
+func (p *CivoProvisioner) Delete(request HostDeleteRequest) error {
+	var id string
+	var err error
+	if len(request.ID) > 0 {
+		id = request.ID
+	} else {
+		id, err = p.lookupID(request)
+		if err != nil {
+			return err
+		}
+	}
 
 	apiURL := fmt.Sprint("https://api.civo.com/v2/instances/", id)
-
-	req, err := http.NewRequest(http.MethodDelete, apiURL, nil)
+	_, err = apiCall(p.APIKey, http.MethodDelete, apiURL, nil)
 	if err != nil {
 		return err
-	}
-	addAuth(req, p.APIKey)
-
-	req.Header.Add("Accept", "application/json")
-	instance := CreatedInstance{}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	var body []byte
-	if res.Body != nil {
-		defer res.Body.Close()
-		body, _ = ioutil.ReadAll(res.Body)
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected HTTP code: %d\n%q", res.StatusCode, string(body))
-	}
-
-	unmarshalErr := json.Unmarshal(body, &instance)
-	if unmarshalErr != nil {
-		return unmarshalErr
 	}
 	return nil
 }
 
+// Provision creates a new exit node
 func (p *CivoProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 
 	log.Printf("Provisioning host with Civo\n")
@@ -123,8 +111,47 @@ func (p *CivoProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	}, nil
 }
 
-func provisionCivoInstance(host BasicHost, key string) (CreatedInstance, error) {
-	instance := CreatedInstance{}
+// List returns a list of exit nodes
+func (p *CivoProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
+	var inlets []*ProvisionedHost
+	apiURL := fmt.Sprintf("https://api.civo.com/v2/instances/?tags=%s", filter.Filter)
+	body, err := apiCall(p.APIKey, http.MethodGet, apiURL, nil)
+	if err != nil {
+		return inlets, err
+	}
+
+	var resp apiResponse
+	unmarshalErr := json.Unmarshal(body, &resp)
+	if unmarshalErr != nil {
+		return inlets, unmarshalErr
+	}
+
+	for _, instance := range resp.Items {
+		host := &ProvisionedHost{
+			IP:     instance.PublicIP,
+			ID:     instance.ID,
+			Status: instance.Status,
+		}
+		inlets = append(inlets, host)
+	}
+	return inlets, nil
+}
+
+func (p *CivoProvisioner) lookupID(request HostDeleteRequest) (string, error) {
+	inlets, err := p.List(ListFilter{Filter: "inlets"})
+	if err != nil {
+		return "", err
+	}
+	for _, inlet := range inlets {
+		if inlet.IP == request.IP {
+			return inlet.ID, nil
+		}
+	}
+	return "", fmt.Errorf("no host with ip: %s", request.IP)
+}
+
+func provisionCivoInstance(host BasicHost, key string) (createdInstance, error) {
+	instance := createdInstance{}
 
 	apiURL := "https://api.civo.com/v2/instances"
 
@@ -137,28 +164,9 @@ func provisionCivoInstance(host BasicHost, key string) (CreatedInstance, error) 
 	values.Add("script", host.UserData)
 	values.Add("tags", "inlets")
 
-	req, err := http.NewRequest(http.MethodPost, apiURL, strings.NewReader(values.Encode()))
+	body, err := apiCall(key, http.MethodPost, apiURL, strings.NewReader(values.Encode()))
 	if err != nil {
 		return instance, err
-	}
-	addAuth(req, key)
-
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return instance, err
-	}
-
-	var body []byte
-	if res.Body != nil {
-		defer res.Body.Close()
-		body, _ = ioutil.ReadAll(res.Body)
-	}
-
-	if res.StatusCode != http.StatusOK {
-		return instance, fmt.Errorf("unexpected HTTP code: %d\n%q", res.StatusCode, string(body))
 	}
 
 	unmarshalErr := json.Unmarshal(body, &instance)
@@ -170,7 +178,43 @@ func provisionCivoInstance(host BasicHost, key string) (CreatedInstance, error) 
 	return instance, nil
 }
 
-type CreatedInstance struct {
+func apiCall(key, method, url string, requestBody io.Reader) ([]byte, error) {
+
+	req, err := http.NewRequest(method, url, requestBody)
+	if err != nil {
+		return nil, err
+	}
+	addAuth(req, key)
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var body []byte
+	if res.Body != nil {
+		defer res.Body.Close()
+		body, err = ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected HTTP code: %d\n%q", res.StatusCode, string(body))
+	}
+
+	return body, nil
+}
+
+type apiResponse struct {
+	Items []createdInstance `json:"items"`
+}
+
+type createdInstance struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	PublicIP  string    `json:"public_ip"`

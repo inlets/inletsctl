@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/inlets/inletsctl/pkg/provision"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -14,15 +15,19 @@ func init() {
 	inletsCmd.AddCommand(deleteCmd)
 	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
 	deleteCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
+	deleteCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
 	deleteCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
 	deleteCmd.Flags().StringP("access-token-file", "f", "", "Read this file for the access token for your cloud")
 
 	deleteCmd.Flags().StringP("id", "i", "", "Host ID")
+	deleteCmd.Flags().String("ip", "", "Host IP")
 
 	deleteCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway, EC2)")
 	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
 	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
+	deleteCmd.Flags().String("project-id", "", "Project ID (Packet.com, Google Compute Engine)")
+
 }
 
 // deleteCmd represents the client sub command
@@ -49,7 +54,7 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 
 	var region string
 	if cmd.Flags().Changed("region") {
-		if regionVal, err := cmd.Flags().GetString("region"); len(regionVal) > 0 {
+		if regionVal, err := cmd.Flags().GetString("region"); isSet(regionVal) {
 			if err != nil {
 				return errors.Wrap(err, "failed to get 'region' value.")
 			}
@@ -60,19 +65,6 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 		region = "fr-par-1"
 	} else if provider == "ec2" {
 		region = "eu-west-1"
-	}
-
-	inletsToken, err := cmd.Flags().GetString("inlets-token")
-	if err != nil {
-		return errors.Wrap(err, "failed to get 'inlets-token' value.")
-	}
-	if len(inletsToken) == 0 {
-		var passwordErr error
-		inletsToken, passwordErr = generateAuth()
-
-		if passwordErr != nil {
-			return passwordErr
-		}
 	}
 
 	accessToken, err := getFileOrString(cmd.Flags(), "access-token-file", "access-token", true)
@@ -104,17 +96,41 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	hostID, _ := cmd.Flags().GetString("id")
+	hostIP, _ := cmd.Flags().GetString("ip")
+	projectID, _ := cmd.Flags().GetString("project-id")
+	zone, _ := cmd.Flags().GetString("zone")
 
-	if len(hostID) == 0 {
-		return fmt.Errorf("give a valid --id for your host")
+	if isNotSet(hostID) && isNotSet(hostIP) {
+		return fmt.Errorf("give a valid --id or --ip for your host")
 	}
 
-	fmt.Printf("Deleting host: %s from %s\n", hostID, provider)
+	if provider == "gce" && isSet(hostIP) {
+		if isNotSet(projectID) {
+			return fmt.Errorf("--ip requires --project-id to be set for provider")
+		}
+	}
 
-	err = provisioner.Delete(hostID)
+	deleteRequest := provision.HostDeleteRequest{
+		ID:        hostID,
+		IP:        hostIP,
+		ProjectID: projectID,
+		Zone:      zone,
+	}
+
+	fmt.Printf("Deleting host: %s%s from %s\n", hostID, hostIP, provider)
+
+	err = provisioner.Delete(deleteRequest)
 	if err != nil {
 		return err
 	}
 
 	return err
+}
+
+func isNotSet(s string) bool {
+	return len(s) == 0
+}
+
+func isSet(s string) bool {
+	return len(s) > 0
 }
