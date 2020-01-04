@@ -29,6 +29,7 @@ func NewDigitalOceanProvisioner(accessKey string) (*DigitalOceanProvisioner, err
 	}, nil
 }
 
+// Status returns the status of an exit node
 func (p *DigitalOceanProvisioner) Status(id string) (*ProvisionedHost, error) {
 	sid, _ := strconv.Atoi(id)
 
@@ -54,12 +55,72 @@ func (p *DigitalOceanProvisioner) Status(id string) (*ProvisionedHost, error) {
 	}, nil
 }
 
-func (p *DigitalOceanProvisioner) Delete(id string) error {
-	sid, _ := strconv.Atoi(id)
-	_, err := p.client.Droplets.Delete(context.Background(), sid)
+// Delete terminates an exit node
+func (p *DigitalOceanProvisioner) Delete(request HostDeleteRequest) error {
+	var id string
+	var err error
+	if len(request.ID) > 0 {
+		id = request.ID
+	} else {
+		id, err = p.lookupID(request)
+		if err != nil {
+			return err
+		}
+	}
+	sid, err := strconv.Atoi(id)
+	if err != nil {
+		return err
+	}
+	_, err = p.client.Droplets.Delete(context.Background(), sid)
 	return err
 }
 
+// List returns a list of exit nodes
+func (p *DigitalOceanProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
+	var inlets []*ProvisionedHost
+	opt := &godo.ListOptions{}
+	for {
+		droplets, resp, err := p.client.Droplets.ListByTag(context.Background(), filter.Filter, opt)
+		if err != nil {
+			return inlets, err
+		}
+		for _, droplet := range droplets {
+			publicIP, err := droplet.PublicIPv4()
+			if err != nil {
+				return inlets, err
+			}
+			host := &ProvisionedHost{
+				IP: publicIP,
+				ID: fmt.Sprintf("%d", droplet.ID),
+			}
+			inlets = append(inlets, host)
+		}
+		if resp.Links == nil || resp.Links.IsLastPage() {
+			break
+		}
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			return inlets, err
+		}
+		opt.Page = page + 1
+	}
+	return inlets, nil
+}
+
+func (p *DigitalOceanProvisioner) lookupID(request HostDeleteRequest) (string, error) {
+	inlets, err := p.List(ListFilter{Filter: "inlets"})
+	if err != nil {
+		return "", err
+	}
+	for _, inlet := range inlets {
+		if inlet.IP == request.IP {
+			return inlet.ID, nil
+		}
+	}
+	return "", fmt.Errorf("no host with ip: %s", request.IP)
+}
+
+// Provision creates an exit node
 func (p *DigitalOceanProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 
 	log.Printf("Provisioning host with DigitalOcean\n")
@@ -75,6 +136,7 @@ func (p *DigitalOceanProvisioner) Provision(host BasicHost) (*ProvisionedHost, e
 		Image: godo.DropletCreateImage{
 			Slug: host.OS,
 		},
+		Tags:     []string{"inlets"},
 		UserData: host.UserData,
 	}
 
@@ -89,10 +151,12 @@ func (p *DigitalOceanProvisioner) Provision(host BasicHost) (*ProvisionedHost, e
 	}, nil
 }
 
+// TokenSource contains an access token
 type TokenSource struct {
 	AccessToken string
 }
 
+// Token returns an oauth2 token
 func (t *TokenSource) Token() (*oauth2.Token, error) {
 	token := &oauth2.Token{
 		AccessToken: t.AccessToken,
