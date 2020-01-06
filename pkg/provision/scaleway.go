@@ -17,7 +17,7 @@ type ScalewayProvisioner struct {
 // NewScalewayProvisioner with an accessKey and secretKey
 func NewScalewayProvisioner(accessKey, secretKey, organizationID, region string) (*ScalewayProvisioner, error) {
 	if region == "" {
-		region = "fr-par-1"
+		region = Defaults[ScalewayProvider].Region
 	}
 
 	zone, err := scw.ParseZone(region)

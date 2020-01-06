@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/inlets/inletsctl/pkg/provision"
 	"io/ioutil"
 	"log"
 	"os"
@@ -73,7 +74,7 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 
 	fmt.Println(upstream, "=", port)
 
-	inletsToken, passwordErr := generateAuth()
+	inletsToken, passwordErr := provision.GenerateAuth()
 	if passwordErr != nil {
 		return passwordErr
 	}

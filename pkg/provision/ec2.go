@@ -1,6 +1,7 @@
 package provision
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"strconv"
@@ -17,7 +18,10 @@ type EC2Provisioner struct {
 }
 
 // NewEC2Provioner creates an EC2Provisioner and initialises an EC2 client
-func NewEC2Provisioner(region, accessKey, secretKey string) (*EC2Provisioner, error) {
+func NewEC2Provisioner(accessKey, secretKey, region string) (*EC2Provisioner, error) {
+	if region == "" {
+		region = Defaults[EC2Provider].Region
+	}
 	sess, err := session.NewSession(&aws.Config{
 		Region:      aws.String(region),
 		Credentials: credentials.NewStaticCredentials(accessKey, secretKey, ""),
@@ -33,7 +37,7 @@ func (p *EC2Provisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		return nil, err
 	}
 
-	groupID, name, err := p.securityGroup(host.Additional["inlets-port"])
+	groupID, name, err := p.securityGroup(ControlPort)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +47,7 @@ func (p *EC2Provisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		InstanceType: aws.String(host.Plan),
 		MinCount:     aws.Int64(1),
 		MaxCount:     aws.Int64(1),
-		UserData:     &host.UserData,
+		UserData:     aws.String(base64.StdEncoding.EncodeToString([]byte(host.UserData))),
 		NetworkInterfaces: []*ec2.InstanceNetworkInterfaceSpecification{
 			{
 				DeviceIndex:              aws.Int64(int64(0)),

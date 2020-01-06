@@ -64,10 +64,6 @@ func (p *DigitalOceanProvisioner) Provision(host BasicHost) (*ProvisionedHost, e
 
 	log.Printf("Provisioning host with DigitalOcean\n")
 
-	if host.Region == "" {
-		host.Region = "lon1"
-	}
-
 	createReq := &godo.DropletCreateRequest{
 		Name:   host.Name,
 		Region: host.Region,

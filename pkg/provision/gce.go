@@ -30,9 +30,9 @@ func (gce *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	instance := &compute.Instance{
 		Name:         host.Name,
 		Description:  "Exit node created by inlets-operator",
-		MachineType:  fmt.Sprintf("zones/%s/machineTypes/%s", host.Additional["zone"], host.Plan),
+		MachineType:  fmt.Sprintf("zones/%s/machineTypes/%s", host.Zone, host.Plan),
 		CanIpForward: true,
-		Zone:         fmt.Sprintf("projects/%s/zones/%s", host.Additional["projectid"], host.Additional["zone"]),
+		Zone:         fmt.Sprintf("projects/%s/zones/%s", host.ProjectID, host.Zone),
 		Disks: []*compute.AttachedDisk{
 			{
 				AutoDelete: true,
@@ -85,20 +85,20 @@ func (gce *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		},
 	}
 
-	exists, _ := gce.checkInletsFirewallRuleExists(host.Additional["projectid"], host.Additional["firewall-name"], host.Additional["firewall-port"])
+	exists, _ := gce.checkInletsFirewallRuleExists(host.ProjectID, "inlets", ControlPort)
 
 	if !exists {
-		err := gce.createInletsFirewallRule(host.Additional["projectid"], host.Additional["firewall-name"], host.Additional["firewall-port"])
+		err := gce.createInletsFirewallRule(host.ProjectID, "inlets", ControlPort)
 		log.Println("inlets firewallRule does not exist")
 		if err != nil {
 			return nil, fmt.Errorf("Could not create inlets firewall rule: %v", err)
 		}
-		log.Printf("Creating inlets firewallRule opening port: %s\n", host.Additional["firewall-port"])
+		log.Printf("Creating inlets firewallRule opening port: %s\n", ControlPort)
 	} else {
 		log.Println("inlets firewallRule exists")
 	}
 
-	op, err := gce.gceProvisioner.Instances.Insert(host.Additional["projectid"], host.Additional["zone"], instance).Do()
+	op, err := gce.gceProvisioner.Instances.Insert(host.ProjectID, host.Zone, instance).Do()
 	if err != nil {
 		return nil, fmt.Errorf("could not provision GCE instance: %v", err)
 	}
@@ -109,7 +109,7 @@ func (gce *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		status = ActiveStatus
 	}
 	return &ProvisionedHost{
-		ID:     constructCustomGCEID(host.Name, host.Additional["zone"], host.Additional["projectid"]),
+		ID:     constructCustomGCEID(host.Name, host.Zone, host.ProjectID),
 		Status: status,
 	}, nil
 

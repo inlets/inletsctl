@@ -4,10 +4,8 @@
 package cmd
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"strconv"
 	"strings"
 	"time"
 
@@ -15,7 +13,6 @@ import (
 	provision "github.com/inlets/inletsctl/pkg/provision"
 
 	"github.com/pkg/errors"
-	password "github.com/sethvargo/go-password/password"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -23,8 +20,8 @@ import (
 func init() {
 	inletsCmd.AddCommand(createCmd)
 	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
-	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
-	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
+	createCmd.Flags().StringP("region", "r", "", "The region for your cloud provider")
+	createCmd.Flags().StringP("zone", "z", "", "The zone for the exit node (Google Compute Engine)")
 
 	createCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
 	createCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
@@ -53,24 +50,25 @@ var createCmd = &cobra.Command{
 }
 
 func runCreate(cmd *cobra.Command, _ []string) error {
+	var pConfig provision.ProvisionerRequest
+	var err error
 
-	provider, err := cmd.Flags().GetString("provider")
+	pConfig.Provider, err = cmd.Flags().GetString("provider")
 	if err != nil {
 		return errors.Wrap(err, "failed to get 'provider' value.")
 	}
 
-	fmt.Printf("Using provider: %s\n", provider)
+	fmt.Printf("Using provider: %s\n", pConfig.Provider)
 
 	inletsToken, err := cmd.Flags().GetString("inlets-token")
 	if err != nil {
 		return errors.Wrap(err, "failed to get 'inlets-token' value.")
 	}
 	if len(inletsToken) == 0 {
-		var passwordErr error
-		inletsToken, passwordErr = generateAuth()
+		inletsToken, err = provision.GenerateAuth()
 
-		if passwordErr != nil {
-			return passwordErr
+		if err != nil {
+			return err
 		}
 	}
 
@@ -80,76 +78,74 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		poll = pollOverride
 	}
 
-	accessToken, err := getFileOrString(cmd.Flags(), "access-token-file", "access-token", true)
+	pConfig.AccessToken, err = getFileOrString(cmd.Flags(), "access-token-file", "access-token", true)
 	if err != nil {
 		return err
 	}
 
-	var region string
 	if cmd.Flags().Changed("region") {
-		if regionVal, err := cmd.Flags().GetString("region"); len(regionVal) > 0 {
+		if pConfig.Region, err = cmd.Flags().GetString("region"); len(pConfig.Region) == 0 {
 			if err != nil {
 				return errors.Wrap(err, "failed to get 'region' value.")
 			}
-			region = regionVal
+			pConfig.Region = provision.Defaults[pConfig.Provider].Region
 		}
-
-	} else if provider == "scaleway" {
-		region = "fr-par-1"
-	} else if provider == "packet" {
-		region = "ams1"
-	} else if provider == "ec2" {
-		region = "eu-west-1"
+	} else {
+		pConfig.Region = provision.Defaults[pConfig.Provider].Region
 	}
 
 	var zone string
-	if provider == "gce" {
-		zone, err = cmd.Flags().GetString("zone")
+	if pConfig.Provider == provision.GCEProvider {
+		if cmd.Flags().Changed("zone") {
+			if zone, err = cmd.Flags().GetString("zone"); len(zone) == 0 {
+				if err != nil {
+					return errors.Wrap(err, "failed to get 'zone' value.")
+				}
+				zone = provision.Defaults[pConfig.Provider].Zone
+			}
+		} else {
+			zone = provision.Defaults[pConfig.Provider].Zone
+		}
 	}
 
-	var secretKey string
-	var organisationID string
-	if provider == "scaleway" || provider == "ec2" {
-
-		var secretKeyErr error
-		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
-		if secretKeyErr != nil {
-			return secretKeyErr
+	if pConfig.Provider == provision.ScalewayProvider || pConfig.Provider == provision.EC2Provider {
+		pConfig.SecretKey, err = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
+		if err != nil {
+			return err
 		}
-
-		if provider == "scaleway" {
-			organisationID, _ = cmd.Flags().GetString("organisation-id")
-			if len(organisationID) == 0 {
+		if pConfig.Provider == provision.ScalewayProvider {
+			pConfig.OrganisationID, _ = cmd.Flags().GetString("organisation-id")
+			if len(pConfig.OrganisationID) == 0 {
 				return fmt.Errorf("--organisation-id cannot be empty")
 			}
 		}
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region)
+	provisioner, err := provision.NewProvisioner(pConfig)
 
 	if err != nil {
 		return err
 	}
 
 	remoteTCP, _ := cmd.Flags().GetString("remote-tcp")
-
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
 
-	inletsControlPort := 8080
-
-	userData := makeUserdata(inletsToken, inletsControlPort, remoteTCP)
+	userData := provision.MakeUserdata(provision.UserDataRequest{
+		AuthToken:         inletsToken,
+		InletsControlPort: provision.ControlPort,
+		RemoteTCP:         remoteTCP,
+	})
 
 	projectID, _ := cmd.Flags().GetString("project-id")
-
-	hostReq, err := createHost(provider, name, region, zone, projectID, userData, strconv.Itoa(inletsControlPort))
+	hostReq, err := provision.NewBasicHost(pConfig.Provider, name, pConfig.Region, projectID, zone, userData)
 	if err != nil {
 		return err
 	}
 
-	if provider == "gce" {
-		fmt.Printf("Requesting host: %s in %s, from %s\n", name, zone, provider)
+	if pConfig.Provider == provision.GCEProvider {
+		fmt.Printf("Requesting host: %s in %s, from %s\n", name, zone, pConfig.Provider)
 	} else {
-		fmt.Printf("Requesting host: %s in %s, from %s\n", name, region, provider)
+		fmt.Printf("Requesting host: %s in %s, from %s\n", name, pConfig.Region, pConfig.Provider)
 	}
 
 	hostRes, err := provisioner.Provision(*hostReq)
@@ -179,14 +175,14 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 Command:
   export UPSTREAM=http://127.0.0.1:8000
-  inlets client --remote "ws://%s:%d" \
+  inlets client --remote "ws://%s:%s" \
 	--token "%s" \
 	--upstream $UPSTREAM
 
 To Delete:
   inletsctl delete --provider %s --id "%s"
 `,
-					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken, provider, hostStatus.ID)
+					hostStatus.IP, inletsToken, hostStatus.IP, provision.ControlPort, inletsToken, pConfig.Provider, hostStatus.ID)
 				return nil
 			}
 
@@ -210,135 +206,6 @@ Command:
 	}
 
 	return err
-}
-
-func getProvisioner(provider, accessToken, secretKey, organisationID, region string) (provision.Provisioner, error) {
-	if provider == "digitalocean" {
-		return provision.NewDigitalOceanProvisioner(accessToken)
-	} else if provider == "packet" {
-		return provision.NewPacketProvisioner(accessToken)
-	} else if provider == "civo" {
-		return provision.NewCivoProvisioner(accessToken)
-	} else if provider == "scaleway" {
-		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
-	} else if provider == "gce" {
-		return provision.NewGCEProvisioner(accessToken)
-	} else if provider == "ec2" {
-		return provision.NewEC2Provisioner(region, accessToken, secretKey)
-	}
-	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
-}
-
-func generateAuth() (string, error) {
-	pwdRes, pwdErr := password.Generate(64, 10, 0, false, true)
-	return pwdRes, pwdErr
-}
-
-func createHost(provider, name, region, zone, projectID, userData, inletsPort string) (*provision.BasicHost, error) {
-	if provider == "digitalocean" {
-		return &provision.BasicHost{
-			Name:       name,
-			OS:         "ubuntu-16-04-x64",
-			Plan:       "512mb",
-			Region:     region,
-			UserData:   userData,
-			Additional: map[string]string{},
-		}, nil
-	} else if provider == "packet" {
-		return &provision.BasicHost{
-			Name:     name,
-			OS:       "ubuntu_16_04",
-			Plan:     "t1.small.x86",
-			Region:   region,
-			UserData: userData,
-			Additional: map[string]string{
-				"project_id": projectID,
-			},
-		}, nil
-	} else if provider == "scaleway" {
-		return &provision.BasicHost{
-			Name:       name,
-			OS:         "ubuntu-bionic",
-			Plan:       "DEV1-S",
-			Region:     region,
-			UserData:   userData,
-			Additional: map[string]string{},
-		}, nil
-	} else if provider == "civo" {
-		return &provision.BasicHost{
-			Name:       name,
-			OS:         "811a8dfb-8202-49ad-b1ef-1e6320b20497",
-			Plan:       "g2.small",
-			Region:     region,
-			UserData:   userData,
-			Additional: map[string]string{},
-		}, nil
-	} else if provider == "gce" {
-		return &provision.BasicHost{
-			Name:     name,
-			OS:       "projects/debian-cloud/global/images/debian-9-stretch-v20191121",
-			Plan:     "f1-micro",
-			Region:   "",
-			UserData: userData,
-			Additional: map[string]string{
-				"projectid":     projectID,
-				"zone":          zone,
-				"firewall-name": "inlets",
-				"firewall-port": inletsPort,
-			},
-		}, nil
-	} else if provider == "ec2" {
-		// Ubuntu images can be found here https://cloud-images.ubuntu.com/locator/ec2/
-		// Name is used in the OS field so the ami can be lookup up in the region specified
-		return &provision.BasicHost{
-			Name:     name,
-			OS:       "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20191114",
-			Plan:     "t3.nano",
-			Region:   region,
-			UserData: base64.StdEncoding.EncodeToString([]byte(userData)),
-			Additional: map[string]string{
-				"inlets-port": inletsPort,
-			},
-		}, nil
-	}
-
-	return nil, fmt.Errorf("no provisioner for provider: %q", provider)
-}
-
-func makeUserdata(authToken string, inletsControlPort int, remoteTCP string) string {
-
-	controlPort := fmt.Sprintf("%d", inletsControlPort)
-
-	if len(remoteTCP) == 0 {
-		return `#!/bin/bash
-export AUTHTOKEN="` + authToken + `"
-export CONTROLPORT="` + controlPort + `"
-curl -sLS https://get.inlets.dev | sh
-
-curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-operator.service  && \
-	mv inlets-operator.service /etc/systemd/system/inlets.service && \
-	echo "AUTHTOKEN=$AUTHTOKEN" > /etc/default/inlets && \
-	echo "CONTROLPORT=$CONTROLPORT" >> /etc/default/inlets && \
-	systemctl start inlets && \
-	systemctl enable inlets`
-	}
-
-	return `#!/bin/bash
-	export AUTHTOKEN="` + authToken + `"
-	export REMOTETCP="` + remoteTCP + `"
-	export IP=$(curl -sfSL https://ifconfig.co)
-	
-	curl -SLsf https://github.com/inlets/inlets-pro-pkg/releases/download/0.4.0/inlets-pro-linux > inlets-pro-linux && \
-	chmod +x ./inlets-pro-linux  && \
-	mv ./inlets-pro-linux /usr/local/bin/inlets-pro
-	
-	curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-pro.service  && \
-		mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
-		echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
-		echo "REMOTETCP=$REMOTETCP" >> /etc/default/inlets-pro && \
-		echo "IP=$IP" >> /etc/default/inlets-pro && \
-		systemctl start inlets-pro && \
-		systemctl enable inlets-pro`
 }
 
 func getFileOrString(flags *pflag.FlagSet, file, value string, required bool) (string, error) {

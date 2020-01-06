@@ -108,10 +108,6 @@ func (p *CivoProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 
 	log.Printf("Provisioning host with Civo\n")
 
-	if host.Region == "" {
-		host.Region = "lon1"
-	}
-
 	res, err := provisionCivoInstance(host, p.APIKey)
 
 	if err != nil {

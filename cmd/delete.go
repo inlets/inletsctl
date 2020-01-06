@@ -5,13 +5,15 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/inlets/inletsctl/pkg/provision"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	inletsCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
+	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, packet, scaleway, or civo")
 
 	deleteCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
 	deleteCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
@@ -37,26 +39,22 @@ var deleteCmd = &cobra.Command{
 }
 
 func runDelete(cmd *cobra.Command, _ []string) error {
-	provider, err := cmd.Flags().GetString("provider")
+	var pConfig provision.ProvisionerRequest
+	var err error
+	pConfig.Provider, err = cmd.Flags().GetString("provider")
 	if err != nil {
 		return errors.Wrap(err, "failed to get 'provider' value.")
 	}
 
-	fmt.Printf("Using provider: %s\n", provider)
+	fmt.Printf("Using provider: %s\n", pConfig.Provider)
 
-	var region string
 	if cmd.Flags().Changed("region") {
 		if regionVal, err := cmd.Flags().GetString("region"); len(regionVal) > 0 {
 			if err != nil {
 				return errors.Wrap(err, "failed to get 'region' value.")
 			}
-			region = regionVal
+			pConfig.Region = regionVal
 		}
-
-	} else if provider == "scaleway" {
-		region = "fr-par-1"
-	} else if provider == "ec2" {
-		region = "eu-west-1"
 	}
 
 	inletsToken, err := cmd.Flags().GetString("inlets-token")
@@ -65,39 +63,29 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	}
 	if len(inletsToken) == 0 {
 		var passwordErr error
-		inletsToken, passwordErr = generateAuth()
+		inletsToken, passwordErr = provision.GenerateAuth()
 
 		if passwordErr != nil {
 			return passwordErr
 		}
 	}
 
-	accessToken, err := getFileOrString(cmd.Flags(), "access-token-file", "access-token", true)
+	pConfig.AccessToken, err = getFileOrString(cmd.Flags(), "access-token-file", "access-token", true)
 	if err != nil {
 		return err
 	}
 
-	var secretKey string
-	var organisationID string
-	if provider == "scaleway" || provider == "ec2" {
-		var secretKeyErr error
-		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
-		if secretKeyErr != nil {
-			return secretKeyErr
+	if pConfig.Provider == provision.ScalewayProvider || pConfig.Provider == provision.EC2Provider {
+		pConfig.SecretKey, err = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
+		if err != nil {
+			return err
 		}
-
-		if provider == "scaleway" {
-			organisationID, _ = cmd.Flags().GetString("organisation-id")
-			if len(organisationID) == 0 {
+		if pConfig.Provider == provision.ScalewayProvider {
+			pConfig.OrganisationID, _ = cmd.Flags().GetString("organisation-id")
+			if len(pConfig.OrganisationID) == 0 {
 				return fmt.Errorf("--organisation-id cannot be empty")
 			}
 		}
-	}
-
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region)
-
-	if err != nil {
-		return err
 	}
 
 	hostID, _ := cmd.Flags().GetString("id")
@@ -106,7 +94,12 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("give a valid --id for your host")
 	}
 
-	fmt.Printf("Deleting host: %s from %s\n", hostID, provider)
+	provisioner, err := provision.NewProvisioner(pConfig)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Deleting host: %s from %s\n", hostID, pConfig.Provider)
 
 	err = provisioner.Delete(hostID)
 	if err != nil {

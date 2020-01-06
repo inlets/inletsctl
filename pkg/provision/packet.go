@@ -48,15 +48,12 @@ func (p *PacketProvisioner) Delete(id string) error {
 }
 
 func (p *PacketProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
-	if host.Region == "" {
-		host.Region = "ams1"
-	}
 
 	createReq := &packngo.DeviceCreateRequest{
 		Plan:         host.Plan,
 		Facility:     []string{host.Region},
 		Hostname:     host.Name,
-		ProjectID:    host.Additional["project_id"],
+		ProjectID:    host.ProjectID,
 		SpotInstance: false,
 		OS:           host.OS,
 		BillingCycle: "hourly",
