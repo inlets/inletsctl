@@ -146,6 +146,25 @@ inletsctl kfwd --if 192.168.0.14 --from openfaas-figlet:8080
 
 Then access the service via `http://127.0.0.1:8080`.
 
+
+## Downloading inlets or inlets-pro
+
+The `inletsctl download` command can be used to download the inlets or inltets-pro binaries from github
+
+Example usage:
+
+```sh
+# Download the latest inlets binary
+inletsctl download
+
+#Download the latest inlets-pro binary
+inletsctl download --pro
+
+# Download a specific version of inlets/inlets-pro
+inletsctl download --version 2.6.2
+```
+
+
 ## Contributing
 
 ### Add another cloud provisioner
