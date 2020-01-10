@@ -201,9 +201,12 @@ Command:
   inlets-pro client --connect "wss://%s:%d/connect" \
 	--token "%s" \
 	--license "$LICENSE" \
-	--tcp-ports 8000
+	--tcp-ports $TCP_PORTS
+
+To Delete:
+	  inletsctl delete --provider %s --id "%s"
 `,
-				hostStatus.IP, inletsToken, hostStatus.IP, proPort, inletsToken)
+				hostStatus.IP, inletsToken, hostStatus.IP, proPort, inletsToken, provider, hostStatus.ID)
 
 			return nil
 		}
