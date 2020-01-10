@@ -33,7 +33,13 @@ func (p *EC2Provisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		return nil, err
 	}
 
-	groupID, name, err := p.securityGroup(host.Additional["inlets-port"])
+	port, err := strconv.Atoi(host.Additional["inlets-port"])
+	if err != nil {
+		return nil, err
+	}
+	pro := host.Additional["pro"]
+
+	groupID, name, err := p.creteEC2SecurityGroup(port, pro)
 	if err != nil {
 		return nil, err
 	}
@@ -154,12 +160,10 @@ func (p *EC2Provisioner) Delete(id string) error {
 	return nil
 }
 
-// securityGroup creates a security group and ingress rule for the inlets port
-func (p *EC2Provisioner) securityGroup(port string) (*string, *string, error) {
-	targetPort, err := strconv.Atoi(port)
-	if err != nil {
-		return nil, nil, err
-	}
+// creteEC2SecurityGroup creates a security group for the exit-node
+func (p *EC2Provisioner) creteEC2SecurityGroup(controlPort int, pro string) (*string, *string, error) {
+	ports := []int{80, 443, controlPort}
+	proPorts := []int{1024,65535}
 	groupName := "inlets-" + uuid.New().String()
 	group, err := p.ec2Provisioner.CreateSecurityGroup(&ec2.CreateSecurityGroupInput{
 		Description: aws.String("inlets security group"),
@@ -169,22 +173,37 @@ func (p *EC2Provisioner) securityGroup(port string) (*string, *string, error) {
 		return nil, nil, err
 	}
 
-	_, err = p.ec2Provisioner.AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
-		CidrIp:     aws.String("0.0.0.0/0"),
-		FromPort:   aws.Int64(int64(targetPort)),
-		IpProtocol: aws.String("TCP"),
-		ToPort:     aws.Int64(int64(targetPort)),
-		GroupId:    group.GroupId,
-	})
-	if err != nil {
-		return nil, nil, err
+	for _, port := range ports {
+		err = p.createEC2SecurityGroupRule(*group.GroupId, port, port)
+		if err != nil {
+			return group.GroupId, &groupName, err
+		}
+	}
+	if pro == "true" {
+		err = p.createEC2SecurityGroupRule(*group.GroupId, proPorts[0], proPorts[1])
+		if err != nil {
+			return group.GroupId, &groupName, err
+		}
 	}
 
 	return group.GroupId, &groupName, nil
 }
 
-// lookupAMI gets the AMI ID that the exit node will use
+func (p *EC2Provisioner) createEC2SecurityGroupRule(groupID string, fromPort, toPort int) error {
+	_, err := p.ec2Provisioner.AuthorizeSecurityGroupIngress(&ec2.AuthorizeSecurityGroupIngressInput{
+		CidrIp:     aws.String("0.0.0.0/0"),
+		FromPort:   aws.Int64(int64(fromPort)),
+		IpProtocol: aws.String("tcp"),
+		ToPort:     aws.Int64(int64(toPort)),
+		GroupId:    aws.String(groupID),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+// lookupAMI gets the AMI ID that the exit node will use
 func (p *EC2Provisioner) lookupAMI(name string) (*string, error) {
 	images, err := p.ec2Provisioner.DescribeImages(&ec2.DescribeImagesInput{
 		Filters: []*ec2.Filter{
