@@ -132,6 +132,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	remoteTCP, _ := cmd.Flags().GetString("remote-tcp")
+	var pro bool
+	if len(remoteTCP) > 0 {
+		pro = true
+	}
+
 
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
 
@@ -141,7 +146,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	projectID, _ := cmd.Flags().GetString("project-id")
 
-	hostReq, err := createHost(provider, name, region, zone, projectID, userData, strconv.Itoa(inletsControlPort))
+	hostReq, err := createHost(provider, name, region, zone, projectID, userData, strconv.Itoa(inletsControlPort), pro)
 	if err != nil {
 		return err
 	}
@@ -172,7 +177,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			i+1, max, hostStatus.ID, hostStatus.Status)
 
 		if hostStatus.Status == "active" {
-			if len(remoteTCP) == 0 {
+			if !pro {
 				fmt.Printf(`Inlets OSS exit-node summary:
   IP: %s
   Auth-token: %s
@@ -184,7 +189,7 @@ Command:
 	--upstream $UPSTREAM
 
 To Delete:
-  inletsctl delete --provider %s --id "%s"
+	inletsctl delete --provider %s --id "%s"
 `,
 					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken, provider, hostStatus.ID)
 				return nil
@@ -201,9 +206,12 @@ Command:
   inlets-pro client --connect "wss://%s:%d/connect" \
 	--token "%s" \
 	--license "$LICENSE" \
-	--tcp-ports 8000
+	--tcp-ports $TCP_PORTS
+
+To Delete:
+	  inletsctl delete --provider %s --id "%s"
 `,
-				hostStatus.IP, inletsToken, hostStatus.IP, proPort, inletsToken)
+				hostStatus.IP, inletsToken, hostStatus.IP, proPort, inletsToken, provider, hostStatus.ID)
 
 			return nil
 		}
@@ -234,7 +242,7 @@ func generateAuth() (string, error) {
 	return pwdRes, pwdErr
 }
 
-func createHost(provider, name, region, zone, projectID, userData, inletsPort string) (*provision.BasicHost, error) {
+func createHost(provider, name, region, zone, projectID, userData, inletsPort string, pro bool) (*provision.BasicHost, error) {
 	if provider == "digitalocean" {
 		return &provision.BasicHost{
 			Name:       name,
@@ -298,6 +306,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			UserData: base64.StdEncoding.EncodeToString([]byte(userData)),
 			Additional: map[string]string{
 				"inlets-port": inletsPort,
+				"pro": fmt.Sprint(pro),
 			},
 		}, nil
 	}
