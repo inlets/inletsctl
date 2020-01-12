@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -12,6 +13,7 @@ import (
 func init() {
 	inletsCmd.AddCommand(deleteCmd)
 	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
+	deleteCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 
 	deleteCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
 	deleteCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
