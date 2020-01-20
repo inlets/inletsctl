@@ -30,7 +30,8 @@ func init() {
 var kfwdCmd = &cobra.Command{
 	Use:   "kfwd",
 	Short: "Forward a Kubernetes service to the local machine",
-	Long:  `Forward a Kubernetes service to the local machine`,
+	Long: `Forward a Kubernetes service to the local machine using the --if flag to 
+specify an ethernet address accessible from within the Kubernetes cluster`,
 	Example: `  inletsctl kfwd --from test-app-expressjs-k8s:8080
   inletsctl kfwd --from test-app-expressjs-k8s:8080 --if 192.168.0.14
 `,

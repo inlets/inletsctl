@@ -31,11 +31,11 @@ var inletsCmd = &cobra.Command{
 	Use:   "inletsctl",
 	Short: "Create exit nodes for use with inlets.",
 	Long: `
-inletsctl can create exit nodes for you on your preferred cloud provider
-so that you can run a single command and then connect with your inlets
-client.
+inletsctl automates the task of creating an exit-node on cloud infrastructure.
+Once provisioned, you'll receive a command to connect with. You can use this 
+tool whether you want to use inlets or inlets-pro for L4 TCP.
 
-See also: inlets-operator for Kubernetes and inlets-pro for TCP tunnelling.
+See also: inlets-operator which does the same job, but for Kubernetes services.
 `,
 	Run: runInlets,
 }

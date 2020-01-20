@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +9,8 @@ import (
 	"path"
 	"runtime"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -30,7 +31,9 @@ var downloadCmd = &cobra.Command{
 	Use:   "download",
 	Short: "Download the inlets or inlets pro binary",
 	Long:  `Download the inlets or inlets pro binary`,
-	Example: `  inletsctl download 
+	Example: `  inletsctl download
+	inletsctl download --pro
+	inletsctl download --version 0.2.6 
 `,
 	RunE:          downloadInlets,
 	SilenceUsage:  true,

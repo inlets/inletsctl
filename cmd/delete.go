@@ -15,7 +15,6 @@ func init() {
 	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
 	deleteCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 
-	deleteCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
 	deleteCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
 	deleteCmd.Flags().StringP("access-token-file", "f", "", "Read this file for the access token for your cloud")
 
@@ -26,13 +25,15 @@ func init() {
 	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
 }
 
-// clientCmd represents the client sub command.
+// deleteCmd represents the client sub command
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete an exit node",
-	Long: `Delete an exit node
-
-  Example: inletsctl delete --provider digitalocean --id abczsef`,
+	Long: `Delete an exit node created at an earlier time by inletsctl using an API 
+key for your cloud host.`,
+	Example: `  inletsctl delete --provider digitalocean --id 1235678
+	inletsctl delete --access-token-file $HOME/access-token --region lon1
+`,
 	RunE:          runDelete,
 	SilenceUsage:  true,
 	SilenceErrors: true,

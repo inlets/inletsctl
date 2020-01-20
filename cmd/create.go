@@ -26,7 +26,7 @@ func init() {
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
-	createCmd.Flags().StringP("inlets-token", "t", "", "The inlets auth token for your exit node")
+	createCmd.Flags().StringP("inlets-token", "t", "", "The auth token for the inlets server on your new exit-node, leave blank to auto-generate")
 	createCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
 	createCmd.Flags().StringP("access-token-file", "f", "", "Read this file for the access token for your cloud")
 
@@ -37,16 +37,23 @@ func init() {
 
 	createCmd.Flags().StringP("remote-tcp", "c", "", `Remote host for inlets-pro to use for forwarding TCP connections`)
 
-	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds")
+	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 }
 
 // clientCmd represents the client sub command.
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create an exit node",
-	Long: `Create an exit node on your preferred cloud
+	Short: "Create an exit node on cloud infrastructure",
+	Long: `Create an exit node on cloud infrastructure. The estimated cost of each VM 
+along with what OS version and spec will be used is explained in the README.
+`,
+	Example: `  inletsctl create  \
+	--provider [digitalocean|packet|ec2|scaleway|civo|gce] \
+	--access-token-file $HOME/access-token \
+	--region lon1
 
-  Example: inletsctl create --provider digitalocean`,
+  # For inlets-pro, give the --remote-tcp flag
+  inletsctl create --remote-tcp 192.168.0.100`,
 	RunE:          runCreate,
 	SilenceUsage:  true,
 	SilenceErrors: true,
