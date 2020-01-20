@@ -55,6 +55,18 @@ Inlets is [listed on the Cloud Native Landscape](https://landscape.cncf.io/categ
 * [inlets-operator](https://github.com/inlets/inlets-operator) - deep integration for inlets in Kubernetes, expose Service type LoadBalancer
 * [inletsctl](https://github.com/inlets/inletsctl) - CLI tool to provision exit-nodes for use with inlets or inlets-pro
 
+## How much will this cost?
+
+The `inletsctl create` command will provision a cloud host with the provider and region of your choice and then start running `inlets server`. The host is configured with the standard VM image for Ubuntu or Debian Linux and inlets is installed via userdata/cloud-init.
+
+The [provision](https://github.com/inlets/inletsctl/tree/master/pkg/provision) package contains defaults for OS images to use and for cloud host plans and sizing. You'll find all available options on `inletsctl create --help`
+
+The cost for cloud hosts varies depending on a number of factors such as the region, bandwidth used, and so forth. A rough estimation is that it could cost around 5 USD / month to host a VM on for DigitalOcean, Civo, or Scaleway. The VM is required to provide your public IP. Some hosting providers supply credits and a free-tier such as GCE and AWS.
+
+See the pricing grid on the [inlets-operator](https://github.com/inlets/inlets-operator#provider-pricing) for a detailed breakdown.
+
+inletsctl does not automatically delete your exit nodes (read cloud hosts), so you'll need to do that in your dashboard or via `inletsctl delete` when you are done.
+
 ## Install `inletsctl`
 
 ```sh
@@ -68,10 +80,6 @@ curl -sLSf https://inletsctl.inlets.dev | sudo sh
 ```
 
 Windows users are encouraged to use [git bash](https://git-scm.com/downloads) to install the inletsctl binary.
-
-## Costs for exit-nodes
-
-See notes for [inlets-operator](https://github.com/inlets/inlets-operator#provider-pricing)
 
 ## Examples for `inletsctl create`
 
