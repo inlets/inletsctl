@@ -1,6 +1,11 @@
 # inletsctl
 
 [![Build Status](https://travis-ci.org/inlets/inletsctl.svg?branch=master)](https://travis-ci.org/inlets/inletsctl)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Report Card](https://goreportcard.com/badge/github.com/inlets/inletsctl)](https://goreportcard.com/report/github.com/inlets/inletsctl)
+[![Documentation](https://godoc.org/github.com/inlets/inletsctl?status.svg)](http://godoc.org/github.com/inlets/inletsctl) [![Derek App](https://alexellis.o6s.io/badge?owner=inlets&repo=inletsctl)](https://github.com/alexellis/derek/)
+
+<!-- ![GitHub All Releases](https://img.shields.io/github/downloads/inlets/inletsctl/total) -->
 
 **Conceptual diagram**
 
