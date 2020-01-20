@@ -7,6 +7,12 @@
 
 <!-- ![GitHub All Releases](https://img.shields.io/github/downloads/inlets/inletsctl/total) -->
 
+inletsctl automates the task of creating an exit-node on cloud infrastructure.
+Once provisioned, you'll receive a command to connect with. You can use this 
+tool whether you want to use inlets or inlets-pro for L4 TCP.
+
+It needs to exist as a separate binary and CLI, so that the core inlets tool does not become bloated. The EC2 and AWS SDKs for Golang are very heavy-weight and result in a binary of over 30MB vs the small and nimble inlets and inlets-pro binaries.
+
 **Conceptual diagram**
 
 ![Webhook example with Inlets OSS](https://blog.alexellis.io/content/images/2019/09/inletsio--2-.png)
