@@ -17,6 +17,7 @@ var (
 	inletsPro       bool
 	downloadVersion string
 	destination     string
+	verbose         bool
 )
 
 func init() {
@@ -25,6 +26,8 @@ func init() {
 	downloadCmd.Flags().BoolVar(&inletsPro, "pro", false, "Download inlets pro")
 	downloadCmd.Flags().StringVar(&downloadVersion, "version", "", "specific version to download")
 	downloadCmd.Flags().StringVar(&destination, "download-to", "/usr/local/bin", "location to download to (Default: /usr/local/bin)")
+	downloadCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show download URL")
+
 }
 
 var downloadCmd = &cobra.Command{
@@ -57,21 +60,7 @@ func downloadInlets(_ *cobra.Command, _ []string) error {
 	osVal := runtime.GOOS
 	arch := runtime.GOARCH
 
-	extension := ""
-
-	if osVal == "windows" {
-		extension = ".exe"
-	}
-
-	if arch == "arm" {
-		arch = "armhf"
-	}
-
-	if arch == "amd64" {
-		arch = ""
-	} else {
-		arch = "-" + arch
-	}
+	arch, extension := buildFilename(arch, osVal)
 
 	if len(downloadVersion) == 0 {
 		var err error
@@ -82,6 +71,9 @@ func downloadInlets(_ *cobra.Command, _ []string) error {
 	}
 
 	url := downloadUrl + downloadVersion + "/" + binaryName + arch + extension
+	if verbose {
+		fmt.Printf("URL: %s.\n", url)
+	}
 	fmt.Printf("Starting download of %s %s, this could take a few moments.\n", binaryName, downloadVersion)
 	output, err := downloadBinary(http.DefaultClient, url, binaryName)
 
@@ -214,4 +206,25 @@ func moveFile(source, destination string) (error, bool) {
 		return err, false
 	}
 	return nil, false
+}
+
+func buildFilename(arch, osVal string) (string, string) {
+	extension := ""
+
+	if osVal == "windows" {
+		extension = ".exe"
+	}
+
+	if arch == "arm" {
+		arch = "armhf"
+	}
+
+	if osVal == "darwin" {
+		arch = "-" + osVal
+	} else if arch == "amd64" {
+		arch = ""
+	} else {
+		arch = "-" + arch
+	}
+	return arch, extension
 }
