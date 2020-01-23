@@ -24,6 +24,7 @@ const WelcomeMessage = "Welcome to inletsctl! Find out more at https://github.co
 
 func init() {
 	inletsCmd.AddCommand(versionCmd)
+	inletsCmd.AddCommand(makeUpdate())
 }
 
 // inletsCmd represents the base command when called without any sub commands.
