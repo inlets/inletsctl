@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/inlets/inletsctl/pkg/env"
 
 	"github.com/inlets/inletsctl/pkg/provision"
 	"github.com/pkg/errors"
@@ -67,7 +68,11 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 		region = "eu-west-1"
 	}
 
-	accessToken, err := getFileOrString(cmd.Flags(), "access-token-file", "access-token", true)
+	accessToken, err := env.GetRequiredFileOrString(cmd.Flags(),
+		"access-token-file",
+		"access-token",
+		"INLETS_ACCESS_TOKEN",
+	)
 	if err != nil {
 		return err
 	}
@@ -76,7 +81,11 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	var organisationID string
 	if provider == "scaleway" || provider == "ec2" {
 		var secretKeyErr error
-		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
+		secretKey, secretKeyErr = env.GetRequiredFileOrString(cmd.Flags(),
+			"secret-key-file",
+			"secret-key",
+			"INLETS_SECRET_KEY",
+		)
 		if secretKeyErr != nil {
 			return secretKeyErr
 		}
