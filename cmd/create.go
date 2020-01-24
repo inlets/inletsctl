@@ -6,15 +6,16 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/inlets/inletsctl/pkg/env"
 	"strconv"
 	"strings"
 	"time"
 
-	names "github.com/inlets/inletsctl/pkg/names"
-	provision "github.com/inlets/inletsctl/pkg/provision"
+	"github.com/inlets/inletsctl/pkg/names"
+	"github.com/inlets/inletsctl/pkg/provision"
 
 	"github.com/pkg/errors"
-	password "github.com/sethvargo/go-password/password"
+	"github.com/sethvargo/go-password/password"
 	"github.com/spf13/cobra"
 )
 
@@ -90,7 +91,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		poll = pollOverride
 	}
 
-	accessToken, err := getFileOrString(cmd.Flags(), "access-token-file", "access-token", true)
+	accessToken, err := env.GetRequiredFileOrString(cmd.Flags(),
+		"access-token-file",
+		"access-token",
+		"INLETS_ACCESS_TOKEN",
+	)
 	if err != nil {
 		return err
 	}
@@ -122,7 +127,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	if provider == "scaleway" || provider == "ec2" {
 
 		var secretKeyErr error
-		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
+		secretKey, secretKeyErr = env.GetRequiredFileOrString(cmd.Flags(),
+			"secret-key-file",
+			"secret-key",
+			"INLETS_SECRET_KEY",
+		)
 		if secretKeyErr != nil {
 			return secretKeyErr
 		}

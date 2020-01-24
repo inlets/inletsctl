@@ -50,11 +50,11 @@ Completed:
 * [x] Provisioner: AWS EC2
 * [x] `inletsctl delete` command
 * [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
+* [x] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
 
 Pending:
 
 * [ ] Enable `inletsctl delete` via `--ip` vs. instance ID [#2](https://github.com/inlets/inletsctl/issues/2)
-* [ ] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
 * [ ] Enable `inlets-pro` and TCP with `inletsctl kfwd` [#13](https://github.com/inlets/inletsctl/issues/13)
 * [ ] Generate systemd unit files for tunnels
 
@@ -190,6 +190,32 @@ inletsctl download --pro
 
 # Download a specific version of inlets/inlets-pro
 inletsctl download --version 2.6.2
+```
+
+## Configuration using environment variables
+
+You may want to set an environment variable that points at your `access-token-file` or `secret-key-file`
+
+Inlets will look for the following:
+
+```sh
+# For providers that use --access-token-file
+INLETS_ACCESS_TOKEN
+
+
+# For providers that use --secret-key-file
+INLETS_SECRET_KEY
+
+```
+With the correct one of these set you wont need to add the flag on every command execution. 
+
+You can set the following syntax in your `bashrc` (or equivalent for your shell)
+
+```sh
+export INLETS_ACCESS_TOKEN=$(cat my-token.txt)
+
+# or set the INLETS_SECRET_KEY for those providors that use this
+export INLETS_SECRET_KEY=$(cat my-token.txt)
 ```
 
 

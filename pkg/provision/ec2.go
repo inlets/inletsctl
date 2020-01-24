@@ -232,7 +232,7 @@ func (p *EC2Provisioner) lookupID(request HostDeleteRequest) (string, error) {
 // creteEC2SecurityGroup creates a security group for the exit-node
 func (p *EC2Provisioner) creteEC2SecurityGroup(controlPort int, pro string) (*string, *string, error) {
 	ports := []int{80, 443, controlPort}
-	proPorts := []int{1024,65535}
+	proPorts := []int{1024, 65535}
 	groupName := "inlets-" + uuid.New().String()
 	group, err := p.ec2Provisioner.CreateSecurityGroup(&ec2.CreateSecurityGroupInput{
 		Description: aws.String("inlets security group"),
