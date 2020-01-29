@@ -47,15 +47,16 @@ Completed:
 * [x] Provisioner: Civo.com support
 * [x] Provisioner: Google Cloud
 * [x] Provisioner: Packet.com
+* [x] Provisioner: AWS EC2
 * [x] `inletsctl delete` command
 * [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
 
 Pending:
 
-* [ ] Provisioner: AWS EC2
 * [ ] Enable `inletsctl delete` via `--ip` vs. instance ID [#2](https://github.com/inlets/inletsctl/issues/2)
 * [ ] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
 * [ ] Enable `inlets-pro` and TCP with `inletsctl kfwd` [#13](https://github.com/inlets/inletsctl/issues/13)
+* [ ] Generate systemd unit files for tunnels
 
 ### Related projects
 
