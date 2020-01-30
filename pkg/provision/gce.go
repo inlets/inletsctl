@@ -164,10 +164,10 @@ func (p *GCEProvisioner) createInletsFirewallRule(projectID string, firewallRule
 
 // Delete deletes the GCE exit node
 func (p *GCEProvisioner) Delete(request HostDeleteRequest) error {
-	var instanceName string
+	var instanceName, projectID string
 	var err error
 	if len(request.ID) > 0 {
-		instanceName, _, _, err = getGCEFieldsFromID(request.ID)
+		instanceName, _, projectID, err = getGCEFieldsFromID(request.ID)
 		if err != nil {
 			return err
 		}
@@ -176,12 +176,15 @@ func (p *GCEProvisioner) Delete(request HostDeleteRequest) error {
 		if err != nil {
 			return err
 		}
-		instanceName, _, _, err = getGCEFieldsFromID(inletID)
+		instanceName, _, projectID, err = getGCEFieldsFromID(inletID)
 		if err != nil {
 			return err
 		}
 	}
-	_, err = p.gceProvisioner.Instances.Delete(request.ProjectID, request.Zone, instanceName).Do()
+	if len(request.ProjectID) > 0 {
+		projectID = request.ProjectID
+	}
+	_, err = p.gceProvisioner.Instances.Delete(projectID, request.Zone, instanceName).Do()
 	if err != nil {
 		return fmt.Errorf("could not delete the GCE instance: %v", err)
 	}
