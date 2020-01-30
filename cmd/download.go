@@ -48,8 +48,8 @@ func downloadInlets(_ *cobra.Command, _ []string) error {
 	var versionUrl, downloadUrl, binaryName string
 
 	if inletsPro {
-		versionUrl = "https://github.com/inlets/inlets-pro-pkg/releases/latest"
-		downloadUrl = "https://github.com/inlets/inlets-pro-pkg/releases/download/"
+		versionUrl = "https://github.com/inlets/inlets-pro/releases/latest"
+		downloadUrl = "https://github.com/inlets/inlets-pro/releases/download/"
 		binaryName = "inlets-pro"
 	} else {
 		versionUrl = "https://github.com/inlets/inlets/releases/latest"
