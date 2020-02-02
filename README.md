@@ -219,6 +219,25 @@ inletsctl kfwd --if 192.168.0.14 --from openfaas-figlet:8080
 
 Then access the service via `http://127.0.0.1:8080`.
 
+### Example usage with Azure
+
+Generate Azure auth file 
+```sh
+az ad sp create-for-rbac --sdk-auth > ~/Downloads/client_credentials.json
+```
+
+Create
+```sh
+inletsctl create --provider=azure --subscription-id=4d68ee0c-7079-48d2-b15c-f294f9b11a9e \
+  --region=eastus --access-token-file=~/Downloads/client_credentials.json 
+```
+
+Delete
+```sh
+inletsctl delete --provider=azure --id inlets-clever-volhard8 \
+  --subscription-id=4d68ee0c-7079-48d2-b15c-f294f9b11a9e \
+  --region=eastus --access-token-file=~/Downloads/client_credentials.json
+```
 
 ## Downloading inlets or inlets-pro
 

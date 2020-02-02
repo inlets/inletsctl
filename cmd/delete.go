@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/inlets/inletsctl/pkg/env"
+	"os"
 
 	"github.com/inlets/inletsctl/pkg/provision"
 	"github.com/pkg/errors"
@@ -28,6 +29,7 @@ func init() {
 	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
 	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
 	deleteCmd.Flags().String("project-id", "", "Project ID (Packet.com, Google Compute Engine)")
+	deleteCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
 }
 
@@ -98,7 +100,17 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region)
+	var subscriptionID string
+	if provider == "azure" {
+		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
+		authFile, _ := cmd.Flags().GetString("access-token-file")
+		err = os.Setenv("AZURE_AUTH_LOCATION", authFile)
+		if err != nil {
+			return err
+		}
+	}
+
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID)
 
 	if err != nil {
 		return err
