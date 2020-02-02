@@ -6,6 +6,7 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +28,7 @@ func init() {
 
 	inletsCmd.AddCommand(createCmd)
 
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, or civo")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
@@ -39,6 +40,7 @@ func init() {
 	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
 	createCmd.Flags().String("project-id", "", "Project ID (Packet.com, Google Compute Engine)")
+	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
 	createCmd.Flags().StringP("remote-tcp", "c", "", `Remote host for inlets-pro to use for forwarding TCP connections`)
 
@@ -53,7 +55,7 @@ var createCmd = &cobra.Command{
 along with what OS version and spec will be used is explained in the README.
 `,
 	Example: `  inletsctl create  \
-	--provider [digitalocean|packet|ec2|scaleway|civo|gce] \
+	--provider [digitalocean|packet|ec2|scaleway|civo|gce|azure] \
 	--access-token-file $HOME/access-token \
 	--region lon1
 
@@ -149,7 +151,17 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region)
+	var subscriptionID string
+	if provider == "azure" {
+		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
+		authFile, _ := cmd.Flags().GetString("access-token-file")
+		err = os.Setenv("AZURE_AUTH_LOCATION", authFile)
+		if err != nil {
+			return err
+		}
+	}
+
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID)
 
 	if err != nil {
 		return err
@@ -238,7 +250,7 @@ To Delete:
 	return err
 }
 
-func getProvisioner(provider, accessToken, secretKey, organisationID, region string) (provision.Provisioner, error) {
+func getProvisioner(provider, accessToken, secretKey, organisationID, region string, subscriptionID string) (provision.Provisioner, error) {
 	if provider == "digitalocean" {
 		return provision.NewDigitalOceanProvisioner(accessToken)
 	} else if provider == "packet" {
@@ -251,6 +263,8 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region str
 		return provision.NewGCEProvisioner(accessToken)
 	} else if provider == "ec2" {
 		return provision.NewEC2Provisioner(region, accessToken, secretKey)
+	} else if provider == "azure" {
+		return provision.NewAzureProvisioner(subscriptionID)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }
@@ -326,6 +340,22 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			Additional: map[string]string{
 				"inlets-port": inletsPort,
 				"pro":         fmt.Sprint(pro),
+			},
+		}, nil
+	} else if provider == "azure" {
+		return &provision.BasicHost{
+			Name:     name,
+			OS:       "Additional.imageOffer",
+			Plan:     "Standard_B1ls",
+			Region:   region,
+			UserData: userData,
+			Additional: map[string]string{
+				"inlets-port":    inletsPort,
+				"pro":            fmt.Sprint(pro),
+				"imagePublisher": "Canonical",
+				"imageOffer":     "UbuntuServer",
+				"imageSku":       "18.04-LTS",
+				"imageVersion":   "latest",
 			},
 		}, nil
 	}
