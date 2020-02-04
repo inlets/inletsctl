@@ -343,6 +343,9 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			},
 		}, nil
 	} else if provider == "azure" {
+		// Ubuntu images can be found here https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cli-ps-findimage#list-popular-images
+		// An image includes more than one property, it has publisher, offer, sku and version.
+		// So they have to be in "Additional" instead of just "OS".
 		return &provision.BasicHost{
 			Name:     name,
 			OS:       "Additional.imageOffer",
@@ -354,7 +357,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"pro":            fmt.Sprint(pro),
 				"imagePublisher": "Canonical",
 				"imageOffer":     "UbuntuServer",
-				"imageSku":       "18.04-LTS",
+				"imageSku":       "16.04-LTS",
 				"imageVersion":   "latest",
 			},
 		}, nil
