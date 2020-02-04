@@ -191,7 +191,7 @@ inletsctl download --version 2.6.2
 
 Add a provisioner by sending a PR to the [inlets-operator's provision package](https://github.com/inlets/inlets-operator/tree/master/pkg/provision), once released, you can vendor the package here and add any flags that are required.
 
-> Note: only clouds that support cloud-init can be added
+> Note: only providers and platforms which support cloud-init's user-data scripts are supported.
 
 ### License
 
