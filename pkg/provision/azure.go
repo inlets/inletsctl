@@ -40,19 +40,20 @@ func (p *AzureProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	p.resourceGroupName = "inlets-" + host.Name
 	p.deploymentName = "inlets-deploy-" + uuid.New().String()
 
+	log.Printf("Creating resource group %s", p.resourceGroupName)
 	group, err := createGroup(p, host)
 	if err != nil {
-		log.Fatalf("failed to create group: %v", err)
+		return nil, err
 	}
-	log.Printf("Group created %s", *group.Name)
+	log.Printf("Resource group created %s", *group.Name)
 
-	deployment, err := createDeployment(p, host)
-	log.Printf("SSH User: inletsuser / '%s'", host.Additional["adminPassword"])
+	log.Printf("Creating deployment %s", p.deploymentName)
+	err = createDeployment(p, host)
 	if err != nil {
-		log.Fatalf("failed to create group: %v", err)
+		return nil, err
 	}
 	return &ProvisionedHost{
-		IP:     deployment.Properties.Outputs.(map[string]interface{})["publicIP"].(map[string]interface{})["value"].(string),
+		IP:     "Creating",
 		ID:     p.resourceGroupName,
 		Status: ActiveStatus,
 	}, nil
@@ -63,18 +64,24 @@ func (p *AzureProvisioner) Status(id string) (*ProvisionedHost, error) {
 	deploymentsClient := resources.NewDeploymentsClient(p.subscriptionId)
 	deploymentsClient.Authorizer = p.authorizer
 	deployment, err := deploymentsClient.Get(p.ctx, p.resourceGroupName, p.deploymentName)
-	var deploymentStatus string
 	if err != nil {
-		log.Fatalf("failed to get deployment: %v", err)
+		return nil, err
 	}
+	var deploymentStatus string
 	if *deployment.Properties.ProvisioningState == "Succeeded" {
 		deploymentStatus = ActiveStatus
 	} else {
 		deploymentStatus = *deployment.Properties.ProvisioningState
+		if deploymentStatus == "Running" {
+			deploymentStatus = "deploying"
+		}
 	}
-
+	IP := "Creating"
+	if deploymentStatus == ActiveStatus {
+		IP = deployment.Properties.Outputs.(map[string]interface{})["publicIP"].(map[string]interface{})["value"].(string)
+	}
 	return &ProvisionedHost{
-		IP:     deployment.Properties.Outputs.(map[string]interface{})["publicIP"].(map[string]interface{})["value"].(string),
+		IP:     IP,
 		ID:     id,
 		Status: deploymentStatus,
 	}, nil
@@ -86,15 +93,14 @@ func (p *AzureProvisioner) Delete(request HostDeleteRequest) error {
 	groupsClient.Authorizer = p.authorizer
 	groupDeleteFuture, err := groupsClient.Delete(p.ctx, request.ID)
 	if err != nil {
-		log.Fatalf("failed to delete group: %v", err)
-	}
-	log.Printf("Waiting for deletion completion (~10 mins)...")
-	err = groupDeleteFuture.Future.WaitForCompletionRef(p.ctx, groupsClient.BaseClient.Client)
-	if err != nil {
-		log.Fatalf("failed to wait deletion: %v", err)
 		return err
 	}
-	log.Printf("Done deleting resources...")
+	log.Printf("Waiting for deletion completion (~10 mins)")
+	err = groupDeleteFuture.Future.WaitForCompletionRef(p.ctx, groupsClient.BaseClient.Client)
+	if err != nil {
+		return err
+	}
+	log.Printf("Done deleting resources")
 	_, err = groupDeleteFuture.Result(groupsClient)
 	return err
 }
@@ -299,7 +305,6 @@ func getTemplate(host BasicHost) map[string]interface{} {
 func getParameters(p *AzureProvisioner, host BasicHost) (parameters map[string]interface{}, err error) {
 	adminPassword, err := password.Generate(16, 4, 0, false, true)
 	if err != nil {
-		log.Fatalf("failed to create password: %v", err)
 		return
 	}
 	host.Additional["adminPassword"] = adminPassword
@@ -345,17 +350,16 @@ func getParameters(p *AzureProvisioner, host BasicHost) (parameters map[string]i
 	}, nil
 }
 
-func createDeployment(p *AzureProvisioner, host BasicHost) (deployment resources.DeploymentExtended, err error) {
+func createDeployment(p *AzureProvisioner, host BasicHost) (err error) {
 	template := getTemplate(host)
 	params, err := getParameters(p, host)
 	if err != nil {
-		log.Fatalf("failed to create deployment: %v", err)
 		return
 	}
 	deploymentsClient := resources.NewDeploymentsClient(p.subscriptionId)
 	deploymentsClient.Authorizer = p.authorizer
 
-	deploymentFuture, err := deploymentsClient.CreateOrUpdate(
+	_, err = deploymentsClient.CreateOrUpdate(
 		p.ctx,
 		p.resourceGroupName,
 		p.deploymentName,
@@ -367,16 +371,5 @@ func createDeployment(p *AzureProvisioner, host BasicHost) (deployment resources
 			},
 		},
 	)
-	if err != nil {
-		log.Fatalf("failed to create deployment: %v", err)
-		return
-	}
-
-	log.Printf("Waiting for deployment completion...")
-	err = deploymentFuture.Future.WaitForCompletionRef(p.ctx, deploymentsClient.BaseClient.Client)
-	if err != nil {
-		log.Fatalf("failed to wait deployment: %v", err)
-		return
-	}
-	return deploymentFuture.Result(deploymentsClient)
+	return
 }
