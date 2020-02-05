@@ -6,7 +6,6 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
@@ -17,11 +16,15 @@ import (
 	"github.com/pkg/errors"
 	password "github.com/sethvargo/go-password/password"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
+const inletsControlPort = 8080
+const inletsProControlPort = 8123
+
 func init() {
+
 	inletsCmd.AddCommand(createCmd)
+
 	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, packet, scaleway, or civo")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
@@ -144,10 +147,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		pro = true
 	}
 
-
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
-
-	inletsControlPort := 8080
 
 	userData := makeUserdata(inletsToken, inletsControlPort, remoteTCP)
 
@@ -202,7 +202,6 @@ To Delete:
 				return nil
 			}
 
-			proPort := 8123
 			fmt.Printf(`inlets-pro exit-node summary:
   IP: %s
   Auth-token: %s
@@ -218,7 +217,7 @@ Command:
 To Delete:
 	  inletsctl delete --provider %s --id "%s"
 `,
-				hostStatus.IP, inletsToken, hostStatus.IP, proPort, inletsToken, provider, hostStatus.ID)
+				hostStatus.IP, inletsToken, hostStatus.IP, inletsProControlPort, inletsToken, provider, hostStatus.ID)
 
 			return nil
 		}
@@ -313,7 +312,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			UserData: base64.StdEncoding.EncodeToString([]byte(userData)),
 			Additional: map[string]string{
 				"inlets-port": inletsPort,
-				"pro": fmt.Sprint(pro),
+				"pro":         fmt.Sprint(pro),
 			},
 		}, nil
 	}
@@ -332,52 +331,27 @@ export CONTROLPORT="` + controlPort + `"
 curl -sLS https://get.inlets.dev | sh
 
 curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-operator.service  && \
-	mv inlets-operator.service /etc/systemd/system/inlets.service && \
-	echo "AUTHTOKEN=$AUTHTOKEN" > /etc/default/inlets && \
-	echo "CONTROLPORT=$CONTROLPORT" >> /etc/default/inlets && \
-	systemctl start inlets && \
-	systemctl enable inlets`
+  mv inlets-operator.service /etc/systemd/system/inlets.service && \
+  echo "AUTHTOKEN=$AUTHTOKEN" > /etc/default/inlets && \
+  echo "CONTROLPORT=$CONTROLPORT" >> /etc/default/inlets && \
+  systemctl start inlets && \
+  systemctl enable inlets`
 	}
 
 	return `#!/bin/bash
-	export AUTHTOKEN="` + authToken + `"
-	export REMOTETCP="` + remoteTCP + `"
-	export IP=$(curl -sfSL https://ifconfig.co)
-	
-	curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.4.3/inlets-pro > /tmp/inlets-pro && \
-	chmod +x /tmp/inlets-pro  && \
-	mv /tmp/inlets-pro /usr/local/bin/inlets-pro
-	
-	curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-pro.service  && \
-		mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
-		echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
-		echo "REMOTETCP=$REMOTETCP" >> /etc/default/inlets-pro && \
-		echo "IP=$IP" >> /etc/default/inlets-pro && \
-		systemctl start inlets-pro && \
-		systemctl enable inlets-pro`
-}
+export AUTHTOKEN="` + authToken + `"
+export REMOTETCP="` + remoteTCP + `"
+export IP=$(curl -sfSL https://ifconfig.co)
 
-func getFileOrString(flags *pflag.FlagSet, file, value string, required bool) (string, error) {
-	var val string
-	fileVal, _ := flags.GetString(file)
-	if len(fileVal) > 0 {
-		res, err := ioutil.ReadFile(fileVal)
-		if err != nil {
-			return "", err
-		}
-		val = strings.TrimSpace(string(res))
-	} else {
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.4.3/inlets-pro > /tmp/inlets-pro && \
+  chmod +x /tmp/inlets-pro  && \
+  mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
-		flagVal, err := flags.GetString(value)
-		if err != nil {
-			return "", errors.Wrap(err, "failed to get '"+value+"' value.")
-		}
-		val = flagVal
-	}
-
-	if required && len(val) == 0 {
-		return "", fmt.Errorf("give a value for --%s or --%s", file, value)
-	}
-
-	return val, nil
+curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-pro.service  && \
+  mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
+  echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
+  echo "REMOTETCP=$REMOTETCP" >> /etc/default/inlets-pro && \
+  echo "IP=$IP" >> /etc/default/inlets-pro && \
+  systemctl start inlets-pro && \
+  systemctl enable inlets-pro`
 }
