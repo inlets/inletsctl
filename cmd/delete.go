@@ -6,8 +6,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/inlets/inletsctl/pkg/env"
-	"os"
-
 	"github.com/inlets/inletsctl/pkg/provision"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -101,16 +99,13 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	var subscriptionID string
+	var accessTokenFile string
 	if provider == "azure" {
 		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
-		authFile, _ := cmd.Flags().GetString("access-token-file")
-		err = os.Setenv("AZURE_AUTH_LOCATION", authFile)
-		if err != nil {
-			return err
-		}
+		accessTokenFile, _ = cmd.Flags().GetString("access-token-file")
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID)
+	provisioner, err := getProvisioner(provider, accessToken, accessTokenFile, secretKey, organisationID, region, subscriptionID)
 
 	if err != nil {
 		return err
