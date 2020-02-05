@@ -21,6 +21,8 @@ This package is used by:
 
 ## Rules for adding a new provisioner
 
+The first rule about the `provision` package is that we don't do SSH. Key management and statefulness are out of scope. Cheap servers should be treated like cattle, not pets. `ssh` may well be enabled by default, but is out of scope for management. For instance, with DigitalOcean, you can get a root password if you need to log in. Configure as much as you can via cloud-init / user-data.
+
 * Use the Ubuntu 16.04 LTS image
 * Select the cheapest plan and update the [README](https://github.com/inlets/inletsctl/blob/master/README.md) with the estimated monthly cost
 * For inlets OSS open just the required ports
