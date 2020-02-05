@@ -12,7 +12,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/sethvargo/go-password/password"
 	"log"
+	"os"
 )
+
+const AzureStatusSucceeded = "Succeeded"
 
 type AzureProvisioner struct {
 	subscriptionId    string
@@ -22,7 +25,11 @@ type AzureProvisioner struct {
 	ctx               context.Context
 }
 
-func NewAzureProvisioner(subscriptionId string) (*AzureProvisioner, error) {
+func NewAzureProvisioner(subscriptionId, authFile string) (*AzureProvisioner, error) {
+	err := os.Setenv("AZURE_AUTH_LOCATION", authFile)
+	if err != nil {
+		return nil, err
+	}
 	authorizer, err := auth.NewAuthorizerFromFile(azure.PublicCloud.ResourceManagerEndpoint)
 	ctx := context.Background()
 	return &AzureProvisioner{
@@ -53,7 +60,7 @@ func (p *AzureProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		return nil, err
 	}
 	return &ProvisionedHost{
-		IP:     "Creating",
+		IP:     "",
 		ID:     p.resourceGroupName,
 		Status: ActiveStatus,
 	}, nil
@@ -68,15 +75,12 @@ func (p *AzureProvisioner) Status(id string) (*ProvisionedHost, error) {
 		return nil, err
 	}
 	var deploymentStatus string
-	if *deployment.Properties.ProvisioningState == "Succeeded" {
+	if *deployment.Properties.ProvisioningState == AzureStatusSucceeded {
 		deploymentStatus = ActiveStatus
 	} else {
 		deploymentStatus = *deployment.Properties.ProvisioningState
-		if deploymentStatus == "Running" {
-			deploymentStatus = "deploying"
-		}
 	}
-	IP := "Creating"
+	IP := ""
 	if deploymentStatus == ActiveStatus {
 		IP = deployment.Properties.Outputs.(map[string]interface{})["publicIP"].(map[string]interface{})["value"].(string)
 	}
@@ -91,17 +95,7 @@ func (p *AzureProvisioner) Status(id string) (*ProvisionedHost, error) {
 func (p *AzureProvisioner) Delete(request HostDeleteRequest) error {
 	groupsClient := resources.NewGroupsClient(p.subscriptionId)
 	groupsClient.Authorizer = p.authorizer
-	groupDeleteFuture, err := groupsClient.Delete(p.ctx, request.ID)
-	if err != nil {
-		return err
-	}
-	log.Printf("Waiting for deletion completion (~10 mins)")
-	err = groupDeleteFuture.Future.WaitForCompletionRef(p.ctx, groupsClient.BaseClient.Client)
-	if err != nil {
-		return err
-	}
-	log.Printf("Done deleting resources")
-	_, err = groupDeleteFuture.Result(groupsClient)
+	_, err := groupsClient.Delete(p.ctx, request.ID)
 	return err
 }
 
@@ -208,6 +202,7 @@ func getTemplateResourceVirtualMachine(host BasicHost) map[string]interface{} {
 		},
 	}
 }
+
 func getTemplateResourceNetworkInterface() map[string]interface{} {
 	return map[string]interface{}{
 		"name":       "[parameters('networkInterfaceName')]",
@@ -240,6 +235,7 @@ func getTemplateResourceNetworkInterface() map[string]interface{} {
 		},
 	}
 }
+
 func getTemplate(host BasicHost) map[string]interface{} {
 	return map[string]interface{}{
 		"$schema":        "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
