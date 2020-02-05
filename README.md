@@ -81,13 +81,21 @@ inletsctl does not automatically delete your exit nodes (read cloud hosts), so y
 
 ## Install `inletsctl`
 
-```sh
+```bash
+# Install to local directory
+curl -sLSf https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sh
+
+# Install to /usr/local/bin/
 curl -sLSf https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sudo sh
 ```
 
 Or
 
-```sh
+```bash
+# Install to local directory
+curl -sLSf https://inletsctl.inlets.dev | sh
+
+# Install to /usr/local/bin/
 curl -sLSf https://inletsctl.inlets.dev | sudo sh
 ```
 
