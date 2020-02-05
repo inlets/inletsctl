@@ -1,6 +1,6 @@
-# inlets provision package
+# provision cloud hosts with user-data
 
-This package can be used to provision cloud hosts using a simple CRUD-style API:
+This package can be used to provision cloud hosts using a simple CRUD-style API along with a cloud-init user-data script. It could be used to automate anything from k3s clusters, to blogs, or CI runners. We use it to create the cheapest possible hosts in the cloud with a public IP address.
 
 [provision.go](https://github.com/inlets/inletsctl/blob/master/pkg/provision/provision.go)
 
