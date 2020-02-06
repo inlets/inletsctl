@@ -104,6 +104,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			region = regionVal
 		}
 
+	} else if provider == "digitalocean" {
+		region = "lon1"
 	} else if provider == "scaleway" {
 		region = "fr-par-1"
 	} else if provider == "packet" {
