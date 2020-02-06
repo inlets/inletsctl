@@ -5,8 +5,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/inlets/inletsctl)](https://goreportcard.com/report/github.com/inlets/inletsctl)
 [![Documentation](https://godoc.org/github.com/inlets/inletsctl?status.svg)](http://godoc.org/github.com/inlets/inletsctl) [![Derek App](https://alexellis.o6s.io/badge?owner=inlets&repo=inletsctl)](https://github.com/alexellis/derek/)
 
-<!-- ![GitHub All Releases](https://img.shields.io/github/downloads/inlets/inletsctl/total) -->
-
 inletsctl automates the task of creating an exit-node on cloud infrastructure.
 Once provisioned, you'll receive a command to connect with. You can use this 
 tool whether you want to use inlets or inlets-pro for L4 TCP.
