@@ -6,10 +6,11 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/inlets/inletsctl/pkg/env"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/inlets/inletsctl/pkg/env"
 
 	"github.com/inlets/inletsctl/pkg/names"
 	"github.com/inlets/inletsctl/pkg/provision"
@@ -126,14 +127,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	var secretKey string
 	var organisationID string
+	var projectID string
 	if provider == "scaleway" || provider == "ec2" {
 
 		var secretKeyErr error
-		secretKey, secretKeyErr = env.GetRequiredFileOrString(cmd.Flags(),
-			"secret-key-file",
-			"secret-key",
-			"INLETS_SECRET_KEY",
-		)
+		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
 		if secretKeyErr != nil {
 			return secretKeyErr
 		}
@@ -141,8 +139,13 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		if provider == "scaleway" {
 			organisationID, _ = cmd.Flags().GetString("organisation-id")
 			if len(organisationID) == 0 {
-				return fmt.Errorf("--organisation-id cannot be empty")
+				return fmt.Errorf("--organisation-id flag must be set")
 			}
+		}
+	} else if provider == "gce" || provider == "packet" {
+		projectID, _ = cmd.Flags().GetString("project-id")
+		if len(projectID) == 0 {
+			return fmt.Errorf("--project-id flag must be set")
 		}
 	}
 
@@ -161,8 +164,6 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
 
 	userData := makeUserdata(inletsToken, inletsControlPort, remoteTCP)
-
-	projectID, _ := cmd.Flags().GetString("project-id")
 
 	hostReq, err := createHost(provider, name, region, zone, projectID, userData, strconv.Itoa(inletsControlPort), pro)
 	if err != nil {
