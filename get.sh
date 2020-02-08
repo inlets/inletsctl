@@ -34,19 +34,24 @@ getPackage() {
     suffix=""
     case $uname in
     "Darwin")
-    suffix="-darwin"
+    suffix="-darwin.tgz"
     ;;
     "Linux")
         arch=$(uname -m)
         echo $arch
         case $arch in
+        "x86_64")
+        suffix=".tgz"
+        ;;
+        esac
+        case $arch in
         "aarch64")
-        suffix="-arm64"
+        suffix="-arm64.tgz"
         ;;
         esac
         case $arch in
         "armv6l" | "armv7l")
-        suffix="-armhf"
+        suffix="-armhf.tgz"
         ;;
         esac
     ;;
@@ -67,40 +72,74 @@ getPackage() {
 
     curl -sSLf $url --output $targetFile
 
-    if [ "$?" = "0" ]; then
+    if [ $? -ne 0 ]; then
+        echo "Download Failed!"
+        exit 1
+    else
+        extractFolder=$(echo $targetFile | sed "s/${REPO}${suffix}//g")
+        echo -n "Download Complete, extracting $targetFile to $extractFolder ..."
+        tar -xzf $targetFile -C $extractFolder
+    fi
 
-    chmod +x $targetFile
+    if [ $? -ne 0 ]; then
+        echo "\nFailed to expand archve: $targetFile"
+        exit 1
+    else
+        # Remove the tar file
+        echo "OK"
+        rm $targetFile
 
-    echo "Download complete."
+        # Get the parent dir of the 'bin' folder holding the binary
+        targetFile=$(echo $targetFile | sed "s+/${REPO}${suffix}++g")
+        suffix=$(echo $suffix | sed 's/.tgz//g')
 
-        if [ ! -w "$BINLOCATION" ]; then
+        targetFile="${targetFile}/bin/${REPO}${suffix}"
 
-            echo
-            echo "============================================================"
-            echo "  The script was run as a user who is unable to write"
-            echo "  to $BINLOCATION. To complete the installation the"
-            echo "  following commands may need to be run manually."
-            echo "============================================================"
-            echo
-            echo "  sudo cp $REPO$suffix $BINLOCATION/$REPO"
-            echo
-            ./$REPO$suffix version
+        chmod +x $targetFile
+
+        # Calculate SHA
+        shaurl=$(echo $url | sed 's/.tgz/.sha256/g')
+        SHA256=$(curl -sLS $shaurl | awk '{print $1}')
+        echo "SHA256 fetched from release: $SHA256"
+        # NOTE to other maintainers
+        # There needs to be two spaces between the SHA and the file in the echo statement
+        # for shasum to compare the checksums
+        echo "$SHA256  $targetFile" | shasum -a 256 -c -s
+
+        if [ $? -ne 0 ]; then
+            echo "SHA mismatch! This means there must be a problem with the download"
+            exit 1
         else
+            echo "SHA match!"
 
-            echo
-            echo "Running with sufficient permissions to attempt to move $REPO to $BINLOCATION"
+            if [ ! -w "$BINLOCATION" ]; then
+                echo
+                echo "============================================================"
+                echo "  The script was run as a user who is unable to write"
+                echo "  to $BINLOCATION. To complete the installation the"
+                echo "  following commands may need to be run manually."
+                echo "============================================================"
+                echo
+                echo "  sudo cp $REPO$suffix $BINLOCATION/$REPO"
+                echo
+                ./$REPO$suffix version
+            else
 
-            mv $targetFile $BINLOCATION/$REPO
+                echo
+                echo "Running with sufficient permissions to attempt to move $REPO to $BINLOCATION"
 
-            if [ "$?" = "0" ]; then
-                echo "New version of $REPO installed to $BINLOCATION"
+                mv $targetFile $BINLOCATION/$REPO
+
+                if [ "$?" = "0" ]; then
+                    echo "New version of $REPO installed to $BINLOCATION"
+                fi
+
+                if [ -e $targetFile ]; then
+                    rm $targetFile
+                fi
+
+            ${SUCCESS_CMD}
             fi
-
-            if [ -e $targetFile ]; then
-                rm $targetFile
-            fi
-
-           ${SUCCESS_CMD}
         fi
     fi
 }

@@ -1,32 +1,34 @@
 sudo: required
 language: go
-
 go:
 - 1.13.x
-
 script:
 - make dist
-
 before_deploy:
 - "./ci/hashgen.sh"
-
 deploy:
-  provider: releases
   api_key:
     secure: aYgBmrFjqAzOBWncNQ2EKKFZJwOD2+l+a7Lll8+DVJkNyvLdzliI8iD4ro5KLEIwJjlghwM/Xy78O5oMlTPGoBf6IwbFE4nxKr0wlwFonSym5XCW2W7diGwxNvJUvBqY3wHjV13UpFNJVOqKbcaAVC+oGP6Wt4vNttroUaikpokwTfDXneksg5YIIemKkNXAvvWyRHrdOUgn8U8qLnaJ5gdpdcQOACsVXoI43ogsX49nSqXVIaBqt1Ndz+53Dsu7nSUwuwg0CnTYT05sU83RUhzRckvoE/l3mmd/FQBmVyDTfTwjrVwQLaKv2ldqlDmasV1qQ32bsEAfnGswbEZcJ0Qpx6VasAtDk69OW0RPyHs/VMw9BHVgoQyDaO2KGTKBJBBsewaIcJPBnWcDoGsv8oV/s/6tagqT+20zobGLqJfu3JxPlG7m+mC17NW8Fe9UslexyP9R1PgJfghGqQisDIrid9KixqfMpfTAqLykVGR3ra5NctKJEvpM2lyjLsxKxgzRAeIcd/i6Rt/eQX7lQAFQuP+Gq/hwxffFFUvUJPaBg5xk69S5QF6OrVof/LJjReE39u5z+q3O4f1auyZXSlE3ZNTWJEZ2DCuD5fLQm1b2O8sTAuK2HXnPr2gLvjUTO5QaRlQiVwxeYNcaMol42VFZ+XpBU+PQOuhSUmpqhOk=
+  provider: releases
   file:
-    - ./bin/inletsctl
-    - ./bin/inletsctl-darwin
-    - ./bin/inletsctl-armhf
-    - ./bin/inletsctl-arm64
-    - ./bin/inletsctl.exe
-    - ./bin/inletsctl.sha256
-    - ./bin/inletsctl-darwin.sha256
-    - ./bin/inletsctl-armhf.sha256
-    - ./bin/inletsctl-arm64.sha256
-    - ./bin/inletsctl.exe.sha256
+  - "./bin/inletsctl.tgz"
+  - "./bin/inletsctl.sha256"
+  - "./bin/inletsctl.tgz.sha256"
+  - "./bin/inletsctl-darwin.tgz"
+  - "./bin/inletsctl-darwin.sha256"
+  - "./bin/inletsctl-darwin.tgz.sha256"
+  - "./bin/inletsctl-armhf.tgz"
+  - "./bin/inletsctl-armhf.sha256"
+  - "./bin/inletsctl-armhf.tgz.sha256"
+  - "./bin/inletsctl-arm64.tgz"
+  - "./bin/inletsctl-arm64.sha256"
+  - "./bin/inletsctl-arm64.tgz.sha256"
+  - "./bin/inletsctl.exe.tgz"
+  - "./bin/inletsctl.exe.sha256"
+  - "./bin/inletsctl.exe.tgz.sha256"
   skip_cleanup: true
   on:
     tags: true
-
-env: GO111MODULE=on
+env:
+  matrix:
+  - GO111MODULE=on
