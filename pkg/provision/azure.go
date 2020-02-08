@@ -298,12 +298,7 @@ func getTemplate(host BasicHost) map[string]interface{} {
 	}
 }
 
-func getParameters(p *AzureProvisioner, host BasicHost) (parameters map[string]interface{}, err error) {
-	adminPassword, err := password.Generate(16, 4, 0, false, true)
-	if err != nil {
-		return
-	}
-	host.Additional["adminPassword"] = adminPassword
+func getParameters(p *AzureProvisioner, host BasicHost) (parameters map[string]interface{}) {
 	return map[string]interface{}{
 		"location":                 azureParameterValue(host.Region),
 		"networkInterfaceName":     azureParameterValue("inlets-vm-nic"),
@@ -341,17 +336,19 @@ func getParameters(p *AzureProvisioner, host BasicHost) (parameters map[string]i
 		},
 		"virtualMachineSize": azureParameterValue(host.Plan),
 		"adminUsername":      azureParameterValue("inletsuser"),
-		"adminPassword":      azureParameterValue(adminPassword),
+		"adminPassword":      azureParameterValue(host.Additional["adminPassword"]),
 		"customData":         azureParameterValue(host.UserData),
-	}, nil
+	}
 }
 
 func createDeployment(p *AzureProvisioner, host BasicHost) (err error) {
-	template := getTemplate(host)
-	params, err := getParameters(p, host)
+	adminPassword, err := password.Generate(16, 4, 0, false, true)
 	if err != nil {
 		return
 	}
+	host.Additional["adminPassword"] = adminPassword
+	template := getTemplate(host)
+	params := getParameters(p, host)
 	deploymentsClient := resources.NewDeploymentsClient(p.subscriptionId)
 	deploymentsClient.Authorizer = p.authorizer
 
