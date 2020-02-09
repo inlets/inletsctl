@@ -62,7 +62,10 @@ func (p *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 			"inlets": "exit-node",
 		},
 		Tags: &compute.Tags{
-			Items: []string{"http-server", "https-server", "inlets"},
+			Items: []string{
+				"http-server",
+				"https-server",
+				"inlets"},
 		},
 		Scheduling: &compute.Scheduling{
 			AutomaticRestart:  &autoRestart,
@@ -90,7 +93,7 @@ func (p *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		},
 	}
 
-	exists, _ := p.checkInletsFirewallRuleExists(host.Additional["projectid"], host.Additional["firewall-name"], host.Additional["firewall-port"])
+	exists, _ := p.gceFirewallExists(host.Additional["projectid"], host.Additional["firewall-name"], host.Additional["firewall-port"])
 
 	if !exists {
 		err := p.createInletsFirewallRule(host.Additional["projectid"], host.Additional["firewall-name"], host.Additional["firewall-port"])
@@ -113,15 +116,15 @@ func (p *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	if op.Status == gceHostRunning {
 		status = ActiveStatus
 	}
+
 	return &ProvisionedHost{
-		ID:     constructCustomGCEID(host.Name, host.Additional["zone"], host.Additional["projectid"]),
+		ID:     toGCEID(host.Name, host.Additional["zone"], host.Additional["projectid"]),
 		Status: status,
 	}, nil
-
 }
 
-// checkInletsFirewallRuleExists checks if the inlets firewall rule exists or not
-func (p *GCEProvisioner) checkInletsFirewallRuleExists(projectID string, firewallRuleName string, inletsPort string) (bool, error) {
+// gceFirewallExists checks if the inlets firewall rule exists or not
+func (p *GCEProvisioner) gceFirewallExists(projectID string, firewallRuleName string, controlPort string) (bool, error) {
 	op, err := p.gceProvisioner.Firewalls.Get(projectID, firewallRuleName).Do()
 	if err != nil {
 		return false, fmt.Errorf("could not get inlets firewall rule: %v", err)
@@ -129,7 +132,7 @@ func (p *GCEProvisioner) checkInletsFirewallRuleExists(projectID string, firewal
 	if op.Name == firewallRuleName {
 		for _, firewallRule := range op.Allowed {
 			for _, port := range firewallRule.Ports {
-				if port == inletsPort {
+				if port == controlPort {
 					return true, nil
 				}
 			}
@@ -139,7 +142,7 @@ func (p *GCEProvisioner) checkInletsFirewallRuleExists(projectID string, firewal
 }
 
 // createInletsFirewallRule creates a firewall rule opening up the control port for inlets
-func (p *GCEProvisioner) createInletsFirewallRule(projectID string, firewallRuleName string, inletsPort string) error {
+func (p *GCEProvisioner) createInletsFirewallRule(projectID string, firewallRuleName string, controlPort string) error {
 	firewallRule := &compute.Firewall{
 		Name:        firewallRuleName,
 		Description: "Firewall rule created by inlets-operator",
@@ -147,7 +150,7 @@ func (p *GCEProvisioner) createInletsFirewallRule(projectID string, firewallRule
 		Allowed: []*compute.FirewallAllowed{
 			{
 				IPProtocol: "tcp",
-				Ports:      []string{inletsPort},
+				Ports:      []string{controlPort},
 			},
 		},
 		SourceRanges: []string{"0.0.0.0/0"},
@@ -159,6 +162,7 @@ func (p *GCEProvisioner) createInletsFirewallRule(projectID string, firewallRule
 	if err != nil {
 		return fmt.Errorf("could not create firewall rule: %v", err)
 	}
+
 	return nil
 }
 
@@ -212,7 +216,7 @@ func (p *GCEProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
 			}
 			host := &ProvisionedHost{
 				IP:     instance.NetworkInterfaces[0].AccessConfigs[0].NatIP,
-				ID:     constructCustomGCEID(instance.Name, filter.Zone, filter.ProjectID),
+				ID:     toGCEID(instance.Name, filter.Zone, filter.ProjectID),
 				Status: status,
 			}
 			inlets = append(inlets, host)
@@ -225,7 +229,7 @@ func (p *GCEProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
 }
 
 func (p *GCEProvisioner) lookupID(request HostDeleteRequest) (string, error) {
-	inlets, err := p.List(ListFilter{
+	inletHosts, err := p.List(ListFilter{
 		Filter:    "labels.inlets=exit-node",
 		ProjectID: request.ProjectID,
 		Zone:      request.Zone,
@@ -234,12 +238,13 @@ func (p *GCEProvisioner) lookupID(request HostDeleteRequest) (string, error) {
 		return "", err
 	}
 
-	for _, inlet := range inlets {
-		if inlet.IP == request.IP {
-			return inlet.ID, nil
+	for _, host := range inletHosts {
+		if host.IP == request.IP {
+			return host.ID, nil
 		}
 	}
-	return "", fmt.Errorf("no host with ip: %s", request.IP)
+
+	return "", fmt.Errorf("no host found with IP: %s", request.IP)
 }
 
 // Status checks the status of the provisioning GCE exit node
@@ -256,19 +261,20 @@ func (p *GCEProvisioner) Status(id string) (*ProvisionedHost, error) {
 
 	status := ""
 
-	if op.Status == "RUNNING" {
+	if op.Status == gceHostRunning {
 		status = ActiveStatus
 	}
 
 	return &ProvisionedHost{
 		IP:     op.NetworkInterfaces[0].AccessConfigs[0].NatIP,
-		ID:     constructCustomGCEID(instanceName, zone, projectID),
+		ID:     toGCEID(instanceName, zone, projectID),
 		Status: status,
 	}, nil
 }
 
-// construct custom GCE instance ID from fields
-func constructCustomGCEID(instanceName, zone, projectID string) (id string) {
+// toGCEID creates an ID for GCE based upon the instance ID,
+// zone, and projectID fields
+func toGCEID(instanceName, zone, projectID string) (id string) {
 	return fmt.Sprintf("%s|%s|%s", instanceName, zone, projectID)
 }
 
