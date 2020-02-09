@@ -205,10 +205,6 @@ inletsctl create --provider scaleway \
 
 The region is hard-coded to France / Paris 1.
 
-## Example for GCE
-
-Follow the steps here to [configure your service account](https://github.com/inlets/inlets-operator#running-in-cluster-using-google-compute-engine-for-the-exit-node-using-helm)
-
 ## Examples for `inletsctl kfwd`
 
 The `inletsctl kfwd` command can port-forward services from within your local Kubernetes cluster to your local network or computer.

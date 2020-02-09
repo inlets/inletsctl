@@ -2,9 +2,10 @@ package provision
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"strconv"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws/credentials"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -40,7 +41,7 @@ func (p *EC2Provisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	}
 	pro := host.Additional["pro"]
 
-	groupID, name, err := p.creteEC2SecurityGroup(port, pro)
+	groupID, name, err := p.createEC2SecurityGroup(port, pro)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +231,7 @@ func (p *EC2Provisioner) lookupID(request HostDeleteRequest) (string, error) {
 }
 
 // creteEC2SecurityGroup creates a security group for the exit-node
-func (p *EC2Provisioner) creteEC2SecurityGroup(controlPort int, pro string) (*string, *string, error) {
+func (p *EC2Provisioner) createEC2SecurityGroup(controlPort int, pro string) (*string, *string, error) {
 	ports := []int{80, 443, controlPort}
 	proPorts := []int{1024, 65535}
 	groupName := "inlets-" + uuid.New().String()

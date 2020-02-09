@@ -37,6 +37,10 @@ func (p *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	// instance auto restart on failure
 	autoRestart := true
 
+	if host.Additional["pro"] == "true" && host.Additional["tmp"] == "true" {
+		host.Plan = "e2-micro"
+	}
+
 	instance := &compute.Instance{
 		Name:         host.Name,
 		Description:  "Exit node created by inlets-operator",
@@ -53,7 +57,7 @@ func (p *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 				InitializeParams: &compute.AttachedDiskInitializeParams{
 					Description: "Boot Disk for the exit-node created by inlets-operator",
 					DiskName:    host.Name,
-					DiskSizeGb:  10,
+					DiskSizeGb:  15,
 					SourceImage: host.OS,
 				},
 			},
