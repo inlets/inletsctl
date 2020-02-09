@@ -311,6 +311,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"zone":          zone,
 				"firewall-name": "inlets",
 				"firewall-port": inletsPort,
+				"pro":           fmt.Sprint(pro),
 			},
 		}, nil
 	} else if provider == "ec2" {
