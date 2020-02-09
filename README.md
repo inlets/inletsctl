@@ -129,6 +129,49 @@ Workflow:
   inletsctl delete --access-token-file ~/Downloads/do-access-token --id 164857028
   ```
 
+### Example usage with Google Compute Engine
+
+* One time setup required for a service account key
+
+> It is assumed that you have gcloud installed and configured on your machine.
+If not, then follow the instructions [here](https://cloud.google.com/sdk/docs/quickstarts)
+
+```sh
+# Get current projectID
+export PROJECTID=$(gcloud config get-value core/project 2>/dev/null)
+
+# Create a service account
+gcloud iam service-accounts create inlets \
+--description "inlets-operator service account" \
+--display-name "inlets"
+
+# Get service account email
+export SERVICEACCOUNT=$(gcloud iam service-accounts list | grep inlets | awk '{print $2}')
+
+# Assign appropriate roles to inlets service account
+gcloud projects add-iam-policy-binding $PROJECTID \
+--member serviceAccount:$SERVICEACCOUNT \
+--role roles/compute.admin
+
+gcloud projects add-iam-policy-binding $PROJECTID \
+--member serviceAccount:$SERVICEACCOUNT \
+--role roles/iam.serviceAccountUser
+
+# Create inlets service account key file
+gcloud iam service-accounts keys create key.json \
+--iam-account $SERVICEACCOUNT
+```
+
+* Run inlets OSS or inlets-pro
+
+```sh
+# Create a tunnel with inlets OSS
+inletsctl create -p gce --project-id=$PROJECTID -f=key.json
+
+## Create a TCP tunnel with inlets-pro
+inletsctl create -p gce -p $PROJECTID --remote-tcp=127.0.0.1 -f=key.json
+```
+
 ### Example usage with DigitalOcean
 
 ```sh
