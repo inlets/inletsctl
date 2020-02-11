@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"google.golang.org/api/compute/v1"
@@ -19,8 +20,6 @@ type GCEProvisioner struct {
 
 // NewGCEProvisioner returns a new GCEProvisioner
 func NewGCEProvisioner(accessKey string) (*GCEProvisioner, error) {
-	log.Println("Using forked GCE provisioner")
-
 	gceService, err := compute.NewService(context.Background(), option.WithCredentialsJSON([]byte(accessKey)))
 	return &GCEProvisioner{
 		gceProvisioner: gceService,
@@ -29,8 +28,15 @@ func NewGCEProvisioner(accessKey string) (*GCEProvisioner, error) {
 
 // Provision provisions a new GCE instance as an exit node
 func (p *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
+
+	err := p.createInletsFirewallRule(host.Additional["projectid"], host.Additional["firewall-name"], host.Additional["firewall-port"], host.Additional["pro"])
+	if err != nil {
+		return nil, err
+	}
+
 	// instance auto restart on failure
 	autoRestart := true
+
 	instance := &compute.Instance{
 		Name:         host.Name,
 		Description:  "Exit node created by inlets-operator",
@@ -95,26 +101,22 @@ func (p *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		},
 	}
 
-	err := p.createInletsFirewallRule(host.Additional["projectid"], host.Additional["firewall-name"], host.Additional["firewall-port"], host.Additional["pro"])
+	op, err := p.gceProvisioner.Instances.Insert(
+		host.Additional["projectid"],
+		host.Additional["zone"],
+		instance).Do()
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not provision GCE instance: %s", err)
 	}
 
-	op, err := p.gceProvisioner.Instances.Insert(host.Additional["projectid"], host.Additional["zone"], instance).Do()
-	if err != nil {
-		return nil, fmt.Errorf("could not provision GCE instance: %v", err)
-	}
-
-	status := ""
-	log.Println("Status of VM: ", op.Status)
-
-	if op.Status == gceHostRunning {
-		status = ActiveStatus
+	if op.HTTPStatusCode == http.StatusConflict {
+		log.Println("Host already exists, status: conflict.")
 	}
 
 	return &ProvisionedHost{
 		ID:     toGCEID(host.Name, host.Additional["zone"], host.Additional["projectid"]),
-		Status: status,
+		Status: "provisioning",
 	}, nil
 }
 
@@ -220,6 +222,61 @@ func (p *GCEProvisioner) Delete(request HostDeleteRequest) error {
 	return err
 }
 
+// Status checks the status of the provisioning GCE exit node
+func (p *GCEProvisioner) Status(id string) (*ProvisionedHost, error) {
+	instanceName, zone, projectID, err := getGCEFieldsFromID(id)
+	if err != nil {
+		return nil, fmt.Errorf("could not get custom GCE fields: %v", err)
+	}
+
+	op, err := p.gceProvisioner.Instances.Get(projectID, zone, instanceName).Do()
+	if err != nil {
+		return nil, fmt.Errorf("could not get instance: %v", err)
+	}
+
+	var ip string
+	if len(op.NetworkInterfaces) > 0 {
+		ip = op.NetworkInterfaces[0].AccessConfigs[0].NatIP
+	}
+
+	status := gceToInletsStatus(op.Status)
+
+	return &ProvisionedHost{
+		IP:     ip,
+		ID:     toGCEID(instanceName, zone, projectID),
+		Status: status,
+	}, nil
+}
+
+func gceToInletsStatus(gce string) string {
+	status := gce
+	if status == gceHostRunning {
+		status = ActiveStatus
+	}
+	return status
+}
+
+// toGCEID creates an ID for GCE based upon the instance ID,
+// zone, and projectID fields
+func toGCEID(instanceName, zone, projectID string) (id string) {
+	return fmt.Sprintf("%s|%s|%s", instanceName, zone, projectID)
+}
+
+// get some required fields from the custom GCE instance ID
+func getGCEFieldsFromID(id string) (instanceName, zone, projectID string, err error) {
+	fields := strings.Split(id, "|")
+	err = nil
+	if len(fields) == 3 {
+		instanceName = fields[0]
+		zone = fields[1]
+		projectID = fields[2]
+	} else {
+		err = fmt.Errorf("could not get fields from custom ID: fields: %v", fields)
+		return "", "", "", err
+	}
+	return instanceName, zone, projectID, nil
+}
+
 // List returns a list of exit nodes
 func (p *GCEProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
 	var inlets []*ProvisionedHost
@@ -270,50 +327,4 @@ func (p *GCEProvisioner) lookupID(request HostDeleteRequest) (string, error) {
 	}
 
 	return "", fmt.Errorf("no host found with IP: %s", request.IP)
-}
-
-// Status checks the status of the provisioning GCE exit node
-func (p *GCEProvisioner) Status(id string) (*ProvisionedHost, error) {
-	instanceName, zone, projectID, err := getGCEFieldsFromID(id)
-	if err != nil {
-		return nil, fmt.Errorf("could not get custom GCE fields: %v", err)
-	}
-
-	op, err := p.gceProvisioner.Instances.Get(projectID, zone, instanceName).Do()
-	if err != nil {
-		return nil, fmt.Errorf("could not get instance: %v", err)
-	}
-
-	status := ""
-
-	if op.Status == gceHostRunning {
-		status = ActiveStatus
-	}
-
-	return &ProvisionedHost{
-		IP:     op.NetworkInterfaces[0].AccessConfigs[0].NatIP,
-		ID:     toGCEID(instanceName, zone, projectID),
-		Status: status,
-	}, nil
-}
-
-// toGCEID creates an ID for GCE based upon the instance ID,
-// zone, and projectID fields
-func toGCEID(instanceName, zone, projectID string) (id string) {
-	return fmt.Sprintf("%s|%s|%s", instanceName, zone, projectID)
-}
-
-// get some required fields from the custom GCE instance ID
-func getGCEFieldsFromID(id string) (instanceName, zone, projectID string, err error) {
-	fields := strings.Split(id, "|")
-	err = nil
-	if len(fields) == 3 {
-		instanceName = fields[0]
-		zone = fields[1]
-		projectID = fields[2]
-	} else {
-		err = fmt.Errorf("could not get fields from custom ID: fields: %v", fields)
-		return "", "", "", err
-	}
-	return instanceName, zone, projectID, nil
 }
