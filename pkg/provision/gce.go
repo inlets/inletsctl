@@ -19,6 +19,8 @@ type GCEProvisioner struct {
 
 // NewGCEProvisioner returns a new GCEProvisioner
 func NewGCEProvisioner(accessKey string) (*GCEProvisioner, error) {
+	log.Println("Using forked GCE provisioner")
+
 	gceService, err := compute.NewService(context.Background(), option.WithCredentialsJSON([]byte(accessKey)))
 	return &GCEProvisioner{
 		gceProvisioner: gceService,
@@ -104,10 +106,12 @@ func (p *GCEProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	}
 
 	status := ""
+	log.Println("Status of VM: ", op.Status)
 
 	if op.Status == gceHostRunning {
 		status = ActiveStatus
 	}
+
 	return &ProvisionedHost{
 		ID:     toGCEID(host.Name, host.Additional["zone"], host.Additional["projectid"]),
 		Status: status,
@@ -162,16 +166,17 @@ func (p *GCEProvisioner) createInletsFirewallRule(projectID string, firewallRule
 
 	exists, _ := p.gceFirewallExists(projectID, firewallRuleName)
 	if exists {
-		log.Println("inlets firewallRule exists, updating firewall-rules")
+		log.Printf("Creating firewall exists, updating: %s\n", firewallRuleName)
+
 		_, err := p.gceProvisioner.Firewalls.Update(projectID, firewallRuleName, firewallRule).Do()
 		if err != nil {
-			return fmt.Errorf("could not update inlets firewall rule: %v", err)
+			return fmt.Errorf("could not update inlets firewall rule %s, error: %s", firewallRuleName, err)
 		}
 		return nil
 	}
 
 	_, err := p.gceProvisioner.Firewalls.Insert(projectID, firewallRule).Do()
-	log.Println("creating inlets firewallRule")
+	log.Printf("Creating firewall rule: %s\n", firewallRuleName)
 	if err != nil {
 		return fmt.Errorf("could not create inlets firewall rule: %v", err)
 	}
@@ -180,27 +185,35 @@ func (p *GCEProvisioner) createInletsFirewallRule(projectID string, firewallRule
 
 // Delete deletes the GCE exit node
 func (p *GCEProvisioner) Delete(request HostDeleteRequest) error {
-	var instanceName, projectID string
+	var instanceName, projectID, zone string
 	var err error
 	if len(request.ID) > 0 {
-		instanceName, _, projectID, err = getGCEFieldsFromID(request.ID)
+		instanceName, zone, projectID, err = getGCEFieldsFromID(request.ID)
 		if err != nil {
 			return err
 		}
 	} else {
-		inletID, err := p.lookupID(request)
+		inletsID, err := p.lookupID(request)
 		if err != nil {
 			return err
 		}
-		instanceName, _, projectID, err = getGCEFieldsFromID(inletID)
+		instanceName, zone, projectID, err = getGCEFieldsFromID(inletsID)
 		if err != nil {
 			return err
 		}
 	}
+
 	if len(request.ProjectID) > 0 {
 		projectID = request.ProjectID
 	}
-	_, err = p.gceProvisioner.Instances.Delete(projectID, request.Zone, instanceName).Do()
+
+	if len(request.Zone) > 0 {
+		zone = request.Zone
+	}
+
+	log.Printf("Deleting GCE host: %s, %s, %s\n", projectID, zone, instanceName)
+
+	_, err = p.gceProvisioner.Instances.Delete(projectID, zone, instanceName).Do()
 	if err != nil {
 		return fmt.Errorf("could not delete the GCE instance: %v", err)
 	}
