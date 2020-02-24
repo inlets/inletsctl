@@ -29,6 +29,6 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-env:
-  matrix:
-  - GO111MODULE=on
+
+env: GO111MODULE=on
+
