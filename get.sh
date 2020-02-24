@@ -77,7 +77,7 @@ getPackage() {
         exit 1
     else
         extractFolder=$(echo $targetFile | sed "s/${REPO}${suffix}//g")
-        echo -n "Download Complete, extracting $targetFile to $extractFolder ..."
+        echo "Download Complete, extracting $targetFile to $extractFolder ..."
         tar -xzf $targetFile -C $extractFolder
     fi
 
@@ -110,8 +110,6 @@ getPackage() {
             echo "SHA mismatch! This means there must be a problem with the download"
             exit 1
         else
-            echo "SHA match!"
-
             if [ ! -w "$BINLOCATION" ]; then
                 echo
                 echo "============================================================"
