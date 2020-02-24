@@ -356,7 +356,7 @@ export AUTHTOKEN="` + authToken + `"
 export REMOTETCP="` + remoteTCP + `"
 export IP=$(curl -sfSL https://ifconfig.co)
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.4.3/inlets-pro > /tmp/inlets-pro && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.5.6/inlets-pro > /tmp/inlets-pro && \
   chmod +x /tmp/inlets-pro  && \
   mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
