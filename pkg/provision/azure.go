@@ -110,6 +110,23 @@ func createGroup(p *AzureProvisioner, host BasicHost) (group resources.Group, er
 			Location: to.StringPtr(host.Region)})
 }
 
+func getSecurityRuleList(host BasicHost) []interface{} {
+	var rules []interface{}
+	if host.Additional["pro"] == "true" {
+		rules = []interface{}{
+			getSecurityRule("AllPorts", 280, "TCP", "*"),
+		}
+	} else {
+		rules = []interface{}{
+			getSecurityRule("SSH", 300, "TCP", "22"),
+			getSecurityRule("HTTPS", 320, "TCP", "443"),
+			getSecurityRule("HTTP", 340, "TCP", "80"),
+			getSecurityRule("HTTP8080", 360, "TCP", "8080"),
+		}
+	}
+	return rules
+}
+
 func getSecurityRule(name string, priority int, protocol, destPortRange string) map[string]interface{} {
 	return map[string]interface{}{
 		"name": name,
@@ -304,12 +321,7 @@ func getParameters(p *AzureProvisioner, host BasicHost) (parameters map[string]i
 		"networkInterfaceName":     azureParameterValue("inlets-vm-nic"),
 		"networkSecurityGroupName": azureParameterValue("inlets-vm-nsg"),
 		"networkSecurityGroupRules": map[string]interface{}{
-			"value": []interface{}{
-				getSecurityRule("SSH", 300, "TCP", "22"),
-				getSecurityRule("HTTPS", 320, "TCP", "443"),
-				getSecurityRule("HTTP", 340, "TCP", "80"),
-				getSecurityRule("HTTP8080", 360, "TCP", "8080"),
-			},
+			"value": getSecurityRuleList(host),
 		},
 		"subnetName":         azureParameterValue("default"),
 		"virtualNetworkName": azureParameterValue("inlets-vnet"),
