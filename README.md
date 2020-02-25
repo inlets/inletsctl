@@ -221,6 +221,11 @@ Then access the service via `http://127.0.0.1:8080`.
 
 ### Example usage with Azure
 
+Prerequisites:
+
+* You will need `az`. See [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+
+
 Generate Azure auth file 
 ```sh
 az ad sp create-for-rbac --sdk-auth > ~/Downloads/client_credentials.json
