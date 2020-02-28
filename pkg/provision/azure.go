@@ -118,7 +118,6 @@ func getSecurityRuleList(host BasicHost) []interface{} {
 		}
 	} else {
 		rules = []interface{}{
-			getSecurityRule("SSH", 300, "TCP", "22"),
 			getSecurityRule("HTTPS", 320, "TCP", "443"),
 			getSecurityRule("HTTP", 340, "TCP", "80"),
 			getSecurityRule("HTTP8080", 360, "TCP", "8080"),
@@ -309,7 +308,7 @@ func getTemplate(host BasicHost) map[string]interface{} {
 				"type":  "string",
 				"value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpAddressName')), '2019-02-01', 'Full').properties.ipAddress]",
 				// See also https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions-resource#reference
-				// See also https://docs.microsoft.com/en-us/azure/templates/microsoft.network/2019-02-01/publicipaddresses
+				// and https://docs.microsoft.com/en-us/azure/templates/microsoft.network/2019-02-01/publicipaddresses
 			},
 		},
 	}
