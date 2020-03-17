@@ -3,7 +3,8 @@
 [![Build Status](https://travis-ci.com/inlets/inletsctl.svg?branch=master)](https://travis-ci.com/inlets/inletsctl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Report Card](https://goreportcard.com/badge/github.com/inlets/inletsctl)](https://goreportcard.com/report/github.com/inlets/inletsctl)
-[![Documentation](https://godoc.org/github.com/inlets/inletsctl?status.svg)](http://godoc.org/github.com/inlets/inletsctl) [![Derek App](https://alexellis.o6s.io/badge?owner=inlets&repo=inletsctl)](https://github.com/alexellis/derek/)
+[![Documentation](https://godoc.org/github.com/inlets/inletsctl?status.svg)](http://godoc.org/github.com/inlets/inletsctl)
+![Downloads](https://img.shields.io/github/downloads/inlets/inletsctl/total)
 
 inletsctl automates the task of creating an exit-node on cloud infrastructure.
 Once provisioned, you'll receive a command to connect with. You can use this 
