@@ -46,6 +46,7 @@ Completed:
 * [x] Provisioner: Google Cloud
 * [x] Provisioner: Packet.com
 * [x] Provisioner: AWS EC2
+* [x] Provisioner: Azure
 * [x] `inletsctl delete` command
 * [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
 * [x] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
