@@ -6,9 +6,12 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/inlets/inletsctl/pkg/env"
 
@@ -22,6 +25,8 @@ import (
 
 const inletsControlPort = 8080
 const inletsProControlPort = 8123
+
+var staticFile bool
 
 func init() {
 
@@ -44,6 +49,7 @@ func init() {
 	createCmd.Flags().StringP("remote-tcp", "c", "", `Remote host for inlets-pro to use for forwarding TCP connections`)
 
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
+	createCmd.Flags().BoolVarP(&staticFile, "static-file", "", false, "Create a static file for the provisioned machine")
 }
 
 // clientCmd represents the client sub command.
@@ -164,7 +170,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	remoteTCP, _ := cmd.Flags().GetString("remote-tcp")
-	var pro bool
+	var pro bool = false
 	if len(remoteTCP) > 0 {
 		pro = true
 	}
@@ -204,6 +210,18 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			i+1, max, hostStatus.ID, hostStatus.Status)
 
 		if hostStatus.Status == "active" {
+
+			// Creaye a static file named host-name-inletsctl.yaml
+			staticFile, _ := cmd.Flags().GetBool("static-file")
+
+			// If user has passed a fileName to the `-f` flag
+			if staticFile {
+				err := createStaticFile(provider, hostReq, hostStatus, inletsToken, pro)
+				if err != nil {
+					return err
+				}
+			}
+
 			if !pro {
 				fmt.Printf(`Inlets OSS exit-node summary:
   IP: %s
@@ -396,4 +414,50 @@ curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-pro
   echo "IP=$IP" >> /etc/default/inlets-pro && \
   systemctl start inlets-pro && \
   systemctl enable inlets-pro`
+}
+
+func createStaticFile(provider string, reqHost *provision.BasicHost, provisionedHost *provision.ProvisionedHost, inletsToken string, pro bool) error {
+	type Metadata struct {
+		CreatedAt string `yaml:"created_at"`
+		Provider  string `yaml:"provider"`
+		Region    string `yaml:"region,omitempty"`
+		Zone      string `yaml:"zone,omitempty"`
+	}
+	type Host struct {
+		Metadata  *Metadata `yaml:"metadata"`
+		IP        string    `yaml:"ip"`
+		ID        string    `yaml:"id"`
+		AuthToken string    `yaml:"auth_token"`
+		Pro       bool      `yaml:"pro"`
+	}
+	type staticFile struct {
+		Host *Host `yaml:"host"`
+	}
+
+	fileStruct := &staticFile{
+		Host: &Host{
+			Metadata: &Metadata{
+				CreatedAt: time.Now().String(),
+				Provider:  provider,
+				Region:    reqHost.Region,
+				Zone:      reqHost.Additional["zone"],
+			},
+			IP:        provisionedHost.IP,
+			ID:        provisionedHost.ID,
+			AuthToken: inletsToken,
+			Pro:       pro,
+		},
+	}
+
+	out, err := yaml.Marshal(fileStruct)
+	if err != nil {
+		return fmt.Errorf("cannot marshal struct: %v", err)
+	}
+
+	fileName := fmt.Sprintf("%s-inletsctl.yaml", provisionedHost.ID)
+	err = ioutil.WriteFile(fileName, out, 0666)
+	if err != nil {
+		return fmt.Errorf("cannot write to file: %s Error: %v", fileName, err)
+	}
+	return nil
 }

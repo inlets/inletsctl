@@ -12,6 +12,7 @@ require (
 	github.com/alexellis/go-execute v0.0.0-20191029181357-d17947259f74
 	github.com/aws/aws-sdk-go v1.26.8
 	github.com/digitalocean/godo v1.27.0
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/morikuni/aec v1.0.0
@@ -29,5 +30,5 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/genproto v0.0.0-20191115221424-83cc0476cb11 // indirect
 	google.golang.org/grpc v1.25.1 // indirect
-	gopkg.in/yaml.v2 v2.2.7 // indirect
+	gopkg.in/yaml.v2 v2.2.7
 )
