@@ -63,22 +63,22 @@ getPackage() {
         targetFile="$(pwd)/$REPO$suffix"
     fi
 
-    if [ -e $targetFile ]; then
-        rm $targetFile
+    if [ -e "$targetFile" ]; then
+        rm "$targetFile"
     fi
 
     url=https://github.com/$OWNER/$REPO/releases/download/$version/$REPO$suffix
     echo "Downloading package $url as $targetFile"
 
-    curl -sSLf $url --output $targetFile
+    curl -sSLf $url --output "$targetFile"
 
     if [ $? -ne 0 ]; then
         echo "Download Failed!"
         exit 1
     else
-        extractFolder=$(echo $targetFile | sed "s/${REPO}${suffix}//g")
+        extractFolder=$(echo "$targetFile" | sed "s/${REPO}${suffix}//g")
         echo "Download Complete, extracting $targetFile to $extractFolder ..."
-        tar -xzf $targetFile -C $extractFolder
+        tar -xzf "$targetFile" -C "$extractFolder"
     fi
 
     if [ $? -ne 0 ]; then
@@ -87,15 +87,15 @@ getPackage() {
     else
         # Remove the tar file
         echo "OK"
-        rm $targetFile
+        rm "$targetFile"
 
         # Get the parent dir of the 'bin' folder holding the binary
-        targetFile=$(echo $targetFile | sed "s+/${REPO}${suffix}++g")
+        targetFile=$(echo "$targetFile" | sed "s+/${REPO}${suffix}++g")
         suffix=$(echo $suffix | sed 's/.tgz//g')
 
         targetFile="${targetFile}/${REPO}${suffix}"
 
-        chmod +x $targetFile
+        chmod +x "$targetFile"
 
         # Calculate SHA
         shaurl=$(echo $url | sed 's/.tgz/.sha256/g')
@@ -126,14 +126,14 @@ getPackage() {
                 echo
                 echo "Running with sufficient permissions to attempt to move $REPO to $BINLOCATION"
 
-                mv $targetFile $BINLOCATION/$REPO
+                mv "$targetFile" $BINLOCATION/$REPO
 
                 if [ "$?" = "0" ]; then
                     echo "New version of $REPO installed to $BINLOCATION"
                 fi
 
-                if [ -e $targetFile ]; then
-                    rm $targetFile
+                if [ -e "$targetFile" ]; then
+                    rm "$targetFile"
                 fi
 
             ${SUCCESS_CMD}
