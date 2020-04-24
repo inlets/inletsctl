@@ -172,6 +172,9 @@ inletsctl create -p gce --project-id=$PROJECTID -f=key.json
 
 ## Create a TCP tunnel with inlets-pro
 inletsctl create -p gce -p $PROJECTID --remote-tcp=127.0.0.1 -f=key.json
+
+# Or specify any valid Google Cloud Zone optional zone, by default it get provisioned in us-central1-a
+inletsctl create -p gce --project-id=$PROJECTID -f key.json --zone=us-central1-a
 ```
 
 ### Example usage with DigitalOcean
@@ -204,10 +207,6 @@ inletsctl create --provider scaleway \
 ```
 
 The region is hard-coded to France / Paris 1.
-
-## Example for GCE
-
-Follow the steps here to [configure your service account](https://github.com/inlets/inlets-operator#running-in-cluster-using-google-compute-engine-for-the-exit-node-using-helm)
 
 ## Examples for `inletsctl kfwd`
 
