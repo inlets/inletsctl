@@ -262,6 +262,54 @@ inletsctl download --pro
 inletsctl download --version 2.6.2
 ```
 
+## Contributing & getting help
+
+Before seeking support, make sure you have read the instructions correctly, and try to run through them a second or third time to see if you have missed anything.
+
+Then, try the troubleshooting guide below.
+
+## Troubleshooting
+
+inletsctl provisions a host called an exit node or exit server using public cloud APIs. It then 
+prints out a connection string.
+
+Are you unable to connect your client to the exit server?
+
+### inlets PRO
+
+If using auto-tls (the default), check that port 8123 is accessible. It should be serving a file with a self-signed certificate, run the following:
+
+```bash
+export IP=192.168.0.1
+curl -k https://$IP:8123/.well-known/ca.crt
+```
+
+If you see connection refused, log in to the host over SSH and check the service via systemctl:
+
+```bash
+sudo systemctl status inlets-pro
+
+# Check its logs
+sudo journalctl -u inlets-pro
+```
+
+You can also check the configuration in `/etc/default/inlets-pro`, to make sure that an IP address and token are configured.
+
+### inlets OSS
+
+Try to connect on port 8080, where the control-port is being served. Does it connect, or not?
+
+Connect with ssh to the exit-server and check the logs of the inlets service:
+
+```bash
+sudo systemctl status inlets
+
+# Check its logs
+sudo journalctl -u inlets
+```
+
+You can also check the configuration in `/etc/default/inlets`, to make sure that an IP address and token are configured.
+
 ## Configuration using environment variables
 
 You may want to set an environment variable that points at your `access-token-file` or `secret-key-file`
@@ -271,7 +319,6 @@ Inlets will look for the following:
 ```sh
 # For providers that use --access-token-file
 INLETS_ACCESS_TOKEN
-
 
 # For providers that use --secret-key-file
 INLETS_SECRET_KEY
@@ -288,8 +335,9 @@ export INLETS_ACCESS_TOKEN=$(cat my-token.txt)
 export INLETS_SECRET_KEY=$(cat my-token.txt)
 ```
 
+### Community support
 
-## Contributing
+You can seek out community support through the [OpenFaaS Slack](https://slack.openfaas.io/) in the `#inlets` channel
 
 ### Add another cloud provisioner
 
