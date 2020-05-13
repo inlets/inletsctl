@@ -35,7 +35,7 @@ export AUTHTOKEN="auth"
 export REMOTETCP="localhost"
 export IP=$(curl -sfSL https://ifconfig.co)
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.4.3/inlets-pro > /tmp/inlets-pro && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.6.0/inlets-pro > /tmp/inlets-pro && \
   chmod +x /tmp/inlets-pro  && \
   mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
