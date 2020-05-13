@@ -176,7 +176,7 @@ spec:
     spec:
       containers:
       - name: inlets
-        image: inlets/inlets:2.6.3
+        image: inlets/inlets:2.7.2
         imagePullPolicy: IfNotPresent
         command: ["inlets"]
         args:
