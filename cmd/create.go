@@ -27,7 +27,7 @@ func init() {
 
 	inletsCmd.AddCommand(createCmd)
 
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, or civo")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode or civo")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
@@ -54,7 +54,7 @@ var createCmd = &cobra.Command{
 along with what OS version and spec will be used is explained in the README.
 `,
 	Example: `  inletsctl create  \
-	--provider [digitalocean|packet|ec2|scaleway|civo|gce|azure] \
+	--provider [digitalocean|packet|ec2|scaleway|civo|gce|azure|linode] \
 	--access-token-file $HOME/access-token \
 	--region lon1
 
@@ -261,6 +261,8 @@ func getProvisioner(provider, accessToken, accessTokenFile, secretKey, organisat
 		return provision.NewEC2Provisioner(region, accessToken, secretKey)
 	} else if provider == "azure" {
 		return provision.NewAzureProvisioner(subscriptionID, accessTokenFile)
+	} else if provider == "linode" {
+		return provision.NewLinodeProvisioner(accessToken)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }
@@ -355,6 +357,24 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"imageOffer":     "UbuntuServer",
 				"imageSku":       "16.04-LTS",
 				"imageVersion":   "latest",
+			},
+		}, nil
+	} else if provider == "linode" {
+		// Image:
+		//  List of images can be retrieved using: https://api.linode.com/v4/images
+		//  Example response: .."id": "linode/ubuntu16.04lts", "label": "Ubuntu 16.04 LTS"..
+		// Type:
+		//  Type is the VM plan / size in linode.
+		//  List of type and price can be retrieved using curl https://api.linode.com/v4/linode/types
+		return &provision.BasicHost{
+			Name:     name,
+			OS:       "linode/ubuntu16.04lts",
+			Plan:     "g6-nanode-1",
+			Region:   region,
+			UserData: userData,
+			Additional: map[string]string{
+				"inlets-port": inletsPort,
+				"pro":         fmt.Sprint(pro),
 			},
 		}, nil
 	}

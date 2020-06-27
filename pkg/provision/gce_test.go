@@ -7,7 +7,7 @@ func TestCustomGCEIDConstAndDest(t *testing.T) {
 	inputZone := "us-central1-a"
 	inputProjectID := "playground"
 
-	customID := constructCustomGCEID(inputInstanceName, inputZone, inputProjectID)
+	customID := toGCEID(inputInstanceName, inputZone, inputProjectID)
 
 	outputInstanceName, outputZone, outputProjectID, err := getGCEFieldsFromID(customID)
 	if err != nil {

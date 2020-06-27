@@ -13,7 +13,9 @@ require (
 	github.com/aws/aws-sdk-go v1.26.8
 	github.com/digitalocean/godo v1.27.0
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
+	github.com/golang/mock v1.3.1
 	github.com/google/uuid v1.1.1
+	github.com/linode/linodego v0.19.0
 	github.com/morikuni/aec v1.0.0
 	github.com/packethost/packngo v0.2.0
 	github.com/pkg/errors v0.8.1
@@ -29,5 +31,4 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/genproto v0.0.0-20191115221424-83cc0476cb11 // indirect
 	google.golang.org/grpc v1.25.1 // indirect
-	gopkg.in/yaml.v2 v2.2.7 // indirect
 )

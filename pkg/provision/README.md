@@ -41,4 +41,4 @@ If you would like to add a provider please propose it with an Issue, to make sur
 * Scaleway - [alexandrevilain](https://github.com/alexandrevilain/)
 * AWS EC2 - [adamjohnson01](https://github.com/adamjohnson01/)
 * GCE - [utsavanand2](https://github.com/utsavanand2/)
-* Azure - [zechenbit](https://github.com/zechenbit/)
+* Azure, Linode - [zechenbit](https://github.com/zechenbit/)
