@@ -48,6 +48,7 @@ Completed:
 * [x] Provisioner: Packet.com
 * [x] Provisioner: AWS EC2
 * [x] Provisioner: Azure
+* [x] Provisioner: Linode
 * [x] `inletsctl delete` command
 * [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
 * [x] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
@@ -234,6 +235,24 @@ inletsctl delete --provider=azure --id inlets-clever-volhard8 \
   --subscription-id=4d68ee0c-7079-48d2-b15c-f294f9b11a9e \
   --region=eastus --access-token-file=~/Downloads/client_credentials.json
 ```
+
+### Example usage with Linode
+
+Prerequisites:
+
+* Prepare a Linode API Access Token. See [Create Linode API Access token](https://www.linode.com/docs/platform/api/getting-started-with-the-linode-api/#get-an-access-token)  
+
+
+Create
+```sh
+inletsctl create --provider=linode --access-token=<API Access Token> --region=us-east
+```
+
+Delete
+```sh
+inletsctl delete --provider=linode --access-token=<API Access Token> --id <instance id>
+```
+
 
 ## Downloading inlets or inlets-pro
 
