@@ -99,13 +99,11 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	var subscriptionID string
-	var accessTokenFile string
 	if provider == "azure" {
 		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
-		accessTokenFile, _ = cmd.Flags().GetString("access-token-file")
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, accessTokenFile, secretKey, organisationID, region, subscriptionID)
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID)
 
 	if err != nil {
 		return err

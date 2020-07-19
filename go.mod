@@ -12,6 +12,7 @@ require (
 	github.com/alexellis/go-execute v0.0.0-20191029181357-d17947259f74
 	github.com/aws/aws-sdk-go v1.26.8
 	github.com/digitalocean/godo v1.27.0
+	github.com/dimchansky/utfbom v1.1.0
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/golang/mock v1.3.1
 	github.com/google/uuid v1.1.1

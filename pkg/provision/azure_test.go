@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/google/uuid"
 	"testing"
 )
 
-func Test_Azure_Auth_File_Not_Existing(t *testing.T) {
-	nonExistentFile := "/non-existent-" + uuid.New().String()
-	_, err := NewAzureProvisioner("SubscriptionID", nonExistentFile)
+func Test_Azure_Auth_Contents_Invalid(t *testing.T) {
+	_, err := NewAzureProvisioner("SubscriptionID", "invalid contents")
 
 	if err == nil {
 		t.Errorf("want: error, but got: nil")

@@ -1,18 +1,23 @@
 package provision
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
+	"encoding/json"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-12-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2017-09-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2017-05-10/resources"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/dimchansky/utfbom"
 	"github.com/google/uuid"
 	"github.com/sethvargo/go-password/password"
+	"io/ioutil"
 	"log"
 	"os"
+	"unicode/utf16"
 )
 
 const AzureStatusSucceeded = "Succeeded"
@@ -25,12 +30,68 @@ type AzureProvisioner struct {
 	ctx               context.Context
 }
 
-func NewAzureProvisioner(subscriptionId, authFile string) (*AzureProvisioner, error) {
-	err := os.Setenv("AZURE_AUTH_LOCATION", authFile)
+var fileToEnvMap = map[string]string{
+	"subscriptionId":             "AZURE_SUBSCRIPTION_ID",
+	"tenantId":                   "AZURE_TENANT_ID",
+	"auxiliaryTenantIds":         "AZURE_AUXILIARY_TENANT_IDS",
+	"clientId":                   "AZURE_CLIENT_ID",
+	"clientSecret":               "AZURE_CLIENT_SECRET",
+	"certificatePath":            "AZURE_CERTIFICATE_PATH",
+	"certificatePassword":        "AZURE_CERTIFICATE_PASSWORD",
+	"username":                   "AZURE_USERNAME",
+	"password":                   "AZURE_PASSWORD",
+	"environmentName":            "AZURE_ENVIRONMENT",
+	"resource":                   "AZURE_AD_RESOURCE",
+	"activeDirectoryEndpointUrl": "ActiveDirectoryEndpoint",
+	"resourceManagerEndpointUrl": "ResourceManagerEndpoint",
+	"graphResourceId":            "GraphResourceID",
+	"sqlManagementEndpointUrl":   "SQLManagementEndpoint",
+	"galleryEndpointUrl":         "GalleryEndpoint",
+	"managementEndpointUrl":      "ManagementEndpoint",
+}
+
+// In case azure auth file is encoded as UTF-16 instead of UTF-8
+func decodeAzureAuthContents(b []byte) ([]byte, error) {
+	reader, enc := utfbom.Skip(bytes.NewReader(b))
+
+	switch enc {
+	case utfbom.UTF16LittleEndian:
+		u16 := make([]uint16, (len(b)/2)-1)
+		err := binary.Read(reader, binary.LittleEndian, &u16)
+		if err != nil {
+			return nil, err
+		}
+		return []byte(string(utf16.Decode(u16))), nil
+	case utfbom.UTF16BigEndian:
+		u16 := make([]uint16, (len(b)/2)-1)
+		err := binary.Read(reader, binary.BigEndian, &u16)
+		if err != nil {
+			return nil, err
+		}
+		return []byte(string(utf16.Decode(u16))), nil
+	}
+	return ioutil.ReadAll(reader)
+}
+
+func NewAzureProvisioner(subscriptionId, authFileContents string) (*AzureProvisioner, error) {
+	decodedAuthContents, err := decodeAzureAuthContents([]byte(authFileContents))
 	if err != nil {
+		log.Printf("Failed to decode auth contents: '%s', error: '%s'", authFileContents, err.Error())
 		return nil, err
 	}
-	authorizer, err := auth.NewAuthorizerFromFile(azure.PublicCloud.ResourceManagerEndpoint)
+	authMap := map[string]string{}
+	err = json.Unmarshal(decodedAuthContents, &authMap)
+	if err != nil {
+		log.Printf("Failed to parse auth contents: '%s', error: '%s'", authFileContents, err.Error())
+		return nil, err
+	}
+	for fileKey, envKey := range fileToEnvMap {
+		err := os.Setenv(envKey, authMap[fileKey])
+		if err != nil {
+			log.Printf("Failed to set env: '%s', error: '%s'", fileKey, err.Error())
+		}
+	}
+	authorizer, err := auth.NewAuthorizerFromEnvironment()
 	ctx := context.Background()
 	return &AzureProvisioner{
 		subscriptionId: subscriptionId,

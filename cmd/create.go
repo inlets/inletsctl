@@ -151,13 +151,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	var subscriptionID string
-	var accessTokenFile string
 	if provider == "azure" {
 		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
-		accessTokenFile, _ = cmd.Flags().GetString("access-token-file")
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, accessTokenFile, secretKey, organisationID, region, subscriptionID)
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID)
 
 	if err != nil {
 		return err
@@ -246,7 +244,7 @@ To Delete:
 	return err
 }
 
-func getProvisioner(provider, accessToken, accessTokenFile, secretKey, organisationID, region, subscriptionID string) (provision.Provisioner, error) {
+func getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID string) (provision.Provisioner, error) {
 	if provider == "digitalocean" {
 		return provision.NewDigitalOceanProvisioner(accessToken)
 	} else if provider == "packet" {
@@ -260,7 +258,7 @@ func getProvisioner(provider, accessToken, accessTokenFile, secretKey, organisat
 	} else if provider == "ec2" {
 		return provision.NewEC2Provisioner(region, accessToken, secretKey)
 	} else if provider == "azure" {
-		return provision.NewAzureProvisioner(subscriptionID, accessTokenFile)
+		return provision.NewAzureProvisioner(subscriptionID, accessToken)
 	} else if provider == "linode" {
 		return provision.NewLinodeProvisioner(accessToken)
 	}
