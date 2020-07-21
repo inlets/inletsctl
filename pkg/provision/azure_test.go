@@ -15,6 +15,33 @@ func Test_Azure_Auth_Contents_Invalid(t *testing.T) {
 	}
 }
 
+func Test_Azure_Build_Group_Deployment_Name(t *testing.T) {
+	hostID := buildAzureHostID("inlets-peaceful-chaum1", "deployments-e589c808-3936-4bd9-b558-36640eb98cb0")
+	if hostID != "inlets-peaceful-chaum1|deployments-e589c808-3936-4bd9-b558-36640eb98cb0" {
+		t.Errorf("want: inlets-peaceful-chaum1|deployments-e589c808-3936-4bd9-b558-36640eb98cb, but got: %s", hostID)
+	}
+}
+
+func Test_Azure_Parse_Group_Deployment_Name_Success(t *testing.T) {
+	resourceGroupName, deploymentName, err := getAzureFieldsFromID("inlets-peaceful-chaum1|deployments-e589c808-3936-4bd9-b558-36640eb98cb0")
+	if err != nil {
+		t.Errorf("want: nil, but got: %s", err.Error())
+	}
+	if resourceGroupName != "inlets-peaceful-chaum1" {
+		t.Errorf("want: inlets-peaceful-chaum1, but got: %s", resourceGroupName)
+	}
+	if deploymentName != "deployments-e589c808-3936-4bd9-b558-36640eb98cb0" {
+		t.Errorf("want: deployments-e589c808-3936-4bd9-b558-36640eb98cb0, but got: %s", deploymentName)
+	}
+}
+
+func Test_Azure_Parse_Group_Deployment_Name_Fail(t *testing.T) {
+	_, _, err := getAzureFieldsFromID("INVALID_ID")
+	if err == nil {
+		t.Errorf("want: error, but got nil")
+	}
+}
+
 func Test_Azure_Template(t *testing.T) {
 	want := map[string]interface{}{
 		"$schema":        "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
@@ -241,19 +268,6 @@ func Test_Azure_Parameters(t *testing.T) {
 		},
 		"networkSecurityGroupRules": map[string]interface{}{
 			"value": []interface{}{
-				map[string]interface{}{
-					"name": "SSH",
-					"properties": map[string]interface{}{
-						"access":                   "Allow",
-						"destinationAddressPrefix": "*",
-						"destinationPortRange":     "22",
-						"direction":                "Inbound",
-						"priority":                 300,
-						"protocol":                 "TCP",
-						"sourceAddressPrefix":      "*",
-						"sourcePortRange":          "*",
-					},
-				},
 				map[string]interface{}{
 					"name": "HTTPS",
 					"properties": map[string]interface{}{

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-12-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2017-09-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2017-05-10/resources"
@@ -17,6 +18,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"unicode/utf16"
 )
 
@@ -48,6 +50,26 @@ var fileToEnvMap = map[string]string{
 	"sqlManagementEndpointUrl":   "SQLManagementEndpoint",
 	"galleryEndpointUrl":         "GalleryEndpoint",
 	"managementEndpointUrl":      "ManagementEndpoint",
+}
+
+// buildAzureHostID creates an ID for Azure based upon the group name,
+// and deployment name
+func buildAzureHostID(groupName, deploymentName string) (id string) {
+	return fmt.Sprintf("%s|%s", groupName, deploymentName)
+}
+
+// get some required fields from the custom Azure host ID
+func getAzureFieldsFromID(id string) (groupName, deploymentName string, err error) {
+	fields := strings.Split(id, "|")
+	err = nil
+	if len(fields) == 2 {
+		groupName = fields[0]
+		deploymentName = fields[1]
+	} else {
+		err = fmt.Errorf("could not get fields from custom ID: fields: %v", fields)
+		return "", "", err
+	}
+	return groupName, deploymentName, nil
 }
 
 // In case azure auth file is encoded as UTF-16 instead of UTF-8
@@ -106,7 +128,7 @@ func (p *AzureProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	log.Printf("Provisioning host with Azure\n")
 
 	p.resourceGroupName = "inlets-" + host.Name
-	p.deploymentName = "inlets-deploy-" + uuid.New().String()
+	p.deploymentName = "deployment-" + uuid.New().String()
 
 	log.Printf("Creating resource group %s", p.resourceGroupName)
 	group, err := createGroup(p, host)
@@ -122,7 +144,7 @@ func (p *AzureProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	}
 	return &ProvisionedHost{
 		IP:     "",
-		ID:     p.resourceGroupName,
+		ID:     buildAzureHostID(p.resourceGroupName, p.deploymentName),
 		Status: ActiveStatus,
 	}, nil
 }
@@ -131,7 +153,13 @@ func (p *AzureProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 func (p *AzureProvisioner) Status(id string) (*ProvisionedHost, error) {
 	deploymentsClient := resources.NewDeploymentsClient(p.subscriptionId)
 	deploymentsClient.Authorizer = p.authorizer
-	deployment, err := deploymentsClient.Get(p.ctx, p.resourceGroupName, p.deploymentName)
+
+	resourceGroupName, deploymentName, err := getAzureFieldsFromID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	deployment, err := deploymentsClient.Get(p.ctx, resourceGroupName, deploymentName)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +184,11 @@ func (p *AzureProvisioner) Status(id string) (*ProvisionedHost, error) {
 func (p *AzureProvisioner) Delete(request HostDeleteRequest) error {
 	groupsClient := resources.NewGroupsClient(p.subscriptionId)
 	groupsClient.Authorizer = p.authorizer
-	_, err := groupsClient.Delete(p.ctx, request.ID)
+	resourceGroupName, _, err := getAzureFieldsFromID(request.ID)
+	if err != nil {
+		return err
+	}
+	_, err = groupsClient.Delete(p.ctx, resourceGroupName)
 	return err
 }
 
