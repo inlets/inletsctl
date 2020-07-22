@@ -8,7 +8,6 @@ import (
 )
 
 var Status = "running"
-var defaultInstanceName = "CX11"
 
 type HetznerProvisioner struct {
 	client *hcloud.Client
@@ -32,7 +31,7 @@ func (p *HetznerProvisioner) Status(id string) (*ProvisionedHost, error) {
 	if err != nil {
 		return nil, err
 	}
-	if server != nil {
+	if server == nil {
 		return nil, fmt.Errorf("failed to find server with id %s", id)
 	}
 
@@ -56,13 +55,13 @@ func (p *HetznerProvisioner) Status(id string) (*ProvisionedHost, error) {
 // Provision a new server on Hetzner cloud to use as an inlet node.
 func (p *HetznerProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	if len(host.Plan) <= 0 {
-		host.Plan = defaultInstanceName
+		host.Plan = "cx11"
 	}
 	if len(host.Region) <= 0 {
 		host.Region = "hel1"
 	}
 
-	img, _, err := p.client.Image.GetByName(context.Background(), host.Plan)
+	img, _, err := p.client.Image.GetByName(context.Background(), host.OS)
 	loc, _, err := p.client.Location.GetByName(context.Background(), host.Region)
 	pln, _, err := p.client.ServerType.GetByName(context.Background(), host.Plan)
 
