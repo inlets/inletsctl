@@ -49,6 +49,7 @@ Completed:
 * [x] Provisioner: AWS EC2
 * [x] Provisioner: Azure
 * [x] Provisioner: Linode
+* [x] Provisioner: Hetzner
 * [x] `inletsctl delete` command
 * [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
 * [x] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
