@@ -13,7 +13,7 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode or civo")
+	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode, civo or hetzner")
 	deleteCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	deleteCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
