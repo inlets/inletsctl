@@ -27,7 +27,7 @@ func init() {
 
 	inletsCmd.AddCommand(createCmd)
 
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode or civo")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode, civo or hetzner")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
 
@@ -54,7 +54,7 @@ var createCmd = &cobra.Command{
 along with what OS version and spec will be used is explained in the README.
 `,
 	Example: `  inletsctl create  \
-	--provider [digitalocean|packet|ec2|scaleway|civo|gce|azure|linode] \
+	--provider [digitalocean|packet|ec2|scaleway|civo|gce|azure|linode|hetzner] \
 	--access-token-file $HOME/access-token \
 	--region lon1
 
@@ -119,6 +119,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "ams1"
 	} else if provider == "ec2" {
 		region = "eu-west-1"
+	} else if provider == "hetzner" {
+		region = "hel1"
 	}
 
 	var zone string
@@ -261,6 +263,8 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region, su
 		return provision.NewAzureProvisioner(subscriptionID, accessToken)
 	} else if provider == "linode" {
 		return provision.NewLinodeProvisioner(accessToken)
+	} else if provider == "hetzner" {
+		return provision.NewHetznerProvisioner(accessToken)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }
@@ -374,6 +378,14 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"inlets-port": inletsPort,
 				"pro":         fmt.Sprint(pro),
 			},
+		}, nil
+	} else if provider == "hetzner" {
+		return &provision.BasicHost{
+			Name:       name,
+			Region:     region,
+			Plan:       "cx11",
+			OS:         "ubuntu-20.04",
+			UserData:   userData,
 		}, nil
 	}
 
