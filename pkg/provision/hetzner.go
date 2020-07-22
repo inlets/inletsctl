@@ -100,6 +100,7 @@ func (p *HetznerProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error)
 			LabelSelector: "managed-by=inlets",
 		},
 	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (p *HetznerProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error)
 }
 
 // Delete a specific server from the Hetzner cloud.
-func (p* HetznerProvisioner) Delete(request HostDeleteRequest) error {
+func (p *HetznerProvisioner) Delete(request HostDeleteRequest) error {
 	id := request.ID
 	if len(id) <= 0 {
 		hosts, err := p.List(ListFilter{})
@@ -142,6 +143,10 @@ func (p* HetznerProvisioner) Delete(request HostDeleteRequest) error {
 	server, _, err := p.client.Server.GetByID(context.Background(), idAsInt)
 	if err != nil {
 		return err
+	}
+
+	if server == nil {
+		return fmt.Errorf("failed to find server with id %s", id)
 	}
 
 	_, err = p.client.Server.Delete(context.Background(), server)
