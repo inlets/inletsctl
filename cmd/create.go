@@ -380,6 +380,11 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			},
 		}, nil
 	} else if provider == "hetzner" {
+		// Easiest way to get the information of available images and server types is through
+		// the Hetzner API, but it requires auth for any type of call.
+		// Images can be fetched from https://api.hetzner.cloud/v1/images
+		// Server types can be fetched from https://api.hetzner.cloud/v1/server_types
+		// The regions available are hel1 (Helsinki), nur1 (Nuremberg), fsn1 (Falkenstein)
 		return &provision.BasicHost{
 			Name:     name,
 			Region:   region,
