@@ -381,11 +381,11 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 		}, nil
 	} else if provider == "hetzner" {
 		return &provision.BasicHost{
-			Name:       name,
-			Region:     region,
-			Plan:       "cx11",
-			OS:         "ubuntu-20.04",
-			UserData:   userData,
+			Name:     name,
+			Region:   region,
+			Plan:     "cx11",
+			OS:       "ubuntu-16.04",
+			UserData: userData,
 		}, nil
 	}
 
