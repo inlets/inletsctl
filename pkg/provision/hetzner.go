@@ -89,6 +89,8 @@ func (p *HetznerProvisioner) Provision(host BasicHost) (*ProvisionedHost, error)
 func (p *HetznerProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
 	var hosts []*ProvisionedHost
 	hostList, err := p.client.Server.AllWithOpts(context.Background(), hcloud.ServerListOpts{
+		// Adding a label to the VPS so that it is easier to select inlets managed servers and also
+		// to tell the user that the server in question is managed by inlets.
 		ListOpts: hcloud.ListOpts{
 			LabelSelector: "managed-by=inlets",
 		},
@@ -122,10 +124,9 @@ func (p *HetznerProvisioner) Delete(request HostDeleteRequest) error {
 				id = instance.ID
 			}
 		}
-	}
-
-	if len(id) <= 0 {
-		return fmt.Errorf("failed to find server with id %s", id)
+		if len(id) <= 0 {
+			return fmt.Errorf("failed to find server with id with IP %s", request.IP)
+		}
 	}
 
 	idAsInt, err := strconv.Atoi(id)
