@@ -200,6 +200,19 @@ inletsctl create --provider scaleway \
 
 The region is hard-coded to France / Paris 1.
 
+### Example usage with Hetzner
+
+```sh
+# Obtain the API token from Hetzner Cloud Console.
+export TOKEN=""
+
+inletsctl create --provider hetzner \
+  --access-token $TOKEN \
+  --region hel1
+```
+
+Available regions are `hel1` (Helsinki), `nur1` (Nuremberg), `fsn1` (Falkenstein).
+
 ## Examples for `inletsctl kfwd`
 
 The `inletsctl kfwd` command can port-forward services from within your local Kubernetes cluster to your local network or computer.
