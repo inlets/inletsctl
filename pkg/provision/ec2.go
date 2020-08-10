@@ -40,9 +40,23 @@ func (p *EC2Provisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	}
 	pro := host.Additional["pro"]
 
-	groupID, name, err := p.creteEC2SecurityGroup(port, pro)
+	var vpcID = host.Additional["vpc-id"]
+	var subnetID = host.Additional["subnet-id"]
+
+	groupID, name, err := p.createEC2SecurityGroup(vpcID, port, pro)
 	if err != nil {
 		return nil, err
+	}
+
+	var networkSpec = ec2.InstanceNetworkInterfaceSpecification{
+		DeviceIndex:              aws.Int64(int64(0)),
+		AssociatePublicIpAddress: aws.Bool(true),
+		DeleteOnTermination:      aws.Bool(true),
+		Groups:                   []*string{groupID},
+	}
+
+	if len(subnetID) > 0 {
+		networkSpec.SubnetId = aws.String(subnetID)
 	}
 
 	runResult, err := p.ec2Provisioner.RunInstances(&ec2.RunInstancesInput{
@@ -52,15 +66,18 @@ func (p *EC2Provisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 		MaxCount:     aws.Int64(1),
 		UserData:     &host.UserData,
 		NetworkInterfaces: []*ec2.InstanceNetworkInterfaceSpecification{
-			{
-				DeviceIndex:              aws.Int64(int64(0)),
-				AssociatePublicIpAddress: aws.Bool(true),
-				DeleteOnTermination:      aws.Bool(true),
-				Groups:                   []*string{groupID},
-			},
+			&networkSpec,
 		},
 	})
 	if err != nil {
+		// clean up SG if there was an issue provisioning the EC2 instance
+		input := ec2.DeleteSecurityGroupInput {
+			GroupId:   groupID,
+		}
+		_, sgErr := p.ec2Provisioner.DeleteSecurityGroup(&input)
+		if sgErr != nil {
+			return nil, fmt.Errorf("error provisioning ec2 instance: %v; error deleting SG: %v", err, sgErr)
+		}
 		return nil, err
 	}
 
@@ -229,15 +246,21 @@ func (p *EC2Provisioner) lookupID(request HostDeleteRequest) (string, error) {
 	return "", fmt.Errorf("no host with ip: %s", request.IP)
 }
 
-// creteEC2SecurityGroup creates a security group for the exit-node
-func (p *EC2Provisioner) creteEC2SecurityGroup(controlPort int, pro string) (*string, *string, error) {
+// createEC2SecurityGroup creates a security group for the exit-node
+func (p *EC2Provisioner) createEC2SecurityGroup(vpcID string, controlPort int, pro string) (*string, *string, error) {
 	ports := []int{80, 443, controlPort}
 	proPorts := []int{1024, 65535}
 	groupName := "inlets-" + uuid.New().String()
-	group, err := p.ec2Provisioner.CreateSecurityGroup(&ec2.CreateSecurityGroupInput{
+	var input = &ec2.CreateSecurityGroupInput{
 		Description: aws.String("inlets security group"),
 		GroupName:   aws.String(groupName),
-	})
+	}
+
+	if len(vpcID) > 0 {
+		input.VpcId = aws.String(vpcID)
+	}
+
+	group, err := p.ec2Provisioner.CreateSecurityGroup(input)
 	if err != nil {
 		return nil, nil, err
 	}
