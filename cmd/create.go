@@ -35,6 +35,8 @@ func init() {
 	createCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
 	createCmd.Flags().StringP("access-token-file", "f", "", "Read this file for the access token for your cloud")
 
+	createCmd.Flags().String("vpc-id", "", "The VPC ID to create the exit-node in (EC2)")
+	createCmd.Flags().String("subnet-id", "", "The Subnet ID where the exit-node should be placed (EC2)")
 	createCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway, EC2)")
 	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
@@ -131,6 +133,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	var secretKey string
 	var organisationID string
 	var projectID string
+	var vpcID string
+	var subnetID string
 	if provider == "scaleway" || provider == "ec2" {
 
 		var secretKeyErr error
@@ -145,6 +149,23 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 				return fmt.Errorf("--organisation-id flag must be set")
 			}
 		}
+
+		if provider == "ec2" {
+			vpcID, err = cmd.Flags().GetString("vpc-id")
+			if err != nil {
+				return errors.Wrap(err, "failed to get 'vpc-id' value")
+			}
+
+			subnetID, err = cmd.Flags().GetString("subnet-id")
+			if err != nil {
+				return errors.Wrap(err, "failed to get 'subnet-id' value")
+			}
+
+			if (len(vpcID) == 0 && len(subnetID) > 0) || (len(subnetID) == 0 && len(vpcID) > 0) {
+				return fmt.Errorf("both --vpc-id and --subnet-id must be set")
+			}
+		}
+
 	} else if provider == "gce" || provider == "packet" {
 		projectID, _ = cmd.Flags().GetString("project-id")
 		if len(projectID) == 0 {
@@ -173,7 +194,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	userData := makeUserdata(inletsToken, inletsControlPort, remoteTCP)
 
-	hostReq, err := createHost(provider, name, region, zone, projectID, userData, strconv.Itoa(inletsControlPort), pro)
+	hostReq, err := createHost(provider, name, region, zone, projectID, userData, strconv.Itoa(inletsControlPort), vpcID, subnetID, pro)
 	if err != nil {
 		return err
 	}
@@ -274,7 +295,7 @@ func generateAuth() (string, error) {
 	return pwdRes, pwdErr
 }
 
-func createHost(provider, name, region, zone, projectID, userData, inletsPort string, pro bool) (*provision.BasicHost, error) {
+func createHost(provider, name, region, zone, projectID, userData, inletsPort string, vpcID string, subnetID string, pro bool) (*provision.BasicHost, error) {
 	if provider == "digitalocean" {
 		return &provision.BasicHost{
 			Name:       name,
@@ -331,16 +352,27 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	} else if provider == "ec2" {
 		// Ubuntu images can be found here https://cloud-images.ubuntu.com/locator/ec2/
 		// Name is used in the OS field so the ami can be lookup up in the region specified
+
+		var additional = map[string]string{
+			"inlets-port": inletsPort,
+			"pro":         fmt.Sprint(pro),
+		}
+
+		if len(vpcID) > 0 {
+			additional["vpc-id"] = vpcID
+		}
+
+		if len(subnetID) > 0 {
+			additional["subnet-id"] = subnetID
+		}
+
 		return &provision.BasicHost{
-			Name:     name,
-			OS:       "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20191114",
-			Plan:     "t3.nano",
-			Region:   region,
-			UserData: base64.StdEncoding.EncodeToString([]byte(userData)),
-			Additional: map[string]string{
-				"inlets-port": inletsPort,
-				"pro":         fmt.Sprint(pro),
-			},
+			Name:       name,
+			OS:         "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20191114",
+			Plan:       "t3.nano",
+			Region:     region,
+			UserData:   base64.StdEncoding.EncodeToString([]byte(userData)),
+			Additional: additional,
 		}, nil
 	} else if provider == "azure" {
 		// Ubuntu images can be found here https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cli-ps-findimage#list-popular-images
