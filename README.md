@@ -163,7 +163,7 @@ gcloud iam service-accounts keys create key.json \
 inletsctl create -p gce --project-id=$PROJECTID -f=key.json
 
 ## Create a TCP tunnel with inlets-pro
-inletsctl create -p gce -p $PROJECTID --remote-tcp=127.0.0.1 -f=key.json
+inletsctl create -p gce -p $PROJECTID -f=key.json
 
 # Or specify any valid Google Cloud Zone optional zone, by default it get provisioned in us-central1-a
 inletsctl create -p gce --project-id=$PROJECTID -f key.json --zone=us-central1-a
@@ -178,12 +178,14 @@ inletsctl create --access-token-file $HOME/Downloads/do-access-token \
 
 ### Example with inlets-pro
 
-Let's say we want to forward TCP connections to the IP `192.168.0.26` within our client's network, using inlets-pro, we'd run this using the `--remote-tcp` flag.
-
 ```sh
-inletsctl create digitalocean --access-token-file ~/Downloads/do-access-token \
-  --remote-tcp 192.168.0.26
+inletsctl create \
+  --provider digitalocean \
+  --access-token-file ~/Downloads/do-access-token \
+  --pro
 ```
+
+Then make sure you pass the `--upstream` variable to the inlets PRO client with the message displayed after creation.
 
 ### Example usage with Scaleway
 
