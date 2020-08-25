@@ -143,6 +143,7 @@ Hit Control+C to cancel.`, eth, port)
 			"--token=" + inletsToken,
 		},
 	}
+
 	serverRes, serverErr := serverTask.Execute()
 
 	if serverErr != nil {
@@ -176,7 +177,7 @@ spec:
     spec:
       containers:
       - name: inlets
-        image: inlets/inlets:2.7.2
+        image: inlets/inlets:2.7.4
         imagePullPolicy: IfNotPresent
         command: ["inlets"]
         args:

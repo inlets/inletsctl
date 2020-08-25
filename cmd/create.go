@@ -29,21 +29,21 @@ func init() {
 
 	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode, civo or hetzner")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
-	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
+	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit-server (Google Compute Engine)")
 
-	createCmd.Flags().StringP("inlets-token", "t", "", "The auth token for the inlets server on your new exit-node, leave blank to auto-generate")
+	createCmd.Flags().StringP("inlets-token", "t", "", "The auth token for the inlets server on your new exit-server, leave blank to auto-generate")
 	createCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
 	createCmd.Flags().StringP("access-token-file", "f", "", "Read this file for the access token for your cloud")
 
-	createCmd.Flags().String("vpc-id", "", "The VPC ID to create the exit-node in (EC2)")
-	createCmd.Flags().String("subnet-id", "", "The Subnet ID where the exit-node should be placed (EC2)")
+	createCmd.Flags().String("vpc-id", "", "The VPC ID to create the exit-server in (EC2)")
+	createCmd.Flags().String("subnet-id", "", "The Subnet ID where the exit-server should be placed (EC2)")
 	createCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway, EC2)")
 	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
 	createCmd.Flags().String("project-id", "", "Project ID (Packet.com, Google Compute Engine)")
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
-	createCmd.Flags().StringP("remote-tcp", "c", "", `Remote host for inlets-pro to use for forwarding TCP connections`)
+	createCmd.Flags().Bool("pro", false, `Provision an exit-server for use with inlets PRO`)
 
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 }
@@ -51,17 +51,19 @@ func init() {
 // clientCmd represents the client sub command.
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create an exit node on cloud infrastructure",
-	Long: `Create an exit node on cloud infrastructure. The estimated cost of each VM 
-along with what OS version and spec will be used is explained in the README.
+	Short: "Create an exit-server on cloud infrastructure",
+	Long: `Create an exit-server on cloud infrastructure with inlets or inlets PRO 
+preloaded as a systemd service. The estimated cost of each VM along with 
+what OS version and spec will be used is explained in the README.
 `,
 	Example: `  inletsctl create  \
 	--provider [digitalocean|packet|ec2|scaleway|civo|gce|azure|linode|hetzner] \
 	--access-token-file $HOME/access-token \
 	--region lon1
 
-  # For inlets-pro, give the --remote-tcp flag
-  inletsctl create --remote-tcp 192.168.0.100`,
+  # For inlets-pro, give the --pro flag:
+  inletsctl create --pro
+`,
 	RunE:          runCreate,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -190,11 +192,24 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		pro = true
 	}
 
+	if v, _ := cmd.Flags().GetBool("pro"); v {
+		pro = true
+	}
+
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
+	userData := makeUserdata(inletsToken, inletsControlPort, pro)
 
-	userData := makeUserdata(inletsToken, inletsControlPort, remoteTCP)
+	hostReq, err := createHost(provider,
+		name,
+		region,
+		zone,
+		projectID,
+		userData,
+		strconv.Itoa(inletsControlPort),
+		vpcID,
+		subnetID,
+		pro)
 
-	hostReq, err := createHost(provider, name, region, zone, projectID, userData, strconv.Itoa(inletsControlPort), vpcID, subnetID, pro)
 	if err != nil {
 		return err
 	}
@@ -226,7 +241,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 		if hostStatus.Status == "active" {
 			if !pro {
-				fmt.Printf(`Inlets OSS exit-node summary:
+				fmt.Printf(`inlets OSS exit-server summary:
   IP: %s
   Auth-token: %s
 
@@ -243,17 +258,20 @@ To Delete:
 				return nil
 			}
 
-			fmt.Printf(`inlets-pro exit-node summary:
+			fmt.Printf(`inlets PRO (0.7.0) exit-server summary:
   IP: %s
   Auth-token: %s
 
 Command:
-  export TCP_PORTS="8000"
   export LICENSE=""
-  inlets-pro client --connect "wss://%s:%d/connect" \
+  export PORTS="8000"
+  export UPSTREAM="localhost"
+
+  inlets-pro client --url "wss://%s:%d/connect" \
 	--token "%s" \
 	--license "$LICENSE" \
-	--tcp-ports $TCP_PORTS
+	--upstream $UPSTREAM \
+	--ports $PORTS
 
 To Delete:
 	  inletsctl delete --provider %s --id "%s"
@@ -429,11 +447,11 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	return nil, fmt.Errorf("no provisioner for provider: %q", provider)
 }
 
-func makeUserdata(authToken string, inletsControlPort int, remoteTCP string) string {
+func makeUserdata(authToken string, inletsControlPort int, pro bool) string {
 
 	controlPort := fmt.Sprintf("%d", inletsControlPort)
 
-	if len(remoteTCP) == 0 {
+	if !pro {
 		return `#!/bin/bash
 export AUTHTOKEN="` + authToken + `"
 export CONTROLPORT="` + controlPort + `"
@@ -449,17 +467,15 @@ curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-ope
 
 	return `#!/bin/bash
 export AUTHTOKEN="` + authToken + `"
-export REMOTETCP="` + remoteTCP + `"
 export IP=$(curl -sfSL https://checkip.amazonaws.com)
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.6.0/inlets-pro > /tmp/inlets-pro && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.7.0/inlets-pro > /tmp/inlets-pro && \
   chmod +x /tmp/inlets-pro  && \
   mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
-curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-pro.service  && \
+curl -sLO https://raw.githubusercontent.com/inlets/inlets-pro/master/artifacts/inlets-pro.service  && \
   mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
   echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
-  echo "REMOTETCP=$REMOTETCP" >> /etc/default/inlets-pro && \
   echo "IP=$IP" >> /etc/default/inlets-pro && \
   systemctl start inlets-pro && \
   systemctl enable inlets-pro`
