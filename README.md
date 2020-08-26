@@ -248,7 +248,7 @@ You can seek out community support through the [OpenFaaS Slack](https://slack.op
 
 ### Add another cloud provisioner
 
-Add a provisioner by sending a PR to the [inlets-operator's provision package](https://github.com/inlets/inlets-operator/tree/master/pkg/provision), once released, you can vendor the package here and add any flags that are required.
+Add a provisioner by sending a PR to the [inletsctl's provision package](https://github.com/inlets/inletsctl/tree/master/pkg/provision), once released, you can vendor the package here and add any flags that are required.
 
 > Note: only providers and platforms which support cloudinit / user-data scripts are supported.
 

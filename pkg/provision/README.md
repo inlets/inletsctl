@@ -33,6 +33,8 @@ The first rule about the `provision` package is that we don't do SSH. Key manage
 * All provisioning code should detect the correct "status" for the provider and set the standard known value
 * Always show your testing in PRs.
 
+Finally please [add an example to the documentation](https://docs.inlets.dev/#/tools/inletsctl?id=inletsctl-reference-documentation) for your provider in the [inlets/docs](https://github.com/inlets/docs) repo.
+
 If you would like to add a provider please propose it with an Issue, to make sure that the community are happy to accept the change, and to maintain the code on an ongoing basis.
 
 ## Maintainers for each provider
