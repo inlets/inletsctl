@@ -30,7 +30,7 @@ func init() {
 
 	inletsCmd.AddCommand(createCmd)
 
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode, civo or hetzner")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode, civo, hetzner or vultr")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit-server (Google Compute Engine)")
 
@@ -128,6 +128,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "eu-west-1"
 	} else if provider == "hetzner" {
 		region = "hel1"
+	} else if provider == "vultr" {
+		region = "LHR" // London
 	}
 
 	var zone string
@@ -318,6 +320,8 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region, su
 		return provision.NewLinodeProvisioner(accessToken)
 	} else if provider == "hetzner" {
 		return provision.NewHetznerProvisioner(accessToken)
+	} else if provider == "vultr" {
+		return provision.NewVultrProvisioner(accessToken)
 	}
 	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 }
@@ -424,6 +428,21 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"imageSku":       "16.04-LTS",
 				"imageVersion":   "latest",
 			},
+		}, nil
+	} else if provider == "vultr" {
+		// OS:
+		//  A complete list of available OS is available using: https://api.vultr.com/v1/os/list
+		//  215 = Ubuntu 16.04 x64
+		// Plans:
+		//  A complete list of available OS is available using: https://api.vultr.com/v1/plans/list
+		//  201 = 1024 MB RAM,25 GB SSD,1.00 TB BW
+		return &provision.BasicHost{
+			Name:       name,
+			OS:         "215",
+			Plan:       "201",
+			Region:     region,
+			UserData:   userData,
+			Additional: map[string]string{},
 		}, nil
 	} else if provider == "linode" {
 		// Image:
