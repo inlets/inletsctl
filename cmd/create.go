@@ -20,7 +20,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsControlPort = 8080
+const inletsOSSVersion = "2.7.4"
+const inletsPROVersion = "0.7.0"
+
+const inletsOSSControlPort = 8080
 const inletsProControlPort = 8123
 
 func init() {
@@ -185,19 +188,18 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
-	remoteTCP, _ := cmd.Flags().GetString("remote-tcp")
 	var pro bool
-	if len(remoteTCP) > 0 {
-		pro = true
-	}
 
 	if v, _ := cmd.Flags().GetBool("pro"); v {
 		pro = true
 	}
 
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
-	userData := makeUserdata(inletsToken, inletsControlPort, pro)
+	userData := provision.MakeExitServerUserdata(inletsOSSControlPort,
+		inletsToken,
+		inletsOSSVersion,
+		inletsPROVersion,
+		pro)
 
 	hostReq, err := createHost(provider,
 		name,
@@ -205,7 +207,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		zone,
 		projectID,
 		userData,
-		strconv.Itoa(inletsControlPort),
+		strconv.Itoa(inletsOSSControlPort),
 		vpcID,
 		subnetID,
 		pro)
@@ -241,7 +243,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 		if hostStatus.Status == "active" {
 			if !pro {
-				fmt.Printf(`inlets OSS exit-server summary:
+				fmt.Printf(`inlets OSS (`+inletsOSSVersion+`) exit-server summary:
   IP: %s
   Auth-token: %s
 
@@ -254,11 +256,17 @@ Command:
 To Delete:
 	inletsctl delete --provider %s --id "%s"
 `,
-					hostStatus.IP, inletsToken, hostStatus.IP, inletsControlPort, inletsToken, provider, hostStatus.ID)
+					hostStatus.IP,
+					inletsToken,
+					hostStatus.IP,
+					inletsOSSControlPort,
+					inletsToken,
+					provider,
+					hostStatus.ID)
 				return nil
 			}
 
-			fmt.Printf(`inlets PRO (0.7.0) exit-server summary:
+			fmt.Printf(`inlets PRO (`+inletsPROVersion+`) exit-server summary:
   IP: %s
   Auth-token: %s
 
@@ -276,7 +284,13 @@ Command:
 To Delete:
 	  inletsctl delete --provider %s --id "%s"
 `,
-				hostStatus.IP, inletsToken, hostStatus.IP, inletsProControlPort, inletsToken, provider, hostStatus.ID)
+				hostStatus.IP,
+				inletsToken,
+				hostStatus.IP,
+				inletsProControlPort,
+				inletsToken,
+				provider,
+				hostStatus.ID)
 
 			return nil
 		}
@@ -445,38 +459,4 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	}
 
 	return nil, fmt.Errorf("no provisioner for provider: %q", provider)
-}
-
-func makeUserdata(authToken string, inletsControlPort int, pro bool) string {
-
-	controlPort := fmt.Sprintf("%d", inletsControlPort)
-
-	if !pro {
-		return `#!/bin/bash
-export AUTHTOKEN="` + authToken + `"
-export CONTROLPORT="` + controlPort + `"
-curl -sLS https://get.inlets.dev | sh
-
-curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-operator.service  && \
-  mv inlets-operator.service /etc/systemd/system/inlets.service && \
-  echo "AUTHTOKEN=$AUTHTOKEN" > /etc/default/inlets && \
-  echo "CONTROLPORT=$CONTROLPORT" >> /etc/default/inlets && \
-  systemctl start inlets && \
-  systemctl enable inlets`
-	}
-
-	return `#!/bin/bash
-export AUTHTOKEN="` + authToken + `"
-export IP=$(curl -sfSL https://checkip.amazonaws.com)
-
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.7.0/inlets-pro > /tmp/inlets-pro && \
-  chmod +x /tmp/inlets-pro  && \
-  mv /tmp/inlets-pro /usr/local/bin/inlets-pro
-
-curl -sLO https://raw.githubusercontent.com/inlets/inlets-pro/master/artifacts/inlets-pro.service  && \
-  mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
-  echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
-  echo "IP=$IP" >> /etc/default/inlets-pro && \
-  systemctl start inlets-pro && \
-  systemctl enable inlets-pro`
 }
