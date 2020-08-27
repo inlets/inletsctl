@@ -25,6 +25,7 @@ require (
 	github.com/sethvargo/go-password v0.1.3
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
+	github.com/vultr/govultr v0.3.2
 	go.opencensus.io v0.22.2 // indirect
 	golang.org/x/net v0.0.0-20191126235420-ef20fe5d7933 // indirect
 	golang.org/x/oauth2 v0.0.0-20191122200657-5d9234df094c

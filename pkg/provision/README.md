@@ -45,3 +45,4 @@ If you would like to add a provider please propose it with an Issue, to make sur
 * GCE - [utsavanand2](https://github.com/utsavanand2/)
 * Azure, Linode - [zechenbit](https://github.com/zechenbit/)
 * Hetzner [Johannestegner](https://github.com/johannestegner)
+* Vultr [jsiebens](https://github.com/jsiebens)
