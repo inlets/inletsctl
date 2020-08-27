@@ -33,7 +33,7 @@ curl -SLsf https://github.com/inlets/inlets/releases/download/` + ossVersion + `
 chmod +x /tmp/inlets  && \
 mv /tmp/inlets /usr/local/bin/inlets
 
-curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets.service && \
+curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets-operator.service && \
 mv inlets-operator.service /etc/systemd/system/inlets.service && \
 echo "AUTHTOKEN=$AUTHTOKEN" > /etc/default/inlets && \
 echo "CONTROLPORT=$CONTROLPORT" >> /etc/default/inlets && \
