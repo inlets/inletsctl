@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -15,6 +16,7 @@ import (
 
 var (
 	inletsPro       bool
+	inletsPlus      bool
 	downloadVersion string
 	destination     string
 	verbose         bool
@@ -23,7 +25,8 @@ var (
 func init() {
 	inletsCmd.AddCommand(downloadCmd)
 
-	downloadCmd.Flags().BoolVar(&inletsPro, "pro", false, "Download inlets pro")
+	downloadCmd.Flags().BoolVar(&inletsPro, "pro", false, "Download inlets PRO")
+	downloadCmd.Flags().BoolVar(&inletsPlus, "plus", false, "Download inlets plus")
 	downloadCmd.Flags().StringVar(&downloadVersion, "version", "", "specific version to download")
 	downloadCmd.Flags().StringVar(&destination, "download-to", "/usr/local/bin", "location to download to (Default: /usr/local/bin)")
 	downloadCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show download URL")
@@ -32,10 +35,11 @@ func init() {
 
 var downloadCmd = &cobra.Command{
 	Use:   "download",
-	Short: "Download the inlets or inlets pro binary",
-	Long:  `Download the inlets or inlets pro binary`,
+	Short: "Downloads the inlets, inlets PRO, or inlets-plus binaries",
+	Long:  `Downloads the inlets, inlets PRO, or inlets-plus binaries`,
 	Example: `  inletsctl download
 	inletsctl download --pro
+	inletsctl download --plus
 	inletsctl download --version 0.2.6 
 `,
 	RunE:          downloadInlets,
@@ -51,6 +55,10 @@ func downloadInlets(_ *cobra.Command, _ []string) error {
 		versionUrl = "https://github.com/inlets/inlets-pro/releases/latest"
 		downloadUrl = "https://github.com/inlets/inlets-pro/releases/download/"
 		binaryName = "inlets-pro"
+	} else if inletsPlus {
+		versionUrl = "https://github.com/inlets/inlets-plus/releases/latest"
+		downloadUrl = "https://github.com/inlets/inlets-plus/releases/download/"
+		binaryName = "inlets-plus"
 	} else {
 		versionUrl = "https://github.com/inlets/inlets/releases/latest"
 		downloadUrl = "https://github.com/inlets/inlets/releases/download/"
@@ -95,7 +103,7 @@ func downloadInlets(_ *cobra.Command, _ []string) error {
     user that can write to this location.
 ==============================================================
 
-Alternativly you can move the file using these commands
+Alternatively you can move the file using these commands
   curl -SLsf %s > /tmp/%s
   chmod a+x %s
   %s version
@@ -133,14 +141,16 @@ func findRelease(url string) (string, error) {
 	if res.Body != nil {
 		defer res.Body.Close()
 	}
-	if res.StatusCode != 302 {
-		return "", fmt.Errorf("incorrect status code: %d", res.StatusCode)
-	}
 
 	loc := res.Header.Get("Location")
 	if len(loc) == 0 {
 		return "", fmt.Errorf("unable to determine release of inlets")
 	}
+	log.Println(loc)
+	// if res.StatusCode != http.StatusFound && res.StatusCode != http.StatusMovedPermanently {
+	// 	return "", fmt.Errorf("incorrect status code from HEAD got: %d", res.StatusCode)
+	// }
+
 	version := loc[strings.LastIndex(loc, "/")+1:]
 	return version, nil
 }
@@ -155,6 +165,7 @@ func downloadBinary(client *http.Client, url, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	tempDir := os.TempDir()
 	outputPath := path.Join(tempDir, name)
 	if res.Body != nil {
@@ -167,8 +178,10 @@ func downloadBinary(client *http.Client, url, name string) (string, error) {
 		}
 		return outputPath, nil
 	}
+
 	return "", fmt.Errorf("error downloading %s", url)
 }
+
 func moveFile(source, destination string) (error, bool) {
 	src, err := os.Open(source)
 	if err != nil {
