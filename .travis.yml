@@ -13,21 +13,16 @@ deploy:
   file:
   - "./bin/inletsctl.tgz"
   - "./bin/inletsctl.sha256"
-  - "./bin/inletsctl.tgz.sha256"
   - "./bin/inletsctl-darwin.tgz"
-  - "./bin/inletsctl-freebsd.tgz"
-  - "./bin/inletsctl-freebsd.tgz.sha256"
   - "./bin/inletsctl-darwin.sha256"
-  - "./bin/inletsctl-darwin.tgz.sha256"
+  - "./bin/inletsctl-freebsd.tgz"
+  - "./bin/inletsctl-freebsd.sha256"
   - "./bin/inletsctl-armhf.tgz"
   - "./bin/inletsctl-armhf.sha256"
-  - "./bin/inletsctl-armhf.tgz.sha256"
   - "./bin/inletsctl-arm64.tgz"
   - "./bin/inletsctl-arm64.sha256"
-  - "./bin/inletsctl-arm64.tgz.sha256"
   - "./bin/inletsctl.exe.tgz"
   - "./bin/inletsctl.exe.sha256"
-  - "./bin/inletsctl.exe.tgz.sha256"
   skip_cleanup: true
   on:
     tags: true
