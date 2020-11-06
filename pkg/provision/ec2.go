@@ -71,8 +71,8 @@ func (p *EC2Provisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	})
 	if err != nil {
 		// clean up SG if there was an issue provisioning the EC2 instance
-		input := ec2.DeleteSecurityGroupInput {
-			GroupId:   groupID,
+		input := ec2.DeleteSecurityGroupInput{
+			GroupId: groupID,
 		}
 		_, sgErr := p.ec2Provisioner.DeleteSecurityGroup(&input)
 		if sgErr != nil {
@@ -299,7 +299,7 @@ func (p *EC2Provisioner) createEC2SecurityGroupRule(groupID string, fromPort, to
 func (p *EC2Provisioner) lookupAMI(name string) (*string, error) {
 	images, err := p.ec2Provisioner.DescribeImages(&ec2.DescribeImagesInput{
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name: aws.String("name"),
 				Values: []*string{
 					aws.String(name),
