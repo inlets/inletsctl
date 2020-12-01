@@ -2,25 +2,27 @@ package provision
 
 import (
 	"fmt"
-	"net/http"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/packethost/packngo"
 )
 
-// PacketProvisioner provision a host on packet.com
-type PacketProvisioner struct {
+// EquinixMetalProvisioner provisions a host to Equinix Metal
+type EquinixMetalProvisioner struct {
 	client *packngo.Client
 }
 
-// NewPacketProvisioner with an accessKey
-func NewPacketProvisioner(accessKey string) (*PacketProvisioner, error) {
-	return &PacketProvisioner{
-		client: packngo.NewClientWithAuth("", accessKey, http.DefaultClient),
+// NewEquinixMetalProvisioner create a EquinixMetalProvisioner with an accessKey
+func NewEquinixMetalProvisioner(accessKey string) (*EquinixMetalProvisioner, error) {
+	httpClient := retryablehttp.NewClient()
+
+	return &EquinixMetalProvisioner{
+		client: packngo.NewClientWithAuth("", accessKey, httpClient),
 	}, nil
 }
 
 // Status returns the IP, ID and Status of the exit node
-func (p *PacketProvisioner) Status(id string) (*ProvisionedHost, error) {
+func (p *EquinixMetalProvisioner) Status(id string) (*ProvisionedHost, error) {
 	device, _, err := p.client.Devices.Get(id, nil)
 
 	if err != nil {
@@ -45,7 +47,7 @@ func (p *PacketProvisioner) Status(id string) (*ProvisionedHost, error) {
 }
 
 // Delete terminates the exit node
-func (p *PacketProvisioner) Delete(request HostDeleteRequest) error {
+func (p *EquinixMetalProvisioner) Delete(request HostDeleteRequest) error {
 	var id string
 	var err error
 	if len(request.ID) > 0 {
@@ -56,12 +58,13 @@ func (p *PacketProvisioner) Delete(request HostDeleteRequest) error {
 			return err
 		}
 	}
-	_, err = p.client.Devices.Delete(id)
+	force := true
+	_, err = p.client.Devices.Delete(id, force)
 	return err
 }
 
-// Provision deploys an exit node into packet.com
-func (p *PacketProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
+// Provision a host
+func (p *EquinixMetalProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) {
 	if host.Region == "" {
 		host.Region = "ams1"
 	}
@@ -90,7 +93,7 @@ func (p *PacketProvisioner) Provision(host BasicHost) (*ProvisionedHost, error) 
 }
 
 // List returns a list of exit nodes
-func (p *PacketProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
+func (p *EquinixMetalProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) {
 	var inlets []*ProvisionedHost
 	devices, _, err := p.client.Devices.List(filter.ProjectID, nil)
 	if err != nil {
@@ -111,7 +114,7 @@ func (p *PacketProvisioner) List(filter ListFilter) ([]*ProvisionedHost, error) 
 	return inlets, nil
 }
 
-func (p *PacketProvisioner) lookupID(request HostDeleteRequest) (string, error) {
+func (p *EquinixMetalProvisioner) lookupID(request HostDeleteRequest) (string, error) {
 	inlets, err := p.List(ListFilter{Filter: "inlets", ProjectID: request.ProjectID})
 	if err != nil {
 		return "", err

@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/inlets/inletsctl/pkg/env"
 	"github.com/inlets/inletsctl/pkg/provision"
 	"github.com/pkg/errors"
@@ -13,9 +14,9 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode, civo, hetzner or vultr")
+	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, equinix-metal, scaleway, linode, civo, hetzner or vultr")
 	deleteCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
-	deleteCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (Google Compute Engine)")
+	deleteCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (gce)")
 
 	deleteCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
 	deleteCmd.Flags().StringP("access-token-file", "f", "", "Read this file for the access token for your cloud")
@@ -23,11 +24,11 @@ func init() {
 	deleteCmd.Flags().StringP("id", "i", "", "Host ID")
 	deleteCmd.Flags().String("ip", "", "Host IP")
 
-	deleteCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway, EC2)")
-	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
-	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
-	deleteCmd.Flags().String("project-id", "", "Project ID (Packet.com, Google Compute Engine)")
-	deleteCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
+	deleteCmd.Flags().String("secret-key", "", "The access token for your cloud (scaleway, ec2)")
+	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (scaleway, ec2)")
+	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (scaleway)")
+	deleteCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
+	deleteCmd.Flags().String("subscription-id", "", "Subscription ID (azure)")
 
 }
 
