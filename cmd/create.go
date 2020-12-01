@@ -30,20 +30,20 @@ func init() {
 
 	inletsCmd.AddCommand(createCmd)
 
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, packet, scaleway, linode, civo, hetzner or vultr")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, equinix-metal, scaleway, linode, civo, hetzner or vultr")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
-	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit-server (Google Compute Engine)")
+	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit-server (gce)")
 
 	createCmd.Flags().StringP("inlets-token", "t", "", "The auth token for the inlets server on your new exit-server, leave blank to auto-generate")
 	createCmd.Flags().StringP("access-token", "a", "", "The access token for your cloud")
 	createCmd.Flags().StringP("access-token-file", "f", "", "Read this file for the access token for your cloud")
 
-	createCmd.Flags().String("vpc-id", "", "The VPC ID to create the exit-server in (EC2)")
-	createCmd.Flags().String("subnet-id", "", "The Subnet ID where the exit-server should be placed (EC2)")
-	createCmd.Flags().String("secret-key", "", "The access token for your cloud (Scaleway, EC2)")
-	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (Scaleway, EC2)")
-	createCmd.Flags().String("organisation-id", "", "Organisation ID (Scaleway)")
-	createCmd.Flags().String("project-id", "", "Project ID (Packet.com, Google Compute Engine)")
+	createCmd.Flags().String("vpc-id", "", "The VPC ID to create the exit-server in (ec2)")
+	createCmd.Flags().String("subnet-id", "", "The Subnet ID where the exit-server should be placed (ec2)")
+	createCmd.Flags().String("secret-key", "", "The access token for your cloud (scaleway, ec2)")
+	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (scaleway, ec2)")
+	createCmd.Flags().String("organisation-id", "", "Organisation ID (scaleway)")
+	createCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
 	createCmd.Flags().Bool("pro", false, `Provision an exit-server for use with inlets PRO`)
@@ -60,7 +60,7 @@ preloaded as a systemd service. The estimated cost of each VM along with
 what OS version and spec will be used is explained in the README.
 `,
 	Example: `  inletsctl create  \
-	--provider [digitalocean|packet|ec2|scaleway|civo|gce|azure|linode|hetzner] \
+	--provider [digitalocean|equinix-metal|ec2|scaleway|civo|gce|azure|linode|hetzner] \
 	--access-token-file $HOME/access-token \
 	--region lon1
 
@@ -72,11 +72,19 @@ what OS version and spec will be used is explained in the README.
 	SilenceErrors: true,
 }
 
+// EquinixMetalProvider is a constant string for Equinix Metal
+const EquinixMetalProvider = "equinix-metal"
+
 func runCreate(cmd *cobra.Command, _ []string) error {
 
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return errors.Wrap(err, "failed to get 'provider' value.")
+	}
+
+	// Migrate to new name
+	if provider == "packet" {
+		provider = EquinixMetalProvider
 	}
 
 	fmt.Printf("Using provider: %s\n", provider)
@@ -122,7 +130,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "lon1"
 	} else if provider == "scaleway" {
 		region = "fr-par-1"
-	} else if provider == "packet" {
+	} else if provider == EquinixMetalProvider {
 		region = "ams1"
 	} else if provider == "ec2" {
 		region = "eu-west-1"
@@ -173,7 +181,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-	} else if provider == "gce" || provider == "packet" {
+	} else if provider == "gce" || provider == EquinixMetalProvider {
 		projectID, _ = cmd.Flags().GetString("project-id")
 		if len(projectID) == 0 {
 			return fmt.Errorf("--project-id flag must be set")
@@ -304,8 +312,8 @@ To Delete:
 func getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID string) (provision.Provisioner, error) {
 	if provider == "digitalocean" {
 		return provision.NewDigitalOceanProvisioner(accessToken)
-	} else if provider == "packet" {
-		return provision.NewPacketProvisioner(accessToken)
+	} else if provider == EquinixMetalProvider {
+		return provision.NewEquinixMetalProvisioner(accessToken)
 	} else if provider == "civo" {
 		return provision.NewCivoProvisioner(accessToken)
 	} else if provider == "scaleway" {
@@ -341,7 +349,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			UserData:   userData,
 			Additional: map[string]string{},
 		}, nil
-	} else if provider == "packet" {
+	} else if provider == EquinixMetalProvider {
 		return &provision.BasicHost{
 			Name:     name,
 			OS:       "ubuntu_16_04",

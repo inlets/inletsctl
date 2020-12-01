@@ -45,7 +45,7 @@ Completed:
 * [x] Provisioner: Scaleway
 * [x] Provisioner: Civo.com support
 * [x] Provisioner: Google Cloud
-* [x] Provisioner: Packet.com
+* [x] Provisioner: Equinix Metal
 * [x] Provisioner: AWS EC2
 * [x] Provisioner: Azure
 * [x] Provisioner: Linode

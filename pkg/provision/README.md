@@ -39,7 +39,7 @@ If you would like to add a provider please propose it with an Issue, to make sur
 
 ## Maintainers for each provider
 
-* DigitalOcean, Packet, Civo - [alexellis](https://github.com/alexellis/)
+* DigitalOcean, Equinix Metal, Civo - [alexellis](https://github.com/alexellis/)
 * Scaleway - [alexandrevilain](https://github.com/alexandrevilain/)
 * AWS EC2 - [adamjohnson01](https://github.com/adamjohnson01/)
 * GCE - [utsavanand2](https://github.com/utsavanand2/)
