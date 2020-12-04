@@ -3,7 +3,7 @@ GitCommit := $(shell git rev-parse HEAD)
 LDFLAGS := "-s -w -X main.Version=$(Version) -X main.GitCommit=$(GitCommit)"
 export GO111MODULE=on
 .PHONY: all
-all: gofmt test dist
+all: gofmt test dist hashgen
 
 .PHONY: test
 test:
@@ -13,6 +13,10 @@ test:
 gofmt:
 	@test -z $(shell gofmt -l -s $(SOURCE_DIRS) ./ | tee /dev/stderr) || (echo "[WARN] Fix formatting issues with 'make fmt'" && exit 1)
 
+.PHONY: hashgen
+hashgen:
+	./ci/hashgen.sh
+	
 .PHONY: dist
 dist:
 	mkdir -p bin/
@@ -26,3 +30,4 @@ dist:
 
 	echo "Compressing the compiled artifacts"
 	find bin -name "inletsctl*" -exec tar -cvzf {}.tgz {} \;
+

@@ -1,3 +1,3 @@
 #!/bin/sh
-
-for f in bin/*; do shasum -a 256 $f > $f.sha256; done
+cd bin
+for f in inletsctl*; do shasum -a 256 $f > $f.sha256; done
