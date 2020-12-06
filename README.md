@@ -23,6 +23,12 @@ Use-cases:
 * Setup L7 HTTP and L4 TCP tunnels for your local services using [inlets](https://inlets.dev/) with `inletsctl create`
 * Port-forward services your local Kubernetes cluster using `inletsctl kfwd`
 
+## Built for developers by developers
+
+<a href="https://github.com/sponsors/inlets/">
+<img alt="Sponsor this project" src="https://github.com/alexellis/alexellis/blob/master/sponsor-today.png" width="90%">
+</a>
+
 ## Video demo
 
 [![asciicast](https://asciinema.org/a/wVapSMsxpTdU9SBpRXwULaKE4.svg)](https://asciinema.org/a/wVapSMsxpTdU9SBpRXwULaKE4)
