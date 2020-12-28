@@ -43,37 +43,34 @@ In the demo we:
 
 inletsctl is the quickest and easiest way to automate both `inlets` and `inlets-pro`, whilst retaining complete control.
 
-## Features/backlog
+## Provisioners
 
-Completed:
+inletsctl can provision exit-servers to the following providers: DigitalOcean, Scaleway, Civo.com, Google Cloud, Equinix Metal, AWS EC2, Azure, Linode, Hetzner and Vultr.
 
-* [x] Provisioner: DigitalOcean
-* [x] Provisioner: Scaleway
-* [x] Provisioner: Civo.com support
-* [x] Provisioner: Google Cloud
-* [x] Provisioner: Equinix Metal
-* [x] Provisioner: AWS EC2
-* [x] Provisioner: Azure
-* [x] Provisioner: Linode
-* [x] Provisioner: Hetzner
-* [x] Provisioner: Vultr
-* [x] `inletsctl delete` command
-* [x] Add poll interval `--poll 5s` for use with Civo that applies rate-limiting
-* [x] Install `inlets/inlets-pro` via `inletsctl download` [#12](https://github.com/inlets/inletsctl/issues/12)
-* [x] Enable `inletsctl delete` via `--ip` vs. instance ID [#2](https://github.com/inlets/inletsctl/issues/2)
-* [x] Enable `inlets-pro` and TCP with `inletsctl kfwd` [#13](https://github.com/inlets/inletsctl/issues/13)
+An open-source Go package named [provision](https://github.com/inlets/inletsctl/tree/master/pkg/provision) can be extended for each new provider. This code can be used outside of inletsctl by other projects wishing to create hosts and to run some scripts upon start-up via userdata.
 
-Pending:
+```go
+type Provisioner interface {
+	Provision(BasicHost) (*ProvisionedHost, error)
+	Status(id string) (*ProvisionedHost, error)
+	Delete(HostDeleteRequest) error
+}
+```
 
+## Features
+
+* Provision hosts quickly using cloud-init with inlets/PRO pre-installed - `inletsctl create`
+* Delete hosts by ID or IP address - `inletsctl delete`
+* Automate port-forwarding from Kubernetes clusters with `inletsctl kfwd`
 
 ### inlets projects
 
-Inlets is a Cloud Native Tunnel and is [listed on the Cloud Native Landscape](https://landscape.cncf.io/category=service-proxy&format=card-mode&grouping=category&sort=stars) under *Service Proxies*.
+inlets is a Cloud Native Tunnel and is [listed on the Cloud Native Landscape](https://landscape.cncf.io/category=service-proxy&format=card-mode&grouping=category&sort=stars) under *Service Proxies*.
 
-* [inlets](https://github.com/inlets/inlets) - Cloud Native Tunnel for L7 / HTTP traffic written in Go
-* [inlets-pro](https://github.com/inlets/inlets-pro-pkg) - Cloud Native Tunnel for L4 TCP
+* [inlets PRO](https://inlets.dev) - Cloud Native Tunnel - TCP, HTTP & websockets with automated TLS encryption
+* [inlets](https://github.com/inlets/inlets) - Cloud Native Tunnel for HTTP only - configure TLS separately
 * [inlets-operator](https://github.com/inlets/inlets-operator) - Public IPs for your private Kubernetes Services and CRD
-* [inletsctl](https://github.com/inlets/inletsctl) - Automate the cloud for fast HTTP (L7) and TCP (L4) tunnels
+* [inletsctl](https://github.com/inlets/inletsctl) - The fastest way to create self-hosted exit-servers
 
 ## How much will this cost?
 
@@ -104,60 +101,6 @@ Windows users are encouraged to use [git bash](https://git-scm.com/downloads) to
 To learn about the various features of inletsctl and how to configure each cloud provisioner, head over to the docs:
 
 * [docs.inlets.dev](https://docs.inlets.dev/) 
-
-## Quick-start - create an exit server
-
-This example uses DigitalOcean to create a cloud VM and then exposes a local service via the newly created exit-server.
-
-```bash
-inletsctl create \
-  --provider digitalocean \
-  --region="lon1" \
-  --access-token-file $HOME/do-access-token
-```
-
-You'll see the host being provisioned, it usually takes just a few seconds:
-
-```
-Using provider: digitalocean
-Requesting host: gifted-mestorf9 in lon1, from digitalocean
-2020/08/26 10:58:36 Provisioning host with DigitalOcean
-Host: 205463148, status: 
-[1/500] Host: 205463148, status: new
-...
-[16/500] Host: 205463148, status: active
-inlets OSS exit-server summary:
-  IP: 165.232.108.137
-  Auth-token: TlwzS2ze3hQEZTU3lvOk1dgQeHYQtyTX8ELlCYhdjis4FAMw1EDqlJfqr9w0XW5S
-
-Command:
-  export UPSTREAM=http://127.0.0.1:8000
-  inlets client --remote "ws://165.232.108.137:8080" \
-        --token "TlwzS2ze3hQEZTU3lvOk1dgQeHYQtyTX8ELlCYhdjis4FAMw1EDqlJfqr9w0XW5S" \
-        --upstream $UPSTREAM
-
-To Delete:
-        inletsctl delete --provider digitalocean --id "205463148"
-```
-
-Now run the command given to you, changing the `--upstream` URL to match a local URL such as `http://127.0.0.1:3000`
-
-```bash
-  export UPSTREAM=http://127.0.0.1:3000
-  inlets client --remote "ws://165.232.108.137:8080" \
-        --token "TlwzS2ze3hQEZTU3lvOk1dgQeHYQtyTX8ELlCYhdjis4FAMw1EDqlJfqr9w0XW5S" \
-        --upstream $UPSTREAM
-```
-
-You can then access your local website via the Internet and the exit-server's IP at:
-
-http://165.232.108.137
-
-When you're done, you can delete the host using its ID or IP address:
-
-```bash
-inletsctl delete --id 205463148
-```
 
 ## Quick-start - create an exit server (inlets PRO)
 
@@ -242,6 +185,61 @@ MariaDB [(none)]> create database test;
 Query OK, 1 row affected (0.039 sec)
 ```
 
+
+## Quick-start - create an exit server
+
+This example uses DigitalOcean to create a cloud VM and then exposes a local service via the newly created exit-server.
+
+```bash
+inletsctl create \
+  --provider digitalocean \
+  --region="lon1" \
+  --access-token-file $HOME/do-access-token
+```
+
+You'll see the host being provisioned, it usually takes just a few seconds:
+
+```
+Using provider: digitalocean
+Requesting host: gifted-mestorf9 in lon1, from digitalocean
+2020/08/26 10:58:36 Provisioning host with DigitalOcean
+Host: 205463148, status: 
+[1/500] Host: 205463148, status: new
+...
+[16/500] Host: 205463148, status: active
+inlets OSS exit-server summary:
+  IP: 165.232.108.137
+  Auth-token: TlwzS2ze3hQEZTU3lvOk1dgQeHYQtyTX8ELlCYhdjis4FAMw1EDqlJfqr9w0XW5S
+
+Command:
+  export UPSTREAM=http://127.0.0.1:8000
+  inlets client --remote "ws://165.232.108.137:8080" \
+        --token "TlwzS2ze3hQEZTU3lvOk1dgQeHYQtyTX8ELlCYhdjis4FAMw1EDqlJfqr9w0XW5S" \
+        --upstream $UPSTREAM
+
+To Delete:
+        inletsctl delete --provider digitalocean --id "205463148"
+```
+
+Now run the command given to you, changing the `--upstream` URL to match a local URL such as `http://127.0.0.1:3000`
+
+```bash
+  export UPSTREAM=http://127.0.0.1:3000
+  inlets client --remote "ws://165.232.108.137:8080" \
+        --token "TlwzS2ze3hQEZTU3lvOk1dgQeHYQtyTX8ELlCYhdjis4FAMw1EDqlJfqr9w0XW5S" \
+        --upstream $UPSTREAM
+```
+
+You can then access your local website via the Internet and the exit-server's IP at:
+
+http://165.232.108.137
+
+When you're done, you can delete the host using its ID or IP address:
+
+```bash
+inletsctl delete --id 205463148
+```
+
 ## Contributing & getting help
 
 Before seeking support, make sure you have read the instructions correctly, and try to run through them a second or third time to see if you have missed anything.
@@ -251,12 +249,6 @@ Then, try the troubleshooting guide in the official docs (link above).
 ### Community support
 
 You can seek out community support through the [OpenFaaS Slack](https://slack.openfaas.io/) in the `#inlets` channel
-
-### Add another cloud provisioner
-
-Add a provisioner by sending a PR to the [inletsctl's provision package](https://github.com/inlets/inletsctl/tree/master/pkg/provision), once released, you can vendor the package here and add any flags that are required.
-
-> Note: only providers and platforms which support cloudinit / user-data scripts are supported.
 
 ### License
 
