@@ -6,7 +6,6 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -20,10 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsOSSVersion = "2.7.4"
 const inletsPROVersion = "0.7.0"
-
-const inletsOSSControlPort = 8080
 const inletsProControlPort = 8123
 
 func init() {
@@ -46,7 +42,7 @@ func init() {
 	createCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
-	createCmd.Flags().Bool("pro", false, `Provision an exit-server for use with inlets PRO`)
+	createCmd.Flags().Bool("pro", true, `Provision an exit-server for use with inlets PRO`)
 
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 }
@@ -205,9 +201,9 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
-	userData := provision.MakeExitServerUserdata(inletsOSSControlPort,
+	userData := provision.MakeExitServerUserdata(0,
 		inletsToken,
-		inletsOSSVersion,
+		"",
 		inletsPROVersion,
 		pro)
 
@@ -217,7 +213,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		zone,
 		projectID,
 		userData,
-		strconv.Itoa(inletsOSSControlPort),
+		"0",
 		vpcID,
 		subnetID,
 		pro)
@@ -252,47 +248,29 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			i+1, max, hostStatus.ID, hostStatus.Status)
 
 		if hostStatus.Status == "active" {
-			if !pro {
-				fmt.Printf(`inlets OSS (`+inletsOSSVersion+`) exit-server summary:
-  IP: %s
-  Auth-token: %s
-
-Command:
-  export UPSTREAM=http://127.0.0.1:8000
-  inlets client --remote "ws://%s:%d" \
-	--token "%s" \
-	--upstream $UPSTREAM
-
-To Delete:
-	inletsctl delete --provider %s --id "%s"
-`,
-					hostStatus.IP,
-					inletsToken,
-					hostStatus.IP,
-					inletsOSSControlPort,
-					inletsToken,
-					provider,
-					hostStatus.ID)
-				return nil
-			}
-
 			fmt.Printf(`inlets PRO (`+inletsPROVersion+`) exit-server summary:
   IP: %s
   Auth-token: %s
 
 Command:
-  export LICENSE=""
-  export PORTS="8000"
-  export UPSTREAM="localhost"
 
-  inlets-pro client --url "wss://%s:%d/connect" \
-	--token "%s" \
-	--license "$LICENSE" \
-	--upstream $UPSTREAM \
-	--ports $PORTS
+# Obtain a license at https://inlets.dev
+export LICENSE="$HOME/.inlets/license"
 
-To Delete:
-	  inletsctl delete --provider %s --id "%s"
+# Give a single value or comma-separated
+export PORTS="8000"
+
+# Where to route traffic from the inlets server
+export UPSTREAM="localhost"
+
+inlets-pro client --url "wss://%s:%d/connect" \
+  --token "%s" \
+  --license-file "$LICENSE" \
+  --upstream $UPSTREAM \
+  --ports $PORTS
+
+To delete:
+  inletsctl delete --provider %s --id "%s"
 `,
 				hostStatus.IP,
 				inletsToken,

@@ -20,14 +20,8 @@ It needs to exist as a separate binary and CLI, so that the core inlets tool doe
 
 Use-cases:
 
-* Setup L7 HTTP and L4 TCP tunnels for your local services using [inlets](https://inlets.dev/) with `inletsctl create`
+* Setup L4 TCP tunnels for your local services using [inlets](https://inlets.dev/) with `inletsctl create`
 * Port-forward services your local Kubernetes cluster using `inletsctl kfwd`
-
-## Built for developers by developers
-
-<a href="https://github.com/sponsors/inlets/">
-<img alt="Sponsor this project" src="https://github.com/alexellis/alexellis/blob/master/sponsor-today.png" width="90%">
-</a>
 
 ## Video demo
 
@@ -41,7 +35,7 @@ In the demo we:
 * Access the Python HTTP server via the DigitalOcean Public IP
 * Use the CLI to delete the host
 
-inletsctl is the quickest and easiest way to automate both `inlets` and `inlets-pro`, whilst retaining complete control.
+inletsctl is the quickest and easiest way to automate `inlets-pro`, whilst retaining complete control of your tunnel and data.
 
 ## Provisioners
 
@@ -59,18 +53,9 @@ type Provisioner interface {
 
 ## Features
 
-* Provision hosts quickly using cloud-init with inlets/PRO pre-installed - `inletsctl create`
+* Provision hosts quickly using cloud-init with inlets pre-installed - `inletsctl create`
 * Delete hosts by ID or IP address - `inletsctl delete`
 * Automate port-forwarding from Kubernetes clusters with `inletsctl kfwd`
-
-### inlets projects
-
-inlets is a Cloud Native Tunnel and is [listed on the Cloud Native Landscape](https://landscape.cncf.io/category=service-proxy&format=card-mode&grouping=category&sort=stars) under *Service Proxies*.
-
-* [inlets PRO](https://inlets.dev) - Cloud Native Tunnel - TCP, HTTP & websockets with automated TLS encryption
-* [inlets](https://github.com/inlets/inlets) - Cloud Native Tunnel for HTTP only - configure TLS separately
-* [inlets-operator](https://github.com/inlets/inlets-operator) - Public IPs for your private Kubernetes Services and CRD
-* [inletsctl](https://github.com/inlets/inletsctl) - The fastest way to create self-hosted exit-servers
 
 ## How much will this cost?
 
