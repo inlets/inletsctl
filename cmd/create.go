@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inlets/inletsctl/pkg/env"
+	"github.com/inlets/cloud-provision/provision"
 
+	"github.com/inlets/inletsctl/pkg/env"
 	"github.com/inlets/inletsctl/pkg/names"
-	"github.com/inlets/inletsctl/pkg/provision"
 
 	"github.com/pkg/errors"
 	"github.com/sethvargo/go-password/password"

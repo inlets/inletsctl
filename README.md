@@ -47,7 +47,7 @@ inletsctl is the quickest and easiest way to automate both `inlets` and `inlets-
 
 inletsctl can provision exit-servers to the following providers: DigitalOcean, Scaleway, Civo.com, Google Cloud, Equinix Metal, AWS EC2, Azure, Linode, Hetzner and Vultr.
 
-An open-source Go package named [provision](https://github.com/inlets/inletsctl/tree/master/pkg/provision) can be extended for each new provider. This code can be used outside of inletsctl by other projects wishing to create hosts and to run some scripts upon start-up via userdata.
+An open-source Go package named [provision](https://github.com/inlets/cloud-provision) can be extended for each new provider. This code can be used outside of inletsctl by other projects wishing to create hosts and to run some scripts upon start-up via userdata.
 
 ```go
 type Provisioner interface {

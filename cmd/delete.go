@@ -6,8 +6,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/inlets/cloud-provision/provision"
 	"github.com/inlets/inletsctl/pkg/env"
-	"github.com/inlets/inletsctl/pkg/provision"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

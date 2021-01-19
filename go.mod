@@ -18,6 +18,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.6.6
 	github.com/hetznercloud/hcloud-go v1.18.2
+	github.com/inlets/cloud-provision/provision v0.0.0-20210119113012-d52e792ff883
 	github.com/linode/linodego v0.19.0
 	github.com/morikuni/aec v1.0.0
 	github.com/packethost/packngo v0.5.1
@@ -32,4 +33,5 @@ require (
 	google.golang.org/api v0.14.0
 	google.golang.org/genproto v0.0.0-20191115221424-83cc0476cb11 // indirect
 	google.golang.org/grpc v1.25.1 // indirect
+
 )
