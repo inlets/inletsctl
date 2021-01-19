@@ -25,7 +25,7 @@ Use-cases:
 
 ## Video demo
 
-[![asciicast](https://asciinema.org/a/wVapSMsxpTdU9SBpRXwULaKE4.svg)](https://asciinema.org/a/wVapSMsxpTdU9SBpRXwULaKE4)
+[![asciicast](https://asciinema.org/a/q8vqJ0Fwug47T62biscp7cJ5O.svg)](https://asciinema.org/a/q8vqJ0Fwug47T62biscp7cJ5O)
 
 In the demo we:
 
