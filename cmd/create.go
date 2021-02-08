@@ -197,11 +197,9 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
-	userData := provision.MakeExitServerUserdata(0,
+	userData := provision.MakeExitServerUserdata(
 		inletsToken,
-		"",
-		inletsPROVersion,
-		pro)
+		inletsPROVersion)
 
 	hostReq, err := createHost(provider,
 		name,
