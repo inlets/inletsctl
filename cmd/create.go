@@ -42,7 +42,7 @@ func init() {
 	createCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
-	createCmd.Flags().Bool("pro", true, `Provision an exit-server for use with inlets PRO`)
+	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets PRO running as a TCP server`)
 
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 }
@@ -50,19 +50,15 @@ func init() {
 // clientCmd represents the client sub command.
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create an exit-server on cloud infrastructure",
-	Long: `Create an exit-server on cloud infrastructure with inlets or inlets PRO 
-preloaded as a systemd service. The estimated cost of each VM along with 
-what OS version and spec will be used is explained in the README.
-`,
+	Short: "Create an exit-server with inlets PRO preinstalled.",
+	Long: `Create an exit-server with inlets PRO preinstalled on cloud infrastructure 
+with inlets PRO preloaded as a systemd service. The estimated cost of each 
+VM along with what OS version and spec will be used is explained in the 
+project docs.`,
 	Example: `  inletsctl create  \
-	--provider [digitalocean|equinix-metal|ec2|scaleway|civo|gce|azure|linode|hetzner] \
-	--access-token-file $HOME/access-token \
-	--region lon1
-
-  # For inlets-pro, give the --pro flag:
-  inletsctl create --pro
-`,
+    --provider [digitalocean|equinix-metal|ec2|scaleway|civo|gce|azure|linode|hetzner] \
+    --access-token-file $HOME/access-token \
+    --region lon1`,
 	RunE:          runCreate,
 	SilenceUsage:  true,
 	SilenceErrors: true,
