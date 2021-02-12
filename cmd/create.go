@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsPROVersion = "0.7.0"
+const inletsPROVersion = "0.8.1"
 const inletsProControlPort = 8123
 
 func init() {
@@ -254,7 +254,7 @@ export LICENSE="$HOME/.inlets/license"
 # Give a single value or comma-separated
 export PORTS="8000"
 
-# Where to route traffic from the inlets server
+# Where to route traffic from the inlets serverx
 export UPSTREAM="localhost"
 
 inlets-pro client --url "wss://%s:%d/connect" \
