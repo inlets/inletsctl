@@ -93,7 +93,7 @@ getPackage() {
         targetFile=$(echo $targetFile | sed "s+/${REPO}${suffix}++g")
         suffix=$(echo $suffix | sed 's/.tgz//g')
 
-        targetFile="${targetFile}/bin/${REPO}${suffix}"
+        targetFile="${targetFile}/${REPO}${suffix}"
 
         chmod +x $targetFile
 
