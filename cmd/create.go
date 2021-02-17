@@ -43,7 +43,8 @@ func init() {
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
 	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets PRO running as a TCP server`)
-
+	createCmd.Flags().Bool("pro", true, `Provision an exit-server with inlets PRO (Deprecated)`)
+	_ = createCmd.Flags().MarkHidden("pro")
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 }
 
@@ -190,10 +191,14 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	var pro bool
 
-	if v, _ := cmd.Flags().GetBool("pro"); v {
-		pro = true
+	pro := true
+	if cmd.Flags().Changed("pro") {
+		fmt.Printf("WARN: --pro is deprecated, use --tcp instead.")
+		pro, _ = cmd.Flags().GetBool("pro")
+	}
+	if cmd.Flags().Changed("tcp") {
+		pro, _ = cmd.Flags().GetBool("tcp")
 	}
 
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
