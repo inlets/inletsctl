@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsPROVersion = "0.8.1"
+const inletsPROVersion = "0.8.3"
 const inletsProControlPort = 8123
 
 func init() {
@@ -43,6 +43,11 @@ func init() {
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
 	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets PRO running as a TCP server`)
+
+	createCmd.Flags().StringArray("letsencrypt-domain", []string{}, `Domains you want to get a Let's Encrypt certificate for`)
+	createCmd.Flags().String("letsencrypt-issuer", "prod", `The issuer endpoint to use with Let's Encrypt - \"prod\" or \"staging\"`)
+	createCmd.Flags().String("letsencrypt-email", "", `The email to register with Let's Encrypt for renewal notices (required)`)
+
 	createCmd.Flags().Bool("pro", true, `Provision an exit-server with inlets PRO (Deprecated)`)
 	_ = createCmd.Flags().MarkHidden("pro")
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
@@ -201,10 +206,31 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		pro, _ = cmd.Flags().GetBool("tcp")
 	}
 
+	letsencryptDomains, _ := cmd.Flags().GetStringArray("letsencrypt-domain")
+	letsencryptEmail, _ := cmd.Flags().GetString("letsencrypt-email")
+	letsencryptIssuer, _ := cmd.Flags().GetString("letsencrypt-issuer")
+
+	if len(letsencryptDomains) > 0 {
+		if len(letsencryptEmail) == 0 {
+			return fmt.Errorf("--letsencrypt-email is required when --letsencrypt-domain is given")
+		}
+		if len(letsencryptIssuer) == 0 {
+			return fmt.Errorf("--letsencrypt-issuer is required when --letsencrypt-domain is given")
+		}
+	}
+
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
-	userData := provision.MakeExitServerUserdata(
-		inletsToken,
-		inletsPROVersion)
+
+	var userData string
+	if len(letsencryptDomains) > 0 {
+		userData = MakeHTTPSUserdata(inletsToken,
+			inletsPROVersion,
+			letsencryptEmail, letsencryptIssuer, letsencryptDomains)
+	} else {
+		userData = provision.MakeExitServerUserdata(
+			inletsToken,
+			inletsPROVersion)
+	}
 
 	hostReq, err := createHost(provider,
 		name,
@@ -247,14 +273,47 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			i+1, max, hostStatus.ID, hostStatus.Status)
 
 		if hostStatus.Status == "active" {
-			fmt.Printf(`inlets PRO (`+inletsPROVersion+`) exit-server summary:
+			if len(letsencryptDomains) > 0 {
+				fmt.Printf(`inlets PRO HTTPS (%s) server summary:
+  IP: %s
+  HTTPS Domains: %v
+  Auth-token: %s
+
+Command:
+
+# Obtain a license at https://inlets.dev
+# Store it at $HOME/.inlets/LICENSE or use --help for more options
+
+# Where to route traffic from the inlets server
+export UPSTREAM="http://127.0.0.1:8000"
+
+inlets-pro http client --url "wss://%s:%d" \
+--token "%s" \
+--upstream $UPSTREAM
+
+To delete:
+  inletsctl delete --provider %s --id "%s"
+`,
+					inletsPROVersion,
+					hostStatus.IP,
+					letsencryptDomains,
+					inletsToken,
+					hostStatus.IP,
+					inletsProControlPort,
+					inletsToken,
+					provider,
+					hostStatus.ID)
+
+				return nil
+			} else {
+				fmt.Printf(`inlets PRO TCP (%s) server summary:
   IP: %s
   Auth-token: %s
 
 Command:
 
 # Obtain a license at https://inlets.dev
-export LICENSE="$HOME/.inlets/license"
+# Store it at $HOME/.inlets/LICENSE or use --help for more options
 
 # Give a single value or comma-separated
 export PORTS="8000"
@@ -262,24 +321,25 @@ export PORTS="8000"
 # Where to route traffic from the inlets serverx
 export UPSTREAM="localhost"
 
-inlets-pro client --url "wss://%s:%d/connect" \
+inlets-pro tcp client --url "wss://%s:%d" \
   --token "%s" \
-  --license-file "$LICENSE" \
   --upstream $UPSTREAM \
   --ports $PORTS
 
 To delete:
   inletsctl delete --provider %s --id "%s"
 `,
-				hostStatus.IP,
-				inletsToken,
-				hostStatus.IP,
-				inletsProControlPort,
-				inletsToken,
-				provider,
-				hostStatus.ID)
+					inletsPROVersion,
+					hostStatus.IP,
+					inletsToken,
+					hostStatus.IP,
+					inletsProControlPort,
+					inletsToken,
+					provider,
+					hostStatus.ID)
 
-			return nil
+				return nil
+			}
 		}
 	}
 
@@ -463,4 +523,34 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	}
 
 	return nil, fmt.Errorf("no provisioner for provider: %q", provider)
+}
+
+// MakeHTTPSUserdata makes a user-data script in bash to setup inlets
+// PRO with a systemd service and the given version.
+func MakeHTTPSUserdata(authToken, version, letsEncryptEmail, letsEncryptIssuer string, domains []string) string {
+
+	domainFlags := ""
+	for _, domain := range domains {
+		domainFlags += fmt.Sprintf("--letsencrypt-domain=%s ", domain)
+	}
+
+	return `#!/bin/bash
+export AUTHTOKEN="` + authToken + `"
+export IP=$(curl -sfSL https://checkip.amazonaws.com)
+
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/` + version + `/inlets-pro -o /tmp/inlets-pro && \
+  chmod +x /tmp/inlets-pro  && \
+  mv /tmp/inlets-pro /usr/local/bin/inlets-pro
+
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/` + version + `/inlets-pro-http.service -o inlets-pro.service && \
+  mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
+  echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
+  echo "IP=$IP" >> /etc/default/inlets-pro && \
+  echo "DOMAINS=` + strings.TrimSpace(domainFlags) + `" >> /etc/default/inlets-pro && \
+  echo "ISSUER=--letsencrypt-issuer=` + letsEncryptIssuer + `" >> /etc/default/inlets-pro && \
+  echo "EMAIL=--letsencrypt-email=` + letsEncryptEmail + `" >> /etc/default/inlets-pro && \
+  systemctl daemon-reload && \
+  systemctl start inlets-pro && \
+  systemctl enable inlets-pro
+`
 }
