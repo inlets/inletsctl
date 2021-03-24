@@ -6,11 +6,10 @@
 [![Documentation](https://godoc.org/github.com/inlets/inletsctl?status.svg)](http://godoc.org/github.com/inlets/inletsctl)
 ![Downloads](https://img.shields.io/github/downloads/inlets/inletsctl/total)
 
-inletsctl automates the task of creating an exit-node on cloud infrastructure.
-Once provisioned, you'll receive a command to connect with. You can use this 
-tool whether you want to use inlets or inlets-pro for L4 TCP.
+inletsctl automates the task of creating an exit-server (tunnel server) on public cloud infrastructure.
+The `create` command provisions a cheap cloud VM with a public IP and pre-installs inlets PRO for you. You'll then get a connection string that you can use with the inlets client.
 
-It needs to exist as a separate binary and CLI, so that the core inlets tool does not become bloated. The EC2 and AWS SDKs for Golang are very heavy-weight and result in a binary of over 30MB vs the small and nimble inlets and inlets-pro binaries.
+Why is inletsctl a separate binary? This tool is shipped separately, so that the core tunnel binary does not become bloated. The EC2 and AWS SDKs for Golang are very heavy-weight and result in a binary of over 30MB vs the small and nimble inlets-pro binaries.
 
 **Conceptual diagram**
 
@@ -20,7 +19,7 @@ It needs to exist as a separate binary and CLI, so that the core inlets tool doe
 
 Use-cases:
 
-* Setup L4 TCP tunnels for your local services using [inlets](https://inlets.dev/) with `inletsctl create`
+* Setup L4 TCP and HTTPS tunnels for your local services using [inlets PRO](https://inlets.dev/) with `inletsctl create`
 * Port-forward services your local Kubernetes cluster using `inletsctl kfwd`
 
 ## Video demo
@@ -198,7 +197,7 @@ inlets OSS exit-server summary:
 
 Command:
   export UPSTREAM=http://127.0.0.1:8000
-  inlets client --remote "ws://165.232.108.137:8080" \
+  inlets client --remote "wss://165.232.108.137:8080" \
         --token "TlwzS2ze3hQEZTU3lvOk1dgQeHYQtyTX8ELlCYhdjis4FAMw1EDqlJfqr9w0XW5S" \
         --upstream $UPSTREAM
 
@@ -210,7 +209,7 @@ Now run the command given to you, changing the `--upstream` URL to match a local
 
 ```bash
   export UPSTREAM=http://127.0.0.1:3000
-  inlets client --remote "ws://165.232.108.137:8080" \
+  inlets client --remote "wss://165.232.108.137:8080" \
         --token "TlwzS2ze3hQEZTU3lvOk1dgQeHYQtyTX8ELlCYhdjis4FAMw1EDqlJfqr9w0XW5S" \
         --upstream $UPSTREAM
 ```
