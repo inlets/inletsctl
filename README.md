@@ -86,7 +86,7 @@ To learn about the various features of inletsctl and how to configure each cloud
 
 * [docs.inlets.dev](https://docs.inlets.dev/) 
 
-## Quick-start - create an exit server (inlets PRO)
+## Quick-start - create an exit server and expose a TCP service
 
 This example is similar to the previous one, but also adds link-level encryption between your local service and the exit-server.
 
@@ -170,7 +170,7 @@ Query OK, 1 row affected (0.039 sec)
 ```
 
 
-## Quick-start - create an exit server
+## Quick-start - create an exit server and expose a HTTP service
 
 This example uses DigitalOcean to create a cloud VM and then exposes a local service via the newly created exit-server.
 
