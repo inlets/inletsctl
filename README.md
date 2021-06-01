@@ -1,4 +1,4 @@
-# inletsctl - the fastest way to create self-hosted exit-servers
+# inletsctl - the fastest way to create self-hosted tunnels
 
 [![Build Status](https://travis-ci.com/inlets/inletsctl.svg?branch=master)](https://travis-ci.com/inlets/inletsctl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -9,8 +9,6 @@
 inletsctl automates the task of creating an exit-server (tunnel server) on public cloud infrastructure.
 The `create` command provisions a cheap cloud VM with a public IP and pre-installs inlets PRO for you. You'll then get a connection string that you can use with the inlets client.
 
-Why is inletsctl a separate binary? This tool is shipped separately, so that the core tunnel binary does not become bloated. The EC2 and AWS SDKs for Golang are very heavy-weight and result in a binary of over 30MB vs the small and nimble inlets-pro binaries.
-
 **Conceptual diagram**
 
 ![Webhook example with Inlets OSS](https://blog.alexellis.io/content/images/2019/09/inletsio--2-.png)
@@ -20,14 +18,14 @@ Why is inletsctl a separate binary? This tool is shipped separately, so that the
 Use-cases:
 
 * Setup L4 TCP and HTTPS tunnels for your local services using [inlets PRO](https://inlets.dev/) with `inletsctl create`
+* Create tunnels for use with Kubernetes clusters, create the tunnel and use it whenever you need it
 * Port-forward services your local Kubernetes cluster using `inletsctl kfwd`
 
 ## Contents
 
-- [inletsctl - the fastest way to create self-hosted exit-servers](#inletsctl---the-fastest-way-to-create-self-hosted-exit-servers)
+- [inletsctl - the fastest way to create self-hosted tunnels](#inletsctl---the-fastest-way-to-create-self-hosted-tunnels)
   - [Contents](#contents)
   - [Video demo](#video-demo)
-  - [Provisioners](#provisioners)
   - [Features](#features)
   - [How much will this cost?](#how-much-will-this-cost)
   - [Install `inletsctl`](#install-inletsctl)
@@ -36,12 +34,12 @@ Use-cases:
   - [Create a HTTP tunnel](#create-a-http-tunnel)
   - [Create a tunnel for a TCP service](#create-a-tunnel-for-a-tcp-service)
   - [Contributing & getting help](#contributing--getting-help)
+    - [Why do we need this tool?](#why-do-we-need-this-tool)
+    - [Provisioners](#provisioners)
     - [Community support](#community-support)
     - [License](#license)
 
 ## Video demo
-
-[![asciicast](https://asciinema.org/a/q8vqJ0Fwug47T62biscp7cJ5O.svg)](https://asciinema.org/a/q8vqJ0Fwug47T62biscp7cJ5O)
 
 In the demo we:
 
@@ -51,21 +49,10 @@ In the demo we:
 * Access the Python HTTP server via the DigitalOcean Public IP
 * Use the CLI to delete the host
 
-inletsctl is the quickest and easiest way to automate `inlets-pro`, whilst retaining complete control of your tunnel and data.
+[![asciicast](https://asciinema.org/a/q8vqJ0Fwug47T62biscp7cJ5O.svg)](https://asciinema.org/a/q8vqJ0Fwug47T62biscp7cJ5O)
 
-## Provisioners
 
-inletsctl can provision exit-servers to the following providers: DigitalOcean, Scaleway, Civo.com, Google Cloud, Equinix Metal, AWS EC2, Azure, Linode, Hetzner and Vultr.
-
-An open-source Go package named [provision](https://github.com/inlets/cloud-provision) can be extended for each new provider. This code can be used outside of inletsctl by other projects wishing to create hosts and to run some scripts upon start-up via userdata.
-
-```go
-type Provisioner interface {
-	Provision(BasicHost) (*ProvisionedHost, error)
-	Status(id string) (*ProvisionedHost, error)
-	Delete(HostDeleteRequest) error
-}
-```
+inletsctl is the quickest and easiest way to automate tunnels, whilst retaining complete control of your tunnel and data.
 
 ## Features
 
@@ -300,6 +287,24 @@ Query OK, 1 row affected (0.039 sec)
 Before seeking support, make sure you have read the instructions correctly, and try to run through them a second or third time to see if you have missed anything.
 
 Then, try the troubleshooting guide in the official docs (link above).
+
+### Why do we need this tool?
+
+Why is inletsctl a separate binary? This tool is shipped separately, so that the core tunnel binary does not become bloated. The EC2 and AWS SDKs for Golang are very heavy-weight and result in a binary of over 30MB vs the small and nimble inlets-pro binaries.
+
+### Provisioners
+
+inletsctl can provision exit-servers to the following providers: DigitalOcean, Scaleway, Civo.com, Google Cloud, Equinix Metal, AWS EC2, Azure, Linode, Hetzner and Vultr.
+
+An open-source Go package named [provision](https://github.com/inlets/cloud-provision) can be extended for each new provider. This code can be used outside of inletsctl by other projects wishing to create hosts and to run some scripts upon start-up via userdata.
+
+```go
+type Provisioner interface {
+	Provision(BasicHost) (*ProvisionedHost, error)
+	Status(id string) (*ProvisionedHost, error)
+	Delete(HostDeleteRequest) error
+}
+```
 
 ### Community support
 
