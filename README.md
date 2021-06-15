@@ -30,9 +30,6 @@ Use-cases:
   - [How much will this cost?](#how-much-will-this-cost)
   - [Install `inletsctl`](#install-inletsctl)
   - [Looking for documentation?](#looking-for-documentation)
-  - [Create a HTTPS tunnel with a custom domain](#create-a-https-tunnel-with-a-custom-domain)
-  - [Create a HTTP tunnel](#create-a-http-tunnel)
-  - [Create a tunnel for a TCP service](#create-a-tunnel-for-a-tcp-service)
   - [Contributing & getting help](#contributing--getting-help)
     - [Why do we need this tool?](#why-do-we-need-this-tool)
     - [Provisioners](#provisioners)
@@ -45,7 +42,7 @@ In the demo we:
 
 * Create a cloud host on DigitalOcean with a single command
 * Run a local Python HTTP server
-* Connect our `inlets client`
+* Connect our `inlets-pro client`
 * Access the Python HTTP server via the DigitalOcean Public IP
 * Use the CLI to delete the host
 
