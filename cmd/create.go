@@ -314,11 +314,12 @@ Command:
 
 # Obtain a license at https://inlets.dev
 # Store it at $HOME/.inlets/LICENSE or use --help for more options
+export LICENSE="$HOME/.inlets/LICENSE"
 
 # Give a single value or comma-separated
 export PORTS="8000"
 
-# Where to route traffic from the inlets serverx
+# Where to route traffic from the inlets server
 export UPSTREAM="localhost"
 
 inlets-pro tcp client --url "wss://%s:%d" \
