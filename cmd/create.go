@@ -401,7 +401,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	} else if provider == "scaleway" {
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "ubuntu-bionic",
+			OS:         "ubuntu-focal",
 			Plan:       "DEV1-S",
 			Region:     region,
 			UserData:   userData,
