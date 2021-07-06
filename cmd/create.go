@@ -136,6 +136,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "hel1"
 	} else if provider == "vultr" {
 		region = "LHR" // London
+	} else if provider == "linode" {
+		region = "eu-west"
 	}
 
 	var zone string
@@ -493,13 +495,13 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	} else if provider == "linode" {
 		// Image:
 		//  List of images can be retrieved using: https://api.linode.com/v4/images
-		//  Example response: .."id": "linode/ubuntu16.04lts", "label": "Ubuntu 16.04 LTS"..
+		//  Example response: .."id": "linode/ubuntu20.04", "label": "Ubuntu 20.04 LTS"..
 		// Type:
 		//  Type is the VM plan / size in linode.
 		//  List of type and price can be retrieved using curl https://api.linode.com/v4/linode/types
 		return &provision.BasicHost{
 			Name:     name,
-			OS:       "linode/ubuntu16.04lts",
+			OS:       "linode/ubuntu20.04",
 			Plan:     "g6-nanode-1",
 			Region:   region,
 			UserData: userData,
