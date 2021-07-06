@@ -480,13 +480,14 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	} else if provider == "vultr" {
 		// OS:
 		//  A complete list of available OS is available using: https://api.vultr.com/v1/os/list
-		//  215 = Ubuntu 16.04 x64
+		//  387 = Ubuntu 20.04 x64
 		// Plans:
 		//  A complete list of available OS is available using: https://api.vultr.com/v1/plans/list
 		//  201 = 1024 MB RAM,25 GB SSD,1.00 TB BW
+		const ubuntu20_04_x64 = "387"
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "215",
+			OS:         ubuntu20_04_x64,
 			Plan:       "201",
 			Region:     region,
 			UserData:   userData,
