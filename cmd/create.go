@@ -410,10 +410,11 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			Additional: map[string]string{},
 		}, nil
 	} else if provider == "civo" {
+		const ubuntu2004ID = "d927ad2f-5073-4ed6-b2eb-b8e61aef29a8"
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "811a8dfb-8202-49ad-b1ef-1e6320b20497",
-			Plan:       "g2.small",
+			OS:         ubuntu2004ID,
+			Plan:       "g3.xsmall",
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},
