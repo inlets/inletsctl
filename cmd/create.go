@@ -473,8 +473,8 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"inlets-port":    inletsPort,
 				"pro":            fmt.Sprint(pro),
 				"imagePublisher": "Canonical",
-				"imageOffer":     "UbuntuServer",
-				"imageSku":       "16.04-LTS",
+				"imageOffer":     "0001-com-ubuntu-server-focal",
+				"imageSku":       "20_04-lts",
 				"imageVersion":   "latest",
 			},
 		}, nil
