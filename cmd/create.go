@@ -422,7 +422,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	} else if provider == "gce" {
 		return &provision.BasicHost{
 			Name:     name,
-			OS:       "projects/debian-cloud/global/images/debian-9-stretch-v20191121",
+			OS:       "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2004-focal-v20210707",
 			Plan:     "f1-micro",
 			Region:   "",
 			UserData: userData,
