@@ -21,10 +21,10 @@ func init() {
 	inletsCmd.AddCommand(kfwdCmd)
 
 	kfwdCmd.Flags().StringP("from", "f", "", "From service for the inlets client to forward")
-	kfwdCmd.Flags().StringP("if", "i", "", "Destination interface for the inlets server")
+	kfwdCmd.Flags().StringP("if", "i", "", "The address of your laptop, for the inlets PRO server to connect to")
 	kfwdCmd.Flags().StringP("namespace", "n", "default", "Source service namespace")
 	kfwdCmd.Flags().String("license", "", "Inlets PRO license key")
-	kfwdCmd.Flags().Bool("pro", false, "Use inlets PRO")
+	kfwdCmd.Flags().Bool("tcp", false, "Use inlets PRO in TCP mode, or if set to false, in HTTP mode")
 }
 
 // clientCmd represents the client sub command.
@@ -32,18 +32,32 @@ var kfwdCmd = &cobra.Command{
 	Use:   "kfwd",
 	Short: "Forward a Kubernetes service to the local machine",
 	Long: `Forward a Kubernetes service to the local machine using the --if flag to 
-specify an ethernet address accessible from within the Kubernetes cluster`,
-	Example: `  inletsctl kfwd --from test-app-expressjs-k8s:8080
+specify an ethernet address accessible from within the Kubernetes cluster
+
+An inlets PRO HTTP or TCP client is run within the cluster as a deployment, 
+and then the server process is run by inletsctl. The cluster starts the 
+client which then establishes the connection to the server on your 
+local machine.`,
+	Example: `  # Forward a HTTP service
   inletsctl kfwd --from test-app-expressjs-k8s:8080 --if 192.168.0.14
+
+  # Forward a TCP service
+  inletsctl kfwd --from nats:4222 --tcp
 `,
 	RunE:          runKfwd,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 }
 
-func fwdPro(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license string) error {
+func fwdTCP(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license string) error {
 
-	deployment := makeProDeployment(eth, port, upstream, ns, inletsToken, license)
+	deployment := makeTCPDeployment(eth,
+		port,
+		upstream,
+		ns,
+		inletsToken,
+		license)
+
 	tmpPath := path.Join(os.TempDir(), "inlets-"+upstream+".yaml")
 	err := ioutil.WriteFile(tmpPath, []byte(deployment), 0600)
 	if err != nil {
@@ -56,6 +70,7 @@ func fwdPro(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license st
 		Command: "kubectl",
 		Args:    []string{"apply", "-f", tmpPath},
 	}
+
 	res, err := task.Execute()
 	if err != nil {
 		return err
@@ -105,7 +120,7 @@ Hit Control+C to cancel.
 		Args: []string{
 			"server",
 			"--token=" + inletsToken,
-			"--common-name=" + eth,
+			"--auto-tls-san=" + eth,
 			"--auto-tls=true",
 		},
 	}
@@ -163,20 +178,22 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 	if passwordErr != nil {
 		return passwordErr
 	}
-
-	if pro, _ := cmd.Flags().GetBool("pro"); pro {
-		license, err := cmd.Flags().GetString("license")
-		if err != nil {
-			return err
-		}
-		if len(license) == 0 {
-			return fmt.Errorf("--license is required for use with inlets PRO, get a free trial at inlets.dev")
-		}
-
-		return fwdPro(cmd, eth, port, upstream, ns, inletsToken, license)
+	license, err := cmd.Flags().GetString("license")
+	if err != nil {
+		return err
+	}
+	if len(license) == 0 {
+		return fmt.Errorf("--license is required for use with inlets PRO, get a free trial at inlets.dev")
 	}
 
-	deployment := makeDeployment(eth, port, upstream, ns, inletsToken)
+	if tcp, _ := cmd.Flags().GetBool("tcp"); tcp {
+		fmt.Println("Forwarding in TCP mode")
+		return fwdTCP(cmd, eth, port, upstream, ns, inletsToken, license)
+	}
+
+	fmt.Println("Forwarding in HTTP mode")
+
+	deployment := makeHTTPDeployment(eth, port, upstream, ns, inletsToken, license)
 	tmpPath := path.Join(os.TempDir(), "inlets-"+upstream+".yaml")
 	err = ioutil.WriteFile(tmpPath, []byte(deployment), 0600)
 	if err != nil {
@@ -197,7 +214,7 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("exit code unexpected: %d, stderr: %s", res.ExitCode, res.Stderr)
 	}
 
-	fmt.Println("Inlets client scheduled inside your cluster.")
+	fmt.Println("Inlets PRO HTTP client scheduled inside your cluster.")
 
 	go func() {
 		sig := make(chan os.Signal, 1)
@@ -225,7 +242,7 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 		}
 	}()
 
-	fmt.Printf(`Inlets server now listening.
+	fmt.Printf(`Inlets PRO TCP server now listening.
 
 http://%s:%s
 
@@ -233,34 +250,39 @@ Hit Control+C to cancel.
 `, eth, port)
 
 	serverTask := v1.ExecTask{
-		Command: "inlets",
+		Command: "inlets-pro",
 		Args: []string{
+			"http",
 			"server",
-			"--port=" + fmt.Sprintf("%s", port),
+			"--auto-tls=true",
+			"--auto-tls-san=" + eth,
+			"--port=" + port,
 			"--token=" + inletsToken,
 		},
 	}
 
-	serverRes, serverErr := serverTask.Execute()
-
-	if serverErr != nil {
-		return fmt.Errorf("error with server: %s", serverErr.Error())
+	serverRes, err := serverTask.Execute()
+	if err != nil {
+		return fmt.Errorf("error with server: %s", err.Error())
 	}
 
 	if serverRes.ExitCode != 0 {
-		return fmt.Errorf("exit code unexpected from inlets server: %d, stderr: %s, stdout: %s", serverRes.ExitCode, serverRes.Stderr, serverRes.Stdout)
+		return fmt.Errorf("exit code unexpected from server: %d, stderr: %s, stdout: %s",
+			serverRes.ExitCode,
+			serverRes.Stderr,
+			serverRes.Stdout)
 
 	}
 
 	return nil
 }
 
-func makeProDeployment(remote, ports, upstream, ns, inletsToken, license string) string {
+func makeTCPDeployment(remote, ports, upstream, ns, inletsToken, license string) string {
 
 	return fmt.Sprintf(`apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: inlets-pro-client
+  name: inlets-pro-client-%s
   namespace: %s
 spec:
   replicas: 1
@@ -274,45 +296,50 @@ spec:
     spec:
       containers:
       - name: inlets-pro-client
-        image: inlets/inlets-pro:0.7.0
+        image: ghcr.io/inlets/inlets-pro:0.8.5
         imagePullPolicy: IfNotPresent
         command: ["inlets-pro"]
         args:
+        - "tcp"
         - "client"
-        - "--url=wss://%s:8123/connect"
+        - "--auto-tls=true"
+        - "--url=wss://%s:8123"
         - "--upstream=%s"
         - "--ports=%s"
         - "--token=%s"
         - "--license=%s"
-`, ns, remote, upstream, ports, inletsToken, license)
+`, upstream, ns, remote, upstream, ports, inletsToken, license)
 }
 
-func makeDeployment(remote, port, upstream, ns, inletsToken string) string {
+func makeHTTPDeployment(remote, port, upstream, ns, inletsToken, license string) string {
 
 	return fmt.Sprintf(`apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: inlets-%s
+  name: inlets-http-%s
   namespace: %s
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: inlets
+      app.kubernetes.io/name: inlets-http
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: inlets
+        app.kubernetes.io/name: inlets-http
     spec:
       containers:
       - name: inlets
-        image: inlets/inlets:2.7.4
+        image: ghcr.io/inlets/inlets-pro:0.8.5
         imagePullPolicy: IfNotPresent
-        command: ["inlets"]
+        command: ["inlets-pro"]
         args:
+        - "http"
         - "client"
-        - "--remote=ws://%s:%s"
+        - "--url=wss://%s:8123"
+        - "--auto-tls=true"
         - "--upstream=http://%s:%s"
         - "--token=%s"
-`, upstream, ns, remote, port, upstream, port, inletsToken)
+        - "--license=%s"
+`, upstream, ns, remote, upstream, port, inletsToken, license)
 }

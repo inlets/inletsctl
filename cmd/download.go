@@ -16,7 +16,6 @@ import (
 
 var (
 	inletsPro       bool
-	inletsPlus      bool
 	downloadVersion string
 	destination     string
 	verbose         bool
@@ -25,8 +24,7 @@ var (
 func init() {
 	inletsCmd.AddCommand(downloadCmd)
 
-	downloadCmd.Flags().BoolVar(&inletsPro, "pro", false, "Download inlets PRO")
-	downloadCmd.Flags().BoolVar(&inletsPlus, "plus", false, "Download inlets plus")
+	downloadCmd.Flags().BoolVar(&inletsPro, "pro", true, "Download inlets PRO")
 	downloadCmd.Flags().StringVar(&downloadVersion, "version", "", "specific version to download")
 	downloadCmd.Flags().StringVar(&destination, "download-to", "/usr/local/bin", "location to download to (Default: /usr/local/bin)")
 	downloadCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show download URL")
@@ -35,13 +33,12 @@ func init() {
 
 var downloadCmd = &cobra.Command{
 	Use:   "download",
-	Short: "Downloads the inlets, inlets PRO, or inlets-plus binaries",
-	Long:  `Downloads the inlets, inlets PRO, or inlets-plus binaries`,
+	Short: "Downloads the inlets PRO binary",
+	Long:  `Downloads the inlets PRO binary from the GitHub releases page. Only inlets PRO is supported.`,
 	Example: `  inletsctl download
-	inletsctl download --pro
-	inletsctl download --plus
-	inletsctl download --version 0.2.6 
-`,
+  inletsctl download --version 0.2.6 
+  inletsctl download --pro --version 0.2.6 
+  inletsctl download --pro`,
 	RunE:          downloadInlets,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -55,14 +52,10 @@ func downloadInlets(_ *cobra.Command, _ []string) error {
 		versionUrl = "https://github.com/inlets/inlets-pro/releases/latest"
 		downloadUrl = "https://github.com/inlets/inlets-pro/releases/download/"
 		binaryName = "inlets-pro"
-	} else if inletsPlus {
-		versionUrl = "https://github.com/inlets/inlets-plus/releases/latest"
-		downloadUrl = "https://github.com/inlets/inlets-plus/releases/download/"
-		binaryName = "inlets-plus"
 	} else {
-		versionUrl = "https://github.com/inlets/inlets/releases/latest"
-		downloadUrl = "https://github.com/inlets/inlets/releases/download/"
-		binaryName = "inlets"
+		versionUrl = "https://github.com/inlets/inlets-pro/releases/latest"
+		downloadUrl = "https://github.com/inlets/inlets-pro/releases/download/"
+		binaryName = "inlets-pro"
 	}
 
 	osVal := runtime.GOOS
