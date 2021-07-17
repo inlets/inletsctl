@@ -38,6 +38,8 @@ func init() {
 	createCmd.Flags().String("subnet-id", "", "The Subnet ID where the exit-server should be placed (ec2)")
 	createCmd.Flags().String("secret-key", "", "The access token for your cloud (scaleway, ec2)")
 	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (scaleway, ec2)")
+	createCmd.Flags().String("session-token", "", "The session token for ec2 (when using with temporary credentials)")
+
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (scaleway)")
 	createCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
@@ -146,6 +148,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	var secretKey string
+	var sessionToken string
 	var organisationID string
 	var projectID string
 	var vpcID string
@@ -179,6 +182,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			if (len(vpcID) == 0 && len(subnetID) > 0) || (len(subnetID) == 0 && len(vpcID) > 0) {
 				return fmt.Errorf("both --vpc-id and --subnet-id must be set")
 			}
+			sessionToken, _ = cmd.Flags().GetString("session-token")
 		}
 
 	} else if provider == "gce" || provider == EquinixMetalProvider {
@@ -193,7 +197,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID)
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken)
 
 	if err != nil {
 		return err
@@ -349,7 +353,7 @@ To delete:
 	return err
 }
 
-func getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID string) (provision.Provisioner, error) {
+func getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken string) (provision.Provisioner, error) {
 	if provider == "digitalocean" {
 		return provision.NewDigitalOceanProvisioner(accessToken)
 	} else if provider == EquinixMetalProvider {
@@ -361,7 +365,7 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region, su
 	} else if provider == "gce" {
 		return provision.NewGCEProvisioner(accessToken)
 	} else if provider == "ec2" {
-		return provision.NewEC2Provisioner(region, accessToken, secretKey)
+		return provision.NewEC2Provisioner(region, accessToken, secretKey, sessionToken)
 	} else if provider == "azure" {
 		return provision.NewAzureProvisioner(subscriptionID, accessToken)
 	} else if provider == "linode" {

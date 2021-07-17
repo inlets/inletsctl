@@ -26,6 +26,8 @@ func init() {
 
 	deleteCmd.Flags().String("secret-key", "", "The access token for your cloud (scaleway, ec2)")
 	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (scaleway, ec2)")
+	createCmd.Flags().String("session-token", "", "The session token for ec2 (when using with temporary credentials)")
+
 	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (scaleway)")
 	deleteCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
 	deleteCmd.Flags().String("subscription-id", "", "Subscription ID (azure)")
@@ -79,6 +81,7 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	}
 
 	var secretKey string
+	var sessionToken string
 	var organisationID string
 	if provider == "scaleway" || provider == "ec2" {
 		var secretKeyErr error
@@ -89,6 +92,10 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 		)
 		if secretKeyErr != nil {
 			return secretKeyErr
+		}
+
+		if provider == "ec2" {
+			sessionToken, _ = cmd.Flags().GetString("session-token")
 		}
 
 		if provider == "scaleway" {
@@ -104,7 +111,7 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID)
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken)
 
 	if err != nil {
 		return err
