@@ -361,7 +361,8 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region, su
 	} else if provider == "gce" {
 		return provision.NewGCEProvisioner(accessToken)
 	} else if provider == "ec2" {
-		return provision.NewEC2Provisioner(region, accessToken, secretKey)
+		sessionToken := ""
+		return provision.NewEC2Provisioner(region, accessToken, secretKey, sessionToken)
 	} else if provider == "azure" {
 		return provision.NewAzureProvisioner(subscriptionID, accessToken)
 	} else if provider == "linode" {
