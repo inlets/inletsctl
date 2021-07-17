@@ -28,11 +28,14 @@
 ## Your Environment
 <!--- Include as many relevant details about the environment you experienced the bug in -->
 
-* inlets version `inlets --version` 
+* inlets PRO version `inlets-pro version` 
 
-* Docker/Kubernetes version `docker version` / `kubectl version`:
+* inletsctl version `inletsctl version` 
 
-* Operating System and version (e.g. Linux, Windows, MacOS):
+
+* Cloud provider and region being used
+
+* Operating System and version (e.g. Linux, Windows, MacOS): `uname -a`
 
 * Link to your project or a code example to reproduce issue:
 
