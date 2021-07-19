@@ -28,6 +28,7 @@ func init() {
 
 	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, equinix-metal, scaleway, linode, civo, hetzner or vultr")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
+	createCmd.Flags().StringP("plan", "s", "", "The plan or size for your cloud instance")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit-server (gce)")
 
 	createCmd.Flags().StringP("inlets-token", "t", "", "The auth token for the inlets server on your new exit-server, leave blank to auto-generate")
@@ -259,6 +260,15 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	if err != nil {
 		return err
+	}
+
+	// override default plan/size when provided
+	if cmd.Flags().Changed("plan") {
+		planOverride, err := cmd.Flags().GetString("plan")
+		if err != nil {
+			return errors.Wrap(err, "failed to get 'plan' value")
+		}
+		hostReq.Plan = planOverride
 	}
 
 	if provider == "gce" {
