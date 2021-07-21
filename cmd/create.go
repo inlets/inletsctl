@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsPROVersion = "0.8.3"
+const inletsProDefaultVersion = "0.8.6"
 const inletsProControlPort = 8123
 
 func init() {
@@ -55,6 +55,9 @@ func init() {
 	createCmd.Flags().Bool("pro", true, `Provision an exit-server with inlets PRO (Deprecated)`)
 	_ = createCmd.Flags().MarkHidden("pro")
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
+
+	createCmd.Flags().String("inlets-pro-version", inletsProDefaultVersion, `Binary release version for inlets PRO`)
+
 }
 
 // clientCmd represents the client sub command.
@@ -234,17 +237,25 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	inletsProVersion, err := cmd.Flags().GetString("inlets-pro-version")
+	if err != nil {
+		return err
+	}
+	if len(inletsProVersion) == 0 {
+		inletsProVersion = inletsProDefaultVersion
+	}
+
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
 
 	var userData string
 	if len(letsencryptDomains) > 0 {
 		userData = MakeHTTPSUserdata(inletsToken,
-			inletsPROVersion,
+			inletsProVersion,
 			letsencryptEmail, letsencryptIssuer, letsencryptDomains)
 	} else {
 		userData = provision.MakeExitServerUserdata(
 			inletsToken,
-			inletsPROVersion)
+			inletsProVersion)
 	}
 
 	hostReq, err := createHost(provider,
@@ -318,7 +329,7 @@ inlets-pro http client --url "wss://%s:%d" \
 To delete:
   inletsctl delete --provider %s --id "%s"
 `,
-					inletsPROVersion,
+					inletsProVersion,
 					hostStatus.IP,
 					letsencryptDomains,
 					inletsToken,
@@ -354,7 +365,7 @@ inlets-pro tcp client --url "wss://%s:%d" \
 To delete:
   inletsctl delete --provider %s --id "%s"
 `,
-					inletsPROVersion,
+					inletsProVersion,
 					hostStatus.IP,
 					inletsToken,
 					hostStatus.IP,
