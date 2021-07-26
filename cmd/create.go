@@ -26,7 +26,7 @@ func init() {
 
 	inletsCmd.AddCommand(createCmd)
 
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, equinix-metal, scaleway, linode, civo, hetzner or vultr")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, equinix-metal, scaleway, linode, civo, hetzner, ovh or vultr")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("plan", "s", "", "The plan or size for your cloud instance")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit-server (gce)")
@@ -43,8 +43,11 @@ func init() {
 	createCmd.Flags().String("session-token-file", "", "Read this file for the session token for ec2 (when using with temporary credentials)")
 
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (scaleway)")
-	createCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
+	createCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce, ovh)")
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
+
+	createCmd.Flags().String("endpoint", "ovh-eu", "API endpoint (ovh), default: ovh-eu")
+	createCmd.Flags().String("consumer-key", "", "The Consumer Key for using the OVH API")
 
 	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets PRO running as a TCP server`)
 
@@ -145,6 +148,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "LHR" // London
 	} else if provider == "linode" {
 		region = "eu-west"
+	} else if provider == "ovh" {
+		region = "DE1"
 	}
 
 	var zone string
@@ -161,12 +166,19 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	var projectID string
 	var vpcID string
 	var subnetID string
-	if provider == "scaleway" || provider == "ec2" {
+	if provider == "scaleway" || provider == "ec2" || provider == "ovh" {
 
 		var secretKeyErr error
 		secretKey, secretKeyErr = getFileOrString(cmd.Flags(), "secret-key-file", "secret-key", true)
 		if secretKeyErr != nil {
 			return secretKeyErr
+		}
+
+		if provider == "ovh" {
+			projectID, _ = cmd.Flags().GetString("project-id")
+			if len(projectID) == 0 {
+				return fmt.Errorf("--project-id flag must be set")
+			}
 		}
 
 		if provider == "scaleway" {
@@ -209,7 +221,20 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
 	}
 
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken)
+	var endpoint string
+	var consumerKey string
+	if provider == "ovh" {
+		endpoint, err = cmd.Flags().GetString("endpoint")
+		if err != nil {
+			return errors.Wrap(err, "failed to get 'endpoint' value")
+		}
+		consumerKey, err = cmd.Flags().GetString("consumer-key")
+		if err != nil {
+			return errors.Wrap(err, "failed to get 'endpoint' value")
+		}
+	}
+
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken, endpoint, consumerKey, projectID)
 
 	if err != nil {
 		return err
@@ -382,29 +407,35 @@ To delete:
 	return err
 }
 
-func getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken string) (provision.Provisioner, error) {
-	if provider == "digitalocean" {
+func getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken, endpoint, consumerKey, projectID string) (provision.Provisioner, error) {
+
+	switch provider {
+	case "digitalocean":
 		return provision.NewDigitalOceanProvisioner(accessToken)
-	} else if provider == EquinixMetalProvider {
+	case EquinixMetalProvider:
 		return provision.NewEquinixMetalProvisioner(accessToken)
-	} else if provider == "civo" {
+	case "civo":
 		return provision.NewCivoProvisioner(accessToken)
-	} else if provider == "scaleway" {
+	case "scaleway":
 		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
-	} else if provider == "gce" {
+	case "gce":
 		return provision.NewGCEProvisioner(accessToken)
-	} else if provider == "ec2" {
+	case "ec2":
 		return provision.NewEC2Provisioner(region, accessToken, secretKey, sessionToken)
-	} else if provider == "azure" {
+	case "azure":
 		return provision.NewAzureProvisioner(subscriptionID, accessToken)
-	} else if provider == "linode" {
+	case "linode":
 		return provision.NewLinodeProvisioner(accessToken)
-	} else if provider == "hetzner" {
+	case "hetzner":
 		return provision.NewHetznerProvisioner(accessToken)
-	} else if provider == "vultr" {
+	case "vultr":
 		return provision.NewVultrProvisioner(accessToken)
+	case "ovh":
+		return provision.NewOVHProvisioner(endpoint, accessToken, secretKey, consumerKey, region, projectID)
+	default:
+		return nil, fmt.Errorf("no provisioner for provider: %s", provider)
 	}
-	return nil, fmt.Errorf("no provisioner for provider: %s", provider)
+
 }
 
 func generateAuth() (string, error) {
@@ -418,6 +449,15 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			Name:       name,
 			OS:         "ubuntu-18-04-x64",
 			Plan:       "s-1vcpu-1gb",
+			Region:     region,
+			UserData:   userData,
+			Additional: map[string]string{},
+		}, nil
+	} else if provider == "ovh" {
+		return &provision.BasicHost{
+			Name:       name,
+			OS:         "Ubuntu 20.04",
+			Plan:       "s1-2",
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},

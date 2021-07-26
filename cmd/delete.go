@@ -33,6 +33,8 @@ func init() {
 	deleteCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
 	deleteCmd.Flags().String("subscription-id", "", "Subscription ID (azure)")
 
+	deleteCmd.Flags().String("endpoint", "ovh-eu", "API endpoint (ovh), default: ovh-eu")
+	deleteCmd.Flags().String("consumer-key", "", "The Consumer Key for using the OVH API")
 }
 
 // deleteCmd represents the client sub command
@@ -84,7 +86,7 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	var secretKey string
 	var sessionToken string
 	var organisationID string
-	if provider == "scaleway" || provider == "ec2" {
+	if provider == "scaleway" || provider == "ec2" || provider == "ovh" {
 		var secretKeyErr error
 		secretKey, secretKeyErr = env.GetRequiredFileOrString(cmd.Flags(),
 			"secret-key-file",
@@ -115,8 +117,20 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 	if provider == "azure" {
 		subscriptionID, _ = cmd.Flags().GetString("subscription-id")
 	}
-
-	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken)
+	var endpoint string
+	var consumerKey string
+	if provider == "ovh" {
+		endpoint, err = cmd.Flags().GetString("endpoint")
+		if err != nil {
+			return errors.Wrap(err, "failed to get 'endpoint' value")
+		}
+		consumerKey, err = cmd.Flags().GetString("consumer-key")
+		if err != nil {
+			return errors.Wrap(err, "failed to get 'endpoint' value")
+		}
+	}
+	projectID, _ := cmd.Flags().GetString("project-id")
+	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken, endpoint, consumerKey, projectID)
 
 	if err != nil {
 		return err
@@ -124,7 +138,6 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 
 	hostID, _ := cmd.Flags().GetString("id")
 	hostIP, _ := cmd.Flags().GetString("ip")
-	projectID, _ := cmd.Flags().GetString("project-id")
 	zone, _ := cmd.Flags().GetString("zone")
 
 	if isNotSet(hostID) && isNotSet(hostIP) {
