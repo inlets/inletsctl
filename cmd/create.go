@@ -425,8 +425,8 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 	} else if provider == EquinixMetalProvider {
 		return &provision.BasicHost{
 			Name:     name,
-			OS:       "ubuntu_16_04",
-			Plan:     "t1.small.x86",
+			OS:       "ubuntu_20_04",
+			Plan:     "c3.small.x86",
 			Region:   region,
 			UserData: userData,
 			Additional: map[string]string{
