@@ -486,7 +486,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20191114",
+			OS:         "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210621",
 			Plan:       "t3.nano",
 			Region:     region,
 			UserData:   base64.StdEncoding.EncodeToString([]byte(userData)),
