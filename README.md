@@ -1,4 +1,4 @@
-# inletsctl - the fastest way to create self-hosted tunnels
+# inletsctl - create inlets servers on the top cloud platforms
 
 [![Build Status](https://travis-ci.com/inlets/inletsctl.svg?branch=master)](https://travis-ci.com/inlets/inletsctl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
