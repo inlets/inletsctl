@@ -30,11 +30,21 @@ hasCli() {
 getPackage() {
     uname=$(uname)
     userid=$(id -u)
+    arch=$(uname -m)
 
     suffix=""
     case $uname in
     "Darwin")
-    suffix="-darwin.tgz"
+        case $arch in
+        "x86_64")
+        suffix="-darwin.tgz"
+        ;;
+        esac
+        case $arch in
+        "arm64")
+        suffix="-darwin-arm64.tgz"
+        ;;
+        esac
     ;;
     "Linux")
         arch=$(uname -m)

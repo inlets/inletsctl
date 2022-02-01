@@ -110,10 +110,9 @@ type Provisioner interface {
 }
 ```
 
-### Community support
-
-You can seek out community support through the [OpenFaaS Slack](https://slack.openfaas.io/) in the `#inlets` channel
-
 ### License
 
-MIT
+inletsctl is distributed under the MIT license. inlets-pro, which inletsctl uses is licensed under the [inlets-pro End User License Agreement (EULA)](https://github.com/inlets/inlets-pro/blob/master/EULA.md).
+
+A valid inlets license or Gumroad subscription is required to create tunnel servers with inletsctl.
+

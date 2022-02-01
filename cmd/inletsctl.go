@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/morikuni/aec"
 	"github.com/spf13/cobra"
@@ -57,8 +58,10 @@ func getVersion() string {
 func parseBaseCommand(_ *cobra.Command, _ []string) {
 	printLogo()
 
-	fmt.Println("Version:", getVersion())
-	fmt.Println("Git Commit:", GitCommit)
+	fmt.Printf("Version: %s\n", getVersion())
+	fmt.Printf("Git Commit: %s\n", GitCommit)
+	fmt.Printf("Build target: %s/%s\n", runtime.GOOS, runtime.GOARCH)
+
 	os.Exit(0)
 }
 
