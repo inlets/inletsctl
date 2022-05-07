@@ -1,10 +1,11 @@
 #!/bin/bash
 # This script was adapted from https://github.com/openfaas/cli.openfaas.com/blob/master/get.sh
 
+export VERIFY_CHECKSUM=1
 export OWNER=inlets
 export REPO=inletsctl
-export SUCCESS_CMD="$REPO version"
 export BINLOCATION="/usr/local/bin"
+export SUCCESS_CMD="$BINLOCATION/$REPO version"
 
 version=$(curl -sI https://github.com/$OWNER/$REPO/releases/latest | grep -i "location:" | awk -F"/" '{ printf "%s", $NF }' | tr -d '\r')
 
@@ -24,6 +25,28 @@ hasCli() {
     if [ "$?" = "1" ]; then
         echo "You need curl to use this script."
         exit 1
+    fi
+}
+
+checkHash(){
+    
+    sha_cmd="sha256sum"
+
+    if [ ! -x "$(command -v $sha_cmd)" ]; then
+        sha_cmd="shasum -a 256"
+    fi
+
+    if [ -x "$(command -v $sha_cmd)" ]; then
+        
+        targetFileDir=$(dirname $targetFile)
+        
+        (cd $targetFileDir && curl -sSL ${url%.*}.sha256|$sha_cmd -c >/dev/null)
+   
+        if [ "$?" != "0" ]; then
+            rm $targetFile
+            echo "Binary checksum didn't match. Exiting"
+            exit 1
+        fi   
     fi
 }
 
@@ -86,40 +109,26 @@ getPackage() {
         echo "Download Failed!"
         exit 1
     else
-        extractFolder=$(echo "$targetFile" | sed "s/${REPO}${suffix}//g")
-        echo "Download Complete, extracting $targetFile to $extractFolder ..."
-        tar -xzf "$targetFile" -C "$extractFolder"
+        echo "Download complete, extracting $REPO from ${targetFile}..."
+        tar -xzf "${targetFile}" -C "$(dirname ${targetFile})"
     fi
 
     if [ $? -ne 0 ]; then
-        echo "\nFailed to expand archve: $targetFile"
+        echo "\nFailed to expand archive: $targetFile"
         exit 1
     else
         # Remove the tar file
-        echo "OK"
+        echo "Binary extracted"
         rm "$targetFile"
+        # Binary now extracted so remove the archive file extension
+        targetFile=${targetFile%.*}
 
-        # Get the parent dir of the 'bin' folder holding the binary
-        targetFile=$(echo "$targetFile" | sed "s+/${REPO}${suffix}++g")
-        suffix=$(echo $suffix | sed 's/.tgz//g')
-
-        targetFile="${targetFile}/${REPO}${suffix}"
+        if [ "$VERIFY_CHECKSUM" = "1" ]; then
+            checkHash
+        fi
 
         chmod +x "$targetFile"
 
-        # Calculate SHA
-        shaurl=$(echo $url | sed 's/.tgz/.sha256/g')
-        SHA256=$(curl -sLS $shaurl | awk '{print $1}')
-        echo "SHA256 fetched from release: $SHA256"
-        # NOTE to other maintainers
-        # There needs to be two spaces between the SHA and the file in the echo statement
-        # for shasum to compare the checksums
-        echo "$SHA256  $targetFile" | shasum -a 256 -c -s
-
-        if [ $? -ne 0 ]; then
-            echo "SHA mismatch! This means there must be a problem with the download"
-            exit 1
-        else
             if [ ! -w "$BINLOCATION" ]; then
                 echo
                 echo "============================================================"
@@ -148,7 +157,6 @@ getPackage() {
 
             ${SUCCESS_CMD}
             fi
-        fi
     fi
 }
 
