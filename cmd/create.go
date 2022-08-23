@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsProDefaultVersion = "0.9.3"
+const inletsProDefaultVersion = "0.9.6"
 const inletsProControlPort = 8123
 
 func init() {
