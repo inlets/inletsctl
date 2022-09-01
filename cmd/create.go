@@ -49,26 +49,26 @@ func init() {
 	createCmd.Flags().String("endpoint", "ovh-eu", "API endpoint (ovh), default: ovh-eu")
 	createCmd.Flags().String("consumer-key", "", "The Consumer Key for using the OVH API")
 
-	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets PRO running as a TCP server`)
+	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets Pro running as a TCP server`)
 
 	createCmd.Flags().StringArray("letsencrypt-domain", []string{}, `Domains you want to get a Let's Encrypt certificate for`)
 	createCmd.Flags().String("letsencrypt-issuer", "prod", `The issuer endpoint to use with Let's Encrypt - \"prod\" or \"staging\"`)
 	createCmd.Flags().String("letsencrypt-email", "", `The email to register with Let's Encrypt for renewal notices (required)`)
 
-	createCmd.Flags().Bool("pro", true, `Provision an exit-server with inlets PRO (Deprecated)`)
+	createCmd.Flags().Bool("pro", true, `Provision an exit-server with inlets Pro (Deprecated)`)
 	_ = createCmd.Flags().MarkHidden("pro")
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 
-	createCmd.Flags().String("inlets-pro-version", inletsProDefaultVersion, `Binary release version for inlets PRO`)
+	createCmd.Flags().String("inlets-pro-version", inletsProDefaultVersion, `Binary release version for inlets Pro`)
 
 }
 
 // clientCmd represents the client sub command.
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create an exit-server with inlets PRO preinstalled.",
-	Long: `Create an exit-server with inlets PRO preinstalled on cloud infrastructure 
-with inlets PRO preloaded as a systemd service. The estimated cost of each 
+	Short: "Create an exit-server with inlets Pro preinstalled.",
+	Long: `Create an exit-server with inlets Pro preinstalled on cloud infrastructure 
+with inlets Pro preloaded as a systemd service. The estimated cost of each 
 VM along with what OS version and spec will be used is explained in the 
 project docs.`,
 	Example: `  inletsctl create  \
@@ -334,14 +334,14 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 		if hostStatus.Status == "active" {
 			if len(letsencryptDomains) > 0 {
-				fmt.Printf(`inlets PRO HTTPS (%s) server summary:
+				fmt.Printf(`inlets Pro HTTPS (%s) server summary:
   IP: %s
   HTTPS Domains: %v
   Auth-token: %s
 
 Command:
 
-# Obtain a license at https://inlets.dev
+# Obtain a license at https://inlets.dev/pricing
 # Store it at $HOME/.inlets/LICENSE or use --help for more options
 
 # Where to route traffic from the inlets server
@@ -366,15 +366,14 @@ To delete:
 
 				return nil
 			} else {
-				fmt.Printf(`inlets PRO TCP (%s) server summary:
+				fmt.Printf(`inlets Pro TCP (%s) server summary:
   IP: %s
   Auth-token: %s
 
 Command:
 
-# Obtain a license at https://inlets.dev
+# Obtain a license at https://inlets.dev/pricing
 # Store it at $HOME/.inlets/LICENSE or use --help for more options
-export LICENSE="$HOME/.inlets/LICENSE"
 
 # Give a single value or comma-separated
 export PORTS="8000"

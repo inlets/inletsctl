@@ -6,7 +6,7 @@
 ![Downloads](https://img.shields.io/github/downloads/inlets/inletsctl/total)
 
 inletsctl automates the task of creating an exit-server (tunnel server) on public cloud infrastructure.
-The `create` command provisions a cheap cloud VM with a public IP and pre-installs inlets PRO for you. You'll then get a connection string that you can use with the inlets client.
+The `create` command provisions a cheap cloud VM with a public IP and pre-installs inlets Pro for you. You'll then get a connection string that you can use with the inlets client.
 
 **Conceptual diagram**
 
@@ -16,7 +16,7 @@ The `create` command provisions a cheap cloud VM with a public IP and pre-instal
 
 Use-cases:
 
-* Setup L4 TCP and HTTPS tunnels for your local services using [inlets PRO](https://inlets.dev/) with `inletsctl create`
+* Setup L4 TCP and HTTPS tunnels for your local services using [inlets Pro](https://inlets.dev/) with `inletsctl create`
 * Create tunnels for use with Kubernetes clusters, create the tunnel and use it whenever you need it
 * Port-forward services your local Kubernetes cluster using `inletsctl kfwd`
 

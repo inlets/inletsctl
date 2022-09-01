@@ -21,10 +21,10 @@ func init() {
 	inletsCmd.AddCommand(kfwdCmd)
 
 	kfwdCmd.Flags().StringP("from", "f", "", "From service for the inlets client to forward")
-	kfwdCmd.Flags().StringP("if", "i", "", "The address of your laptop, for the inlets PRO server to connect to")
+	kfwdCmd.Flags().StringP("if", "i", "", "The address of your laptop, for the inlets Pro server to connect to")
 	kfwdCmd.Flags().StringP("namespace", "n", "default", "Source service namespace")
 	kfwdCmd.Flags().String("license", "", "Inlets PRO license key")
-	kfwdCmd.Flags().Bool("tcp", false, "Use inlets PRO in TCP mode, or if set to false, in HTTP mode")
+	kfwdCmd.Flags().Bool("tcp", false, "Use inlets Pro in TCP mode, or if set to false, in HTTP mode")
 }
 
 // clientCmd represents the client sub command.
@@ -34,7 +34,7 @@ var kfwdCmd = &cobra.Command{
 	Long: `Forward a Kubernetes service to the local machine using the --if flag to 
 specify an ethernet address accessible from within the Kubernetes cluster
 
-An inlets PRO HTTP or TCP client is run within the cluster as a deployment, 
+An inlets Pro HTTP or TCP client is run within the cluster as a deployment, 
 and then the server process is run by inletsctl. The cluster starts the 
 client which then establishes the connection to the server on your 
 local machine.`,
@@ -80,7 +80,7 @@ func fwdTCP(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license st
 		return fmt.Errorf("exit code unexpected: %d, stderr: %s", res.ExitCode, res.Stderr)
 	}
 
-	fmt.Println("inlets PRO client scheduled inside your cluster.")
+	fmt.Println("inlets Pro client scheduled inside your cluster.")
 
 	go func() {
 		sig := make(chan os.Signal, 1)
@@ -108,7 +108,7 @@ func fwdTCP(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license st
 		}
 	}()
 
-	fmt.Printf(`inlets PRO server now listening.
+	fmt.Printf(`inlets Pro server now listening.
 
 %s:%s
 
@@ -183,7 +183,7 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if len(license) == 0 {
-		return fmt.Errorf("--license is required for use with inlets PRO, get a free trial at inlets.dev")
+		return fmt.Errorf("--license is required for use with inlets Pro, get a free trial at inlets.dev")
 	}
 
 	if tcp, _ := cmd.Flags().GetBool("tcp"); tcp {

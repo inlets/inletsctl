@@ -24,7 +24,7 @@ var (
 func init() {
 	inletsCmd.AddCommand(downloadCmd)
 
-	downloadCmd.Flags().BoolVar(&inletsPro, "pro", true, "Download inlets PRO")
+	downloadCmd.Flags().BoolVar(&inletsPro, "pro", true, "Download inlets Pro")
 	downloadCmd.Flags().StringVar(&downloadVersion, "version", "", "specific version to download")
 	downloadCmd.Flags().StringVar(&destination, "download-to", "/usr/local/bin", "location to download to (Default: /usr/local/bin)")
 	downloadCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show download URL")
@@ -33,8 +33,8 @@ func init() {
 
 var downloadCmd = &cobra.Command{
 	Use:   "download",
-	Short: "Downloads the inlets PRO binary",
-	Long:  `Downloads the inlets PRO binary from the GitHub releases page. Only inlets PRO is supported.`,
+	Short: "Downloads the inlets Pro binary",
+	Long:  `Downloads the inlets Pro binary from the GitHub releases page. Only inlets Pro is supported.`,
 	Example: `  inletsctl download
   inletsctl download --version 0.2.6 
   inletsctl download --pro --version 0.2.6 

@@ -28,7 +28,7 @@
 ## Your Environment
 <!--- Include as many relevant details about the environment you experienced the bug in -->
 
-* inlets PRO version `inlets-pro version` 
+* inlets Pro version `inlets-pro version` 
 
 * inletsctl version `inletsctl version` 
 
