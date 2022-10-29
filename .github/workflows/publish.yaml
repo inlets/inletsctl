@@ -24,7 +24,7 @@ jobs:
         run: make all
 
       - name: Upload release binaries
-        uses: alexellis/upload-assets@0.2.3
+        uses: alexellis/upload-assets@0.4.0
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
