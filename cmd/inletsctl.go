@@ -39,7 +39,8 @@ tool whether you want to use inlets or inlets-pro for L4 TCP.
 
 See also: inlets-operator which does the same job, but for Kubernetes services.
 `,
-	Run: runInlets,
+	Run:           runInlets,
+	SilenceErrors: true,
 }
 
 var versionCmd = &cobra.Command{
