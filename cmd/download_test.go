@@ -46,3 +46,12 @@ func Test_BuildFilename_Darwin_amd64(t *testing.T) {
 		t.Errorf("want: %s, but got: %s", want, arch+ext)
 	}
 }
+
+func Test_BuildFilename_Darwin_arm64(t *testing.T) {
+	arch, ext := buildFilename("arm64", "darwin")
+	want := "-darwin-arm64"
+
+	if want != arch+ext {
+		t.Errorf("want: %s, but got: %s", want, arch+ext)
+	}
+}
