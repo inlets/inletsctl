@@ -5,14 +5,13 @@ go 1.18
 require (
 	github.com/alexellis/go-execute v0.5.0
 	github.com/golang/mock v1.6.0
-	github.com/inlets/cloud-provision v0.6.1
+	github.com/inlets/cloud-provision v0.6.2
 	github.com/linode/linodego v1.9.1
 	github.com/morikuni/aec v1.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
-
 )
 
 require (
@@ -29,7 +28,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/digitalocean/godo v1.83.0 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
-	github.com/dirien/ovh-go-sdk v0.1.1 // indirect
+	github.com/dirien/ovh-go-sdk v0.2.0 // indirect
 	github.com/go-resty/resty/v2 v2.1.1-0.20191201195748-d7b97669fe48 // indirect
 	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -41,11 +40,11 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
 	github.com/hetznercloud/hcloud-go v1.35.2 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/ovh/go-ovh v1.1.0 // indirect
+	github.com/ovh/go-ovh v1.3.0 // indirect
 	github.com/packethost/packngo v0.25.0 // indirect
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/prometheus/client_golang v1.13.0 // indirect
