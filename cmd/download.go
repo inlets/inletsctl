@@ -226,7 +226,11 @@ func buildFilename(arch, osVal string) (string, string) {
 	}
 
 	if osVal == "darwin" {
-		arch = "-" + osVal
+		if arch == "arm64" {
+			arch = "-" + osVal + "-" + arch
+		} else {
+			arch = "-" + osVal
+		}
 	} else if arch == "amd64" {
 		arch = ""
 	} else {
