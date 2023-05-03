@@ -129,9 +129,9 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 			return errors.Wrap(err, "failed to get 'endpoint' value")
 		}
 	}
+
 	projectID, _ := cmd.Flags().GetString("project-id")
 	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken, endpoint, consumerKey, projectID)
-
 	if err != nil {
 		return err
 	}
@@ -155,12 +155,12 @@ func runDelete(cmd *cobra.Command, _ []string) error {
 		IP:        hostIP,
 		ProjectID: projectID,
 		Zone:      zone,
+		Region:    region,
 	}
 
 	fmt.Printf("Deleting host: %s%s from %s\n", hostID, hostIP, provider)
 
-	err = provisioner.Delete(deleteRequest)
-	if err != nil {
+	if err = provisioner.Delete(deleteRequest); err != nil {
 		return err
 	}
 

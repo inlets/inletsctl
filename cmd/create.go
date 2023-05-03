@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsProDefaultVersion = "0.9.9"
+const inletsProDefaultVersion = "0.9.18"
 const inletsProControlPort = 8123
 
 func init() {
@@ -150,6 +150,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "eu-west"
 	} else if provider == "ovh" {
 		region = "DE1"
+	} else if provider == "gce" {
+		return fmt.Errorf("--region is required for the GCE provider")
 	}
 
 	var zone string
@@ -496,7 +498,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			Name:     name,
 			OS:       "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2004-focal-v20210707",
 			Plan:     "f1-micro",
-			Region:   "",
+			Region:   region,
 			UserData: userData,
 			Additional: map[string]string{
 				"projectid":     projectID,
