@@ -15,7 +15,6 @@ import (
 )
 
 var (
-	inletsPro       bool
 	downloadVersion string
 	destination     string
 	verbose         bool
@@ -24,7 +23,6 @@ var (
 func init() {
 	inletsCmd.AddCommand(downloadCmd)
 
-	downloadCmd.Flags().BoolVar(&inletsPro, "pro", true, "Download inlets Pro")
 	downloadCmd.Flags().StringVar(&downloadVersion, "version", "", "specific version to download")
 	downloadCmd.Flags().StringVar(&destination, "download-to", "/usr/local/bin", "location to download to (Default: /usr/local/bin)")
 	downloadCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show download URL")
@@ -33,12 +31,11 @@ func init() {
 
 var downloadCmd = &cobra.Command{
 	Use:   "download",
-	Short: "Downloads the inlets Pro binary",
-	Long:  `Downloads the inlets Pro binary from the GitHub releases page. Only inlets Pro is supported.`,
+	Short: "Downloads the inlets binary",
+	Long:  `Downloads the inlets binary from the GitHub releases page..`,
 	Example: `  inletsctl download
-  inletsctl download --version 0.2.6 
-  inletsctl download --pro --version 0.2.6 
-  inletsctl download --pro`,
+  inletsctl download --version 0.2.6
+`,
 	RunE:          downloadInlets,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -48,15 +45,9 @@ func downloadInlets(_ *cobra.Command, _ []string) error {
 
 	var versionUrl, downloadUrl, binaryName string
 
-	if inletsPro {
-		versionUrl = "https://github.com/inlets/inlets-pro/releases/latest"
-		downloadUrl = "https://github.com/inlets/inlets-pro/releases/download/"
-		binaryName = "inlets-pro"
-	} else {
-		versionUrl = "https://github.com/inlets/inlets-pro/releases/latest"
-		downloadUrl = "https://github.com/inlets/inlets-pro/releases/download/"
-		binaryName = "inlets-pro"
-	}
+	versionUrl = "https://github.com/inlets/inlets-pro/releases/latest"
+	downloadUrl = "https://github.com/inlets/inlets-pro/releases/download/"
+	binaryName = "inlets-pro"
 
 	osVal := runtime.GOOS
 	arch := runtime.GOARCH

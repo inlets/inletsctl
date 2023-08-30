@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsProDefaultVersion = "0.9.18"
+const inletsProDefaultVersion = "0.9.21"
 const inletsProControlPort = 8123
 
 func init() {
@@ -49,7 +49,7 @@ func init() {
 	createCmd.Flags().String("endpoint", "ovh-eu", "API endpoint (ovh), default: ovh-eu")
 	createCmd.Flags().String("consumer-key", "", "The Consumer Key for using the OVH API")
 
-	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets Pro running as a TCP server`)
+	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets running as a TCP server`)
 
 	createCmd.Flags().StringArray("letsencrypt-domain", []string{}, `Domains you want to get a Let's Encrypt certificate for`)
 	createCmd.Flags().String("letsencrypt-issuer", "prod", `The issuer endpoint to use with Let's Encrypt - \"prod\" or \"staging\"`)
@@ -59,22 +59,35 @@ func init() {
 	_ = createCmd.Flags().MarkHidden("pro")
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 
-	createCmd.Flags().String("inlets-pro-version", inletsProDefaultVersion, `Binary release version for inlets Pro`)
-
+	createCmd.Flags().String("inlets-version", inletsProDefaultVersion, `Binary release version for inlets`)
 }
 
 // clientCmd represents the client sub command.
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create an exit-server with inlets Pro preinstalled.",
-	Long: `Create an exit-server with inlets Pro preinstalled on cloud infrastructure 
-with inlets Pro preloaded as a systemd service. The estimated cost of each 
+	Short: "Create an exit-server with inlets preinstalled.",
+	Long: `Create an exit-server with inlets preinstalled on cloud infrastructure 
+with inlets preloaded as a systemd service. The estimated cost of each 
 VM along with what OS version and spec will be used is explained in the 
 project docs.`,
-	Example: `  inletsctl create  \
+	Example: `  # Create a TCP tunnel server
+  inletsctl create  \
     --provider [digitalocean|equinix-metal|ec2|scaleway|civo|gce|azure|linode|hetzner] \
     --access-token-file $HOME/access-token \
-    --region lon1`,
+    --region lon1
+
+  # Create a HTTPS tunnel server, terminating TLS with a certificate 
+  # from Let's Encrypt 
+  inletsctl create  \
+    --letsencrypt-domain inlets.example.com \
+    --letsencrypt-email webmaster@example.com
+
+    # Create a HTTPS tunnel server with multiple domains
+    inletsctl create  \
+      --letsencrypt-domain tunnel1.example.com \
+      --letsencrypt-domain tunnel2.example.com \
+      --letsencrypt-email webmaster@example.com
+`,
 	RunE:          runCreate,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -264,10 +277,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	inletsProVersion, err := cmd.Flags().GetString("inlets-pro-version")
+	inletsProVersion, err := cmd.Flags().GetString("inlets-version")
 	if err != nil {
 		return err
 	}
+
 	if len(inletsProVersion) == 0 {
 		inletsProVersion = inletsProDefaultVersion
 	}
@@ -336,7 +350,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 		if hostStatus.Status == "active" {
 			if len(letsencryptDomains) > 0 {
-				fmt.Printf(`inlets Pro HTTPS (%s) server summary:
+				fmt.Printf(`inlets HTTPS (%s) server summary:
   IP: %s
   HTTPS Domains: %v
   Auth-token: %s
@@ -368,7 +382,7 @@ To delete:
 
 				return nil
 			} else {
-				fmt.Printf(`inlets Pro TCP (%s) server summary:
+				fmt.Printf(`inlets TCP (%s) server summary:
   IP: %s
   Auth-token: %s
 
@@ -527,7 +541,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210621",
+			OS:         "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20230516",
 			Plan:       "t3.nano",
 			Region:     region,
 			UserData:   base64.StdEncoding.EncodeToString([]byte(userData)),
