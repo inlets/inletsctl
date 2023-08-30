@@ -82,11 +82,11 @@ project docs.`,
     --letsencrypt-domain inlets.example.com \
     --letsencrypt-email webmaster@example.com
 
-    # Create a HTTPS tunnel server with multiple domains
-    inletsctl create  \
-      --letsencrypt-domain tunnel1.example.com \
-      --letsencrypt-domain tunnel2.example.com \
-      --letsencrypt-email webmaster@example.com
+  # Create a HTTPS tunnel server with multiple domains
+  inletsctl create  \
+    --letsencrypt-domain tunnel1.example.com \
+    --letsencrypt-domain tunnel2.example.com \
+    --letsencrypt-email webmaster@example.com
 `,
 	RunE:          runCreate,
 	SilenceUsage:  true,
