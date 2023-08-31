@@ -2,10 +2,10 @@ package env
 
 import (
 	"fmt"
-	"github.com/spf13/pflag"
-	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/spf13/pflag"
 )
 
 func GetRequiredFileOrString(flags *pflag.FlagSet, file, value, envVarName string) (string, error) {
@@ -21,7 +21,7 @@ func getFileOrString(flags *pflag.FlagSet, file, value, envVarName string, requi
 
 	if len(authFile) > 0 {
 		// Fallback to the File Flag, then the Env Var
-		res, err := ioutil.ReadFile(authFile)
+		res, err := os.ReadFile(authFile)
 		if err != nil {
 			return "", err
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) Inlets Author(s) 2019. All rights reserved.
+// Copyright (c) Inlets Author(s) 2023. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 package cmd
@@ -98,12 +98,12 @@ func fwdTCP(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license st
 		res, err := task.Execute()
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, err.Error())
+			fmt.Fprintf(os.Stderr, "%s", err.Error())
 			return
 		}
 
 		if res.ExitCode != 0 {
-			fmt.Fprintf(os.Stderr, fmt.Errorf("exit code unexpected from kubectl delete: %d, stderr: %s", res.ExitCode, res.Stderr).Error())
+			fmt.Fprintf(os.Stderr, "%s", fmt.Errorf("exit code unexpected from kubectl delete: %d, stderr: %s", res.ExitCode, res.Stderr).Error())
 			return
 		}
 	}()
@@ -330,7 +330,7 @@ spec:
     spec:
       containers:
       - name: inlets
-        image: ghcr.io/inlets/inlets-pro:0.9.9
+        image: ghcr.io/inlets/inlets-pro:0.9.21
         imagePullPolicy: IfNotPresent
         command: ["inlets-pro"]
         args:

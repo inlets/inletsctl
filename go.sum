@@ -209,6 +209,10 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/inlets/cloud-provision v0.6.5 h1:IOzdBguO+QkqO3uEwyv1bNBHyI7EhyEJr5B3br7Q4eA=
 github.com/inlets/cloud-provision v0.6.5/go.mod h1:zK0cG+FIZuKHyxx0PwBim5qM1AApAxmZfCExZa3VVqc=
+github.com/inlets/cloud-provision v0.6.6 h1:7xqSQ7RCZPpiFXegBGWP4dEebSUgtfCnMRMUbal6eSs=
+github.com/inlets/cloud-provision v0.6.6/go.mod h1:zK0cG+FIZuKHyxx0PwBim5qM1AApAxmZfCExZa3VVqc=
+github.com/inlets/cloud-provision v0.6.7 h1:gBr1knWRdhdR8uAPX1ljyf2VyNTiYs2Gl/Fa1snVwdQ=
+github.com/inlets/cloud-provision v0.6.7/go.mod h1:zK0cG+FIZuKHyxx0PwBim5qM1AApAxmZfCExZa3VVqc=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=

@@ -1,11 +1,11 @@
-// Copyright (c) Inlets Author(s) 2019. All rights reserved.
+// Copyright (c) Inlets Author(s) 2023. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -16,7 +16,7 @@ func getFileOrString(flags *pflag.FlagSet, file, value string, required bool) (s
 	var val string
 	fileVal, _ := flags.GetString(file)
 	if len(fileVal) > 0 {
-		res, err := ioutil.ReadFile(fileVal)
+		res, err := os.ReadFile(fileVal)
 		if err != nil {
 			return "", err
 		}

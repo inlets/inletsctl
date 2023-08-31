@@ -154,7 +154,7 @@ func downloadBinary(client *http.Client, url, name string) (string, error) {
 	outputPath := path.Join(tempDir, name)
 	if res.Body != nil {
 		defer res.Body.Close()
-		res, _ := ioutil.ReadAll(res.Body)
+		res, _ := io.ReadAll(res.Body)
 
 		err := ioutil.WriteFile(outputPath, res, 0777)
 		if err != nil {

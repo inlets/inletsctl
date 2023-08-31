@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/alexellis/go-execute v0.5.0
 	github.com/golang/mock v1.6.0
-	github.com/inlets/cloud-provision v0.6.5
+	github.com/inlets/cloud-provision v0.6.7
 	github.com/linode/linodego v1.12.0
 	github.com/morikuni/aec v1.0.0
 	github.com/pkg/errors v0.9.1

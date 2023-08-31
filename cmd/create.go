@@ -1,4 +1,4 @@
-// Copyright (c) Inlets Author(s) 2019. All rights reserved.
+// Copyright (c) Inlets Author(s) 2023. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 package cmd
@@ -50,6 +50,7 @@ func init() {
 	createCmd.Flags().String("consumer-key", "", "The Consumer Key for using the OVH API")
 
 	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets running as a TCP server`)
+	createCmd.Flags().String("aws-key-name", "", "The name of an existing SSH key on AWS to be used to access the EC2 instance for maintenance (optional)")
 
 	createCmd.Flags().StringArray("letsencrypt-domain", []string{}, `Domains you want to get a Let's Encrypt certificate for`)
 	createCmd.Flags().String("letsencrypt-issuer", "prod", `The issuer endpoint to use with Let's Encrypt - \"prod\" or \"staging\"`)
@@ -98,9 +99,14 @@ const EquinixMetalProvider = "equinix-metal"
 
 func runCreate(cmd *cobra.Command, _ []string) error {
 
+	awsKeyName, err := cmd.Flags().GetString("aws-key-name")
+	if err != nil {
+		return err
+	}
+
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
-		return errors.Wrap(err, "failed to get 'provider' value.")
+		return err
 	}
 
 	// Migrate to new name
@@ -112,8 +118,9 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	inletsToken, err := cmd.Flags().GetString("inlets-token")
 	if err != nil {
-		return errors.Wrap(err, "failed to get 'inlets-token' value.")
+		return err
 	}
+
 	if len(inletsToken) == 0 {
 		var passwordErr error
 		inletsToken, passwordErr = generateAuth()
@@ -250,18 +257,18 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken, endpoint, consumerKey, projectID)
-
 	if err != nil {
 		return err
 	}
 
-	pro := true
+	tcp := true
+
 	if cmd.Flags().Changed("pro") {
 		fmt.Printf("WARN: --pro is deprecated, use --tcp instead.")
-		pro, _ = cmd.Flags().GetBool("pro")
+		tcp, _ = cmd.Flags().GetBool("pro")
 	}
 	if cmd.Flags().Changed("tcp") {
-		pro, _ = cmd.Flags().GetBool("tcp")
+		tcp, _ = cmd.Flags().GetBool("tcp")
 	}
 
 	letsencryptDomains, _ := cmd.Flags().GetStringArray("letsencrypt-domain")
@@ -275,6 +282,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		if len(letsencryptIssuer) == 0 {
 			return fmt.Errorf("--letsencrypt-issuer is required when --letsencrypt-domain is given")
 		}
+		tcp = false
 	}
 
 	inletsProVersion, err := cmd.Flags().GetString("inlets-version")
@@ -305,11 +313,13 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		zone,
 		projectID,
 		userData,
-		"0",
+		fmt.Sprintf("%d", inletsProControlPort),
 		vpcID,
 		subnetID,
-		pro)
-
+		awsKeyName,
+		tcp,
+		letsencryptDomains,
+	)
 	if err != nil {
 		return err
 	}
@@ -357,15 +367,9 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 Command:
 
-# Obtain a license at https://inlets.dev/pricing
-# Store it at $HOME/.inlets/LICENSE or use --help for more options
-
-# Where to route traffic from the inlets server
-export UPSTREAM="http://127.0.0.1:8000"
-
 inlets-pro http client --url "wss://%s:%d" \
---token "%s" \
---upstream $UPSTREAM
+  --token "%s" \
+  --upstream http://127.0.0.1:8080
 
 To delete:
   inletsctl delete --provider %s --id "%s"
@@ -388,19 +392,10 @@ To delete:
 
 Command:
 
-# Obtain a license at https://inlets.dev/pricing
-# Store it at $HOME/.inlets/LICENSE or use --help for more options
-
-# Give a single value or comma-separated
-export PORTS="8000"
-
-# Where to route traffic from the inlets server
-export UPSTREAM="localhost"
-
 inlets-pro tcp client --url "wss://%s:%d" \
   --token "%s" \
-  --upstream $UPSTREAM \
-  --ports $PORTS
+  --upstream 127.0.0.1 \
+  --ports 2222
 
 To delete:
   inletsctl delete --provider %s --id "%s"
@@ -458,7 +453,7 @@ func generateAuth() (string, error) {
 	return pwdRes, pwdErr
 }
 
-func createHost(provider, name, region, zone, projectID, userData, inletsPort string, vpcID string, subnetID string, pro bool) (*provision.BasicHost, error) {
+func createHost(provider, name, region, zone, projectID, userData, inletsProControlPort, vpcID, subnetID, awsKeyName string, tcp bool, letsencryptDomains []string) (*provision.BasicHost, error) {
 	if provider == "digitalocean" {
 		return &provision.BasicHost{
 			Name:       name,
@@ -518,8 +513,8 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 				"projectid":     projectID,
 				"zone":          zone,
 				"firewall-name": "inlets",
-				"firewall-port": inletsPort,
-				"pro":           fmt.Sprint(pro),
+				"firewall-port": inletsProControlPort,
+				"pro":           fmt.Sprint(tcp),
 			},
 		}, nil
 	} else if provider == "ec2" {
@@ -527,8 +522,16 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 		// Name is used in the OS field so the ami can be lookup up in the region specified
 
 		var additional = map[string]string{
-			"inlets-port": inletsPort,
-			"pro":         fmt.Sprint(pro),
+			"inlets-port": inletsProControlPort,
+			"pro":         fmt.Sprint(tcp),
+		}
+
+		if len(letsencryptDomains) > 0 {
+			additional["ports"] = "80,443"
+		}
+
+		if len(awsKeyName) > 0 {
+			additional["key-name"] = awsKeyName
 		}
 
 		if len(vpcID) > 0 {
@@ -547,6 +550,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			UserData:   base64.StdEncoding.EncodeToString([]byte(userData)),
 			Additional: additional,
 		}, nil
+
 	} else if provider == "azure" {
 		// Ubuntu images can be found here https://docs.microsoft.com/en-us/azure/virtual-machines/linux/cli-ps-findimage#list-popular-images
 		// An image includes more than one property, it has publisher, offer, sku and version.
@@ -558,8 +562,8 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			Region:   region,
 			UserData: userData,
 			Additional: map[string]string{
-				"inlets-port":    inletsPort,
-				"pro":            fmt.Sprint(pro),
+				"inlets-port":    inletsProControlPort,
+				"pro":            fmt.Sprint(tcp),
 				"imagePublisher": "Canonical",
 				"imageOffer":     "0001-com-ubuntu-server-focal",
 				"imageSku":       "20_04-lts",
@@ -596,8 +600,8 @@ func createHost(provider, name, region, zone, projectID, userData, inletsPort st
 			Region:   region,
 			UserData: userData,
 			Additional: map[string]string{
-				"inlets-port": inletsPort,
-				"pro":         fmt.Sprint(pro),
+				"inlets-port": inletsProControlPort,
+				"pro":         fmt.Sprint(tcp),
 			},
 		}, nil
 	} else if provider == "hetzner" {
