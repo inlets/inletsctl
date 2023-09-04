@@ -207,12 +207,8 @@ github.com/hetznercloud/hcloud-go v1.39.0/go.mod h1:mepQwR6va27S3UQthaEPGS86jtzS
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/inlets/cloud-provision v0.6.5 h1:IOzdBguO+QkqO3uEwyv1bNBHyI7EhyEJr5B3br7Q4eA=
-github.com/inlets/cloud-provision v0.6.5/go.mod h1:zK0cG+FIZuKHyxx0PwBim5qM1AApAxmZfCExZa3VVqc=
-github.com/inlets/cloud-provision v0.6.6 h1:7xqSQ7RCZPpiFXegBGWP4dEebSUgtfCnMRMUbal6eSs=
-github.com/inlets/cloud-provision v0.6.6/go.mod h1:zK0cG+FIZuKHyxx0PwBim5qM1AApAxmZfCExZa3VVqc=
-github.com/inlets/cloud-provision v0.6.7 h1:gBr1knWRdhdR8uAPX1ljyf2VyNTiYs2Gl/Fa1snVwdQ=
-github.com/inlets/cloud-provision v0.6.7/go.mod h1:zK0cG+FIZuKHyxx0PwBim5qM1AApAxmZfCExZa3VVqc=
+github.com/inlets/cloud-provision v0.6.8 h1:UmpkcaR+6y68K7suFqhsPLLtkccVhBbggE0NnwMopo0=
+github.com/inlets/cloud-provision v0.6.8/go.mod h1:zK0cG+FIZuKHyxx0PwBim5qM1AApAxmZfCExZa3VVqc=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
