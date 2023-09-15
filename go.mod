@@ -3,7 +3,7 @@ module github.com/inlets/inletsctl
 go 1.20
 
 require (
-	github.com/alexellis/go-execute v0.5.0
+	github.com/alexellis/go-execute/v2 v2.0.0
 	github.com/golang/mock v1.6.0
 	github.com/inlets/cloud-provision v0.6.8
 	github.com/linode/linodego v1.12.0

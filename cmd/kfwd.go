@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,7 +14,7 @@ import (
 	"strings"
 	"syscall"
 
-	v1 "github.com/alexellis/go-execute/pkg/v1"
+	v2 "github.com/alexellis/go-execute/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -66,12 +67,12 @@ func fwdTCP(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license st
 
 	fmt.Printf("%s written.\n", tmpPath)
 
-	task := v1.ExecTask{
+	task := v2.ExecTask{
 		Command: "kubectl",
 		Args:    []string{"apply", "-f", tmpPath},
 	}
 
-	res, err := task.Execute()
+	res, err := task.Execute(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -91,11 +92,11 @@ func fwdTCP(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license st
 
 		log.Printf("Interrupt received..\n")
 
-		task := v1.ExecTask{
+		task := v2.ExecTask{
 			Command: "kubectl",
 			Args:    []string{"delete", "-f", tmpPath},
 		}
-		res, err := task.Execute()
+		res, err := task.Execute(context.TODO())
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s", err.Error())
@@ -115,7 +116,7 @@ func fwdTCP(cmd *cobra.Command, eth, port, upstream, ns, inletsToken, license st
 Hit Control+C to cancel.
 `, eth, port)
 
-	serverTask := v1.ExecTask{
+	serverTask := v2.ExecTask{
 		Command: "inlets-pro",
 		Args: []string{
 			"server",
@@ -125,10 +126,9 @@ Hit Control+C to cancel.
 		},
 	}
 
-	serverRes, serverErr := serverTask.Execute()
-
-	if serverErr != nil {
-		return fmt.Errorf("error with server: %s", serverErr.Error())
+	serverRes, err := serverTask.Execute(context.TODO())
+	if err != nil {
+		return fmt.Errorf("error with server: %s", err.Error())
 	}
 
 	if serverRes.ExitCode != 0 {
@@ -201,11 +201,11 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 	}
 	fmt.Printf("%s written.\n", tmpPath)
 
-	task := v1.ExecTask{
+	task := v2.ExecTask{
 		Command: "kubectl",
 		Args:    []string{"apply", "-f", tmpPath},
 	}
-	res, err := task.Execute()
+	res, err := task.Execute(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -225,11 +225,11 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 
 		log.Printf("Interrupt received..\n")
 
-		task := v1.ExecTask{
+		task := v2.ExecTask{
 			Command: "kubectl",
 			Args:    []string{"delete", "-f", tmpPath},
 		}
-		res, err := task.Execute()
+		res, err := task.Execute(context.TODO())
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, err.Error())
@@ -249,7 +249,7 @@ http://%s:%s
 Hit Control+C to cancel.
 `, eth, port)
 
-	serverTask := v1.ExecTask{
+	serverTask := v2.ExecTask{
 		Command: "inlets-pro",
 		Args: []string{
 			"http",
@@ -261,7 +261,7 @@ Hit Control+C to cancel.
 		},
 	}
 
-	serverRes, err := serverTask.Execute()
+	serverRes, err := serverTask.Execute(context.TODO())
 	if err != nil {
 		return fmt.Errorf("error with server: %s", err.Error())
 	}
