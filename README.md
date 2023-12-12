@@ -2,7 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://godoc.org/github.com/inlets/inletsctl?status.svg)](http://godoc.org/github.com/inlets/inletsctl)
-![Downloads](https://img.shields.io/github/downloads/inlets/inletsctl/total) <img alt="Arm CI sponsored by Actuated" src="https://docs.actuated.dev/images/actuated-badge.png" width="120px"></img>
+![Downloads](https://img.shields.io/github/downloads/inlets/inletsctl/total) <a href="https://actuated.dev/"><img alt="Arm CI sponsored by Actuated" src="https://docs.actuated.dev/images/actuated-badge.png" width="120px"></img></a>
+
 
 inletsctl automates the task of creating an exit-server (tunnel server) on public cloud infrastructure.
 The `create` command provisions a cheap cloud VM with a public IP and pre-installs inlets Pro for you. You'll then get a connection string that you can use with the inlets client.
