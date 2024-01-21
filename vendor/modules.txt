@@ -223,8 +223,8 @@ github.com/hetznercloud/hcloud-go/hcloud/schema
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
-# github.com/inlets/cloud-provision v0.6.8
-## explicit; go 1.18
+# github.com/inlets/cloud-provision v0.6.9
+## explicit; go 1.21
 github.com/inlets/cloud-provision/provision
 # github.com/jmespath/go-jmespath v0.4.0
 ## explicit; go 1.14

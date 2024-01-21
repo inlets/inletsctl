@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/alexellis/go-execute/v2 v2.2.1
 	github.com/golang/mock v1.6.0
-	github.com/inlets/cloud-provision v0.6.8
+	github.com/inlets/cloud-provision v0.6.9
 	github.com/linode/linodego v1.27.1
 	github.com/morikuni/aec v1.0.0
 	github.com/pkg/errors v0.9.1

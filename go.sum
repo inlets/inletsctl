@@ -260,6 +260,8 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/inlets/cloud-provision v0.6.8 h1:UmpkcaR+6y68K7suFqhsPLLtkccVhBbggE0NnwMopo0=
 github.com/inlets/cloud-provision v0.6.8/go.mod h1:zK0cG+FIZuKHyxx0PwBim5qM1AApAxmZfCExZa3VVqc=
+github.com/inlets/cloud-provision v0.6.9 h1:x2UUucTKNAGI69vLxggCcxuYEHFGNehOakHd2UJfKdM=
+github.com/inlets/cloud-provision v0.6.9/go.mod h1:VRZaOMJD/edkEfKrRtU8LGMwqhXn3eJ6i8YDdoe5jPs=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=
 github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
