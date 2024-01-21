@@ -22,11 +22,19 @@ import (
 const inletsProDefaultVersion = "0.9.21"
 const inletsProControlPort = 8123
 
+const (
+	digitalOceanImageFlag = "digitalocean-image"
+	digitalOceanPlanFlag  = "digitalocean-plan"
+	nameFlag              = "name"
+)
+
 func init() {
 
 	inletsCmd.AddCommand(createCmd)
 
 	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, equinix-metal, scaleway, linode, civo, hetzner, ovh or vultr")
+	createCmd.Flags().String("name", "", "The name of the host. If not specified a random name will be used")
+
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("plan", "s", "", "The plan or size for your cloud instance")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit-server (gce)")
@@ -55,6 +63,9 @@ func init() {
 	createCmd.Flags().StringArray("letsencrypt-domain", []string{}, `Domains you want to get a Let's Encrypt certificate for`)
 	createCmd.Flags().String("letsencrypt-issuer", "prod", `The issuer endpoint to use with Let's Encrypt - \"prod\" or \"staging\"`)
 	createCmd.Flags().String("letsencrypt-email", "", `The email to register with Let's Encrypt for renewal notices (required)`)
+
+	createCmd.Flags().String(digitalOceanImageFlag, "ubuntu-22-04-x64", "The image to use when creating the Digital Ocean droplet")
+	createCmd.Flags().String(digitalOceanPlanFlag, "s-1vcpu-1gb", "The plan to use when creating the Digital Ocean droplet")
 
 	createCmd.Flags().Bool("pro", true, `Provision an exit-server with inlets Pro (Deprecated)`)
 	_ = createCmd.Flags().MarkHidden("pro")
@@ -256,6 +267,19 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	var doImage string
+	var doPlan string
+	if provider == "digitalocean" {
+		doImage, err = cmd.Flags().GetString(digitalOceanImageFlag)
+		if err != nil {
+			return fmt.Errorf("failed to get '%s' value: %w", digitalOceanImageFlag, err)
+		}
+		doPlan, err = cmd.Flags().GetString(digitalOceanPlanFlag)
+		if err != nil {
+			return fmt.Errorf("failed to get '%s' value: %w", digitalOceanPlanFlag, err)
+		}
+	}
+
 	provisioner, err := getProvisioner(provider, accessToken, secretKey, organisationID, region, subscriptionID, sessionToken, endpoint, consumerKey, projectID)
 	if err != nil {
 		return err
@@ -294,7 +318,14 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		inletsProVersion = inletsProDefaultVersion
 	}
 
-	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
+	var name string
+	name, err = cmd.Flags().GetString(nameFlag)
+	if err != nil {
+		return fmt.Errorf("failed to get '%s' value: %w", nameFlag, err)
+	}
+	if name == "" {
+		name = strings.Replace(names.GetRandomName(10), "_", "-", -1)
+	}
 
 	var userData string
 	if len(letsencryptDomains) > 0 {
@@ -317,6 +348,8 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		vpcID,
 		subnetID,
 		awsKeyName,
+		doImage,
+		doPlan,
 		tcp,
 		letsencryptDomains,
 	)
@@ -453,12 +486,12 @@ func generateAuth() (string, error) {
 	return pwdRes, pwdErr
 }
 
-func createHost(provider, name, region, zone, projectID, userData, inletsProControlPort, vpcID, subnetID, awsKeyName string, tcp bool, letsencryptDomains []string) (*provision.BasicHost, error) {
+func createHost(provider, name, region, zone, projectID, userData, inletsProControlPort, vpcID, subnetID, awsKeyName, doImage, doPlan string, tcp bool, letsencryptDomains []string) (*provision.BasicHost, error) {
 	if provider == "digitalocean" {
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "ubuntu-18-04-x64",
-			Plan:       "s-1vcpu-1gb",
+			OS:         doImage,
+			Plan:       doPlan,
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},
