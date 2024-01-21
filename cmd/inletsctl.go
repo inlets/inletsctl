@@ -14,7 +14,7 @@ import (
 
 var (
 	// Version as per git repo
-	Version string
+	Version string = "dev"
 
 	// GitCommit as per git repo
 	GitCommit string

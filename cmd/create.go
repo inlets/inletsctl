@@ -99,6 +99,25 @@ const EquinixMetalProvider = "equinix-metal"
 
 func runCreate(cmd *cobra.Command, _ []string) error {
 
+	inletsProVersion, err := cmd.Flags().GetString("inlets-version")
+	if err != nil {
+		return err
+	}
+
+	if len(inletsProVersion) == 0 {
+		inletsProVersion = inletsProDefaultVersion
+	}
+
+	tcp := true
+
+	if cmd.Flags().Changed("pro") {
+		fmt.Printf("WARN: --pro is deprecated, use --tcp instead.")
+		tcp, _ = cmd.Flags().GetBool("pro")
+	}
+	if cmd.Flags().Changed("tcp") {
+		tcp, _ = cmd.Flags().GetBool("tcp")
+	}
+
 	awsKeyName, err := cmd.Flags().GetString("aws-key-name")
 	if err != nil {
 		return err
@@ -114,7 +133,14 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		provider = EquinixMetalProvider
 	}
 
-	fmt.Printf("Using provider: %s\n", provider)
+	serverMode := "L4 TCP"
+	if !tcp {
+		serverMode = "L7 HTTPS"
+	}
+
+	fmt.Printf("inletsctl version: %v\nTunnel server: %s\tProvider: %s\tVersion: %s\n",
+		getVersion(),
+		serverMode, provider, inletsProVersion)
 
 	inletsToken, err := cmd.Flags().GetString("inlets-token")
 	if err != nil {
@@ -261,16 +287,6 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	tcp := true
-
-	if cmd.Flags().Changed("pro") {
-		fmt.Printf("WARN: --pro is deprecated, use --tcp instead.")
-		tcp, _ = cmd.Flags().GetBool("pro")
-	}
-	if cmd.Flags().Changed("tcp") {
-		tcp, _ = cmd.Flags().GetBool("tcp")
-	}
-
 	letsencryptDomains, _ := cmd.Flags().GetStringArray("letsencrypt-domain")
 	letsencryptEmail, _ := cmd.Flags().GetString("letsencrypt-email")
 	letsencryptIssuer, _ := cmd.Flags().GetString("letsencrypt-issuer")
@@ -283,15 +299,6 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf("--letsencrypt-issuer is required when --letsencrypt-domain is given")
 		}
 		tcp = false
-	}
-
-	inletsProVersion, err := cmd.Flags().GetString("inlets-version")
-	if err != nil {
-		return err
-	}
-
-	if len(inletsProVersion) == 0 {
-		inletsProVersion = inletsProDefaultVersion
 	}
 
 	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
@@ -457,7 +464,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 	if provider == "digitalocean" {
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "ubuntu-18-04-x64",
+			OS:         "ubuntu-22-04-x64",
 			Plan:       "s-1vcpu-1gb",
 			Region:     region,
 			UserData:   userData,
