@@ -4,14 +4,14 @@ LDFLAGS := "-s -w -X main.Version=$(Version) -X main.GitCommit=$(GitCommit)"
 export GO111MODULE=on
 .PHONY: all
 all: gofmt test dist compress hashgen
-
+SOURCE_DIRS=cmd pkg mock main.go
 .PHONY: test
 test:
 	CGO_ENABLED=0 go test $(shell go list ./... | grep -v /vendor/|xargs echo) -cover
 
 .PHONY: gofmt
 gofmt:
-	@test -z $(shell gofmt -l -s $(SOURCE_DIRS) ./ | tee /dev/stderr) || (echo "[WARN] Fix formatting issues with 'make fmt'" && exit 1)
+	@test -z $(shell gofmt -l -s $(SOURCE_DIRS) ./ |grep -v vendor/| tee /dev/stderr) || (echo "[WARN] Fix formatting issues with 'make gofmt'" && exit 1)
 
 .PHONY: hashgen
 hashgen:
