@@ -330,7 +330,7 @@ spec:
     spec:
       containers:
       - name: inlets
-        image: ghcr.io/inlets/inlets-pro:0.9.21
+        image: ghcr.io/inlets/inlets-pro:0.9.25
         imagePullPolicy: IfNotPresent
         command: ["inlets-pro"]
         args:
