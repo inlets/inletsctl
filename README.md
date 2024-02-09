@@ -4,9 +4,8 @@
 [![Documentation](https://godoc.org/github.com/inlets/inletsctl?status.svg)](http://godoc.org/github.com/inlets/inletsctl)
 ![Downloads](https://img.shields.io/github/downloads/inlets/inletsctl/total) <a href="https://actuated.dev/"><img alt="Arm CI sponsored by Actuated" src="https://docs.actuated.dev/images/actuated-badge.png" width="120px"></img></a>
 
-
 inletsctl automates the task of creating an exit-server (tunnel server) on public cloud infrastructure.
-The `create` command provisions a cheap cloud VM with a public IP and pre-installs inlets Pro for you. You'll then get a connection string that you can use with the inlets client.
+The `create` command provisions a cheap cloud VM with a public IP and pre-installs inlets for you. You'll then get a connection string that you can use with the inlets client.
 
 **Conceptual diagram**
 
@@ -16,7 +15,7 @@ The `create` command provisions a cheap cloud VM with a public IP and pre-instal
 
 Use-cases:
 
-* Setup L4 TCP and HTTPS tunnels for your local services using [inlets Pro](https://inlets.dev/) with `inletsctl create`
+* Setup L4 TCP and HTTPS tunnels for your local services using [inlets-pro](https://inlets.dev/) with `inletsctl create`
 * Create tunnels for use with Kubernetes clusters, create the tunnel and use it whenever you need it
 * Port-forward services your local Kubernetes cluster using `inletsctl kfwd`
 
@@ -46,7 +45,6 @@ In the demo we:
 * Use the CLI to delete the host
 
 [![asciicast](https://asciinema.org/a/q8vqJ0Fwug47T62biscp7cJ5O.svg)](https://asciinema.org/a/q8vqJ0Fwug47T62biscp7cJ5O)
-
 
 inletsctl is the quickest and easiest way to automate tunnels, whilst retaining complete control of your tunnel and data.
 
@@ -114,5 +112,4 @@ type Provisioner interface {
 
 inletsctl is distributed under the MIT license. inlets-pro, which inletsctl uses is licensed under the [inlets-pro End User License Agreement (EULA)](https://github.com/inlets/inlets-pro/blob/master/EULA.md).
 
-A valid inlets license or Gumroad subscription is required to create tunnel servers with inletsctl.
-
+[A valid static inlets license or a Gumroad subscription](https://store.openfaas.com/) is required to create tunnel servers with inletsctl.
