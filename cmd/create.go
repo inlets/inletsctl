@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsProDefaultVersion = "0.9.25"
+const inletsProDefaultVersion = "0.9.28"
 const inletsProControlPort = 8123
 
 func init() {
@@ -71,19 +71,25 @@ var createCmd = &cobra.Command{
 with inlets preloaded as a systemd service. The estimated cost of each 
 VM along with what OS version and spec will be used is explained in the 
 project docs.`,
-	Example: `  # Create a TCP tunnel server
+	Example: `
+  # Create a HTTPS tunnel server, terminating TLS with a certificate 
+  # from Let's Encrypt called "tunnel-richardcase" so your team mates
+  # don't delete your VM unintentionally.
   inletsctl create  \
+    tunnel-richardcase \
+    --letsencrypt-domain inlets.example.com \
+    --letsencrypt-email webmaster@example.com
+
+  # Create a TCP tunnel server with a VM name of ssh-tunnel
+  inletsctl create \
+    ssh-tunnel \
+	--tcp \
     --provider [digitalocean|equinix-metal|ec2|scaleway|civo|gce|azure|linode|hetzner] \
     --access-token-file $HOME/access-token \
     --region lon1
 
-  # Create a HTTPS tunnel server, terminating TLS with a certificate 
-  # from Let's Encrypt 
-  inletsctl create  \
-    --letsencrypt-domain inlets.example.com \
-    --letsencrypt-email webmaster@example.com
-
-  # Create a HTTPS tunnel server with multiple domains
+  # Create a HTTPS tunnel server with multiple domains and an auto-generated
+  # VM name
   inletsctl create  \
     --letsencrypt-domain tunnel1.example.com \
     --letsencrypt-domain tunnel2.example.com \
@@ -98,6 +104,12 @@ project docs.`,
 const EquinixMetalProvider = "equinix-metal"
 
 func runCreate(cmd *cobra.Command, _ []string) error {
+
+	// Get name from the Args, if not provided, generate a random name
+	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
+	if len(cmd.Flags().Args()) > 0 {
+		name = cmd.Flags().Args()[0]
+	}
 
 	inletsProVersion, err := cmd.Flags().GetString("inlets-version")
 	if err != nil {
@@ -301,8 +313,6 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		tcp = false
 	}
 
-	name := strings.Replace(names.GetRandomName(10), "_", "-", -1)
-
 	var userData string
 	if len(letsencryptDomains) > 0 {
 		userData = MakeHTTPSUserdata(inletsToken,
@@ -341,9 +351,9 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	if provider == "gce" {
-		fmt.Printf("Requesting host: %s in %s, from %s\n", name, zone, provider)
+		fmt.Printf("Provisioning exit-server: %s in %s [%s]\n", name, zone, provider)
 	} else {
-		fmt.Printf("Requesting host: %s in %s, from %s\n", name, region, provider)
+		fmt.Printf("Provisioning exit-server: %s in %s [%s]\n", name, region, provider)
 	}
 
 	hostRes, err := provisioner.Provision(*hostReq)
