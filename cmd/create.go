@@ -49,15 +49,13 @@ func init() {
 	createCmd.Flags().String("endpoint", "ovh-eu", "API endpoint (ovh), default: ovh-eu")
 	createCmd.Flags().String("consumer-key", "", "The Consumer Key for using the OVH API")
 
-	createCmd.Flags().Bool("tcp", true, `Provision an exit-server with inlets running as a TCP server`)
+	createCmd.Flags().Bool("tcp", false, `Provision an exit-server with inlets running as a TCP server`)
 	createCmd.Flags().String("aws-key-name", "", "The name of an existing SSH key on AWS to be used to access the EC2 instance for maintenance (optional)")
 
 	createCmd.Flags().StringArray("letsencrypt-domain", []string{}, `Domains you want to get a Let's Encrypt certificate for`)
-	createCmd.Flags().String("letsencrypt-issuer", "prod", `The issuer endpoint to use with Let's Encrypt - \"prod\" or \"staging\"`)
+	createCmd.Flags().String("letsencrypt-issuer", "prod", `The issuer endpoint to use with Let's Encrypt - "prod" or "staging"`)
 	createCmd.Flags().String("letsencrypt-email", "", `The email to register with Let's Encrypt for renewal notices (required)`)
 
-	createCmd.Flags().Bool("pro", true, `Provision an exit-server with inlets Pro (Deprecated)`)
-	_ = createCmd.Flags().MarkHidden("pro")
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 
 	createCmd.Flags().String("inlets-version", inletsProDefaultVersion, `Binary release version for inlets`)
@@ -120,12 +118,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		inletsProVersion = inletsProDefaultVersion
 	}
 
-	tcp := true
-
-	if cmd.Flags().Changed("pro") {
-		fmt.Printf("WARN: --pro is deprecated, use --tcp instead.")
-		tcp, _ = cmd.Flags().GetBool("pro")
-	}
+	tcp := false
 	if cmd.Flags().Changed("tcp") {
 		tcp, _ = cmd.Flags().GetBool("tcp")
 	}
@@ -150,7 +143,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		serverMode = "L7 HTTPS"
 	}
 
-	fmt.Printf("inletsctl version: %v\nTunnel server: %s\tProvider: %s\tVersion: %s\n",
+	fmt.Printf("inletsctl version: %v\nTunnel server: %s\tProvider: %s\tinlets-pro version: %s\n",
 		getVersion(),
 		serverMode, provider, inletsProVersion)
 
@@ -302,6 +295,10 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	letsencryptDomains, _ := cmd.Flags().GetStringArray("letsencrypt-domain")
 	letsencryptEmail, _ := cmd.Flags().GetString("letsencrypt-email")
 	letsencryptIssuer, _ := cmd.Flags().GetString("letsencrypt-issuer")
+
+	if len(letsencryptDomains) == 0 && !tcp {
+		return fmt.Errorf("either --letsencrypt-domain (for a HTTPS tunnel) or --tcp (for a TCP tunnel) must be set")
+	}
 
 	if len(letsencryptDomains) > 0 {
 		if len(letsencryptEmail) == 0 {
