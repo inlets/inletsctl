@@ -68,12 +68,20 @@ inletsctl does not automatically delete your exit nodes (read cloud hosts), so y
 
 ## Install `inletsctl`
 
-```bash
-# Install to local directory (and for Windows users)
-curl -sLSf https://inletsctl.inlets.dev | sh
+You can download the latest release from the [releases page](https://github.com/inlets/inletsctl/releases) or use [arkade](https://arkade.dev/):
 
+```bash
 # Install directly to /usr/local/bin/
-curl -sLSf https://inletsctl.inlets.dev | sudo sh
+curl -sLSf https://get.arkade.dev | sudo sh
+
+# Install to local directory (for Windows users)
+curl -sLSf https://get.arkade.dev | sh
+```
+
+The command can install inletsctl initially, and also update it later on:
+
+```bash
+arkade get inletsctl
 ```
 
 Windows users are encouraged to use [git bash](https://git-scm.com/downloads) to install the inletsctl binary.
@@ -110,6 +118,4 @@ type Provisioner interface {
 
 ### License
 
-inletsctl is distributed under the MIT license. inlets-pro, which inletsctl uses is licensed under the [inlets-pro End User License Agreement (EULA)](https://github.com/inlets/inlets-pro/blob/master/EULA.md).
-
-[A valid static inlets license or a Gumroad subscription](https://store.openfaas.com/) is required to create tunnel servers with inletsctl.
+inletsctl is distributed under the MIT license. inlets-pro, which inletsctl uses is licensed under the [inlets-pro End User License Agreement (EULA)](https://github.com/inlets/inlets-pro/blob/master/EULA.md) and requires [a personal or business subscription](https://store.openfaas.com/).
