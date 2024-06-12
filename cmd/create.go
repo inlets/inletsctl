@@ -500,7 +500,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 	} else if provider == "scaleway" {
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "ubuntu-focal",
+			OS:         "ubuntu-jammy",
 			Plan:       "DEV1-S",
 			Region:     region,
 			UserData:   userData,
