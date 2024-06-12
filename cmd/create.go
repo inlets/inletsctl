@@ -591,10 +591,10 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 		// Plans:
 		//  A complete list of available OS is available using: https://api.vultr.com/v1/plans/list
 		//  201 = 1024 MB RAM,25 GB SSD,1.00 TB BW
-		const ubuntu20_04_x64 = "387"
+		const ubuntu22_04_x64 = "1743"
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         ubuntu20_04_x64,
+			OS:         ubuntu22_04_x64,
 			Plan:       "201",
 			Region:     region,
 			UserData:   userData,
