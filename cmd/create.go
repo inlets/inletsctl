@@ -609,7 +609,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 		//  List of type and price can be retrieved using curl https://api.linode.com/v4/linode/types
 		return &provision.BasicHost{
 			Name:     name,
-			OS:       "linode/ubuntu20.04",
+			OS:       "linode/ubuntu22.04",
 			Plan:     "g6-nanode-1",
 			Region:   region,
 			UserData: userData,
