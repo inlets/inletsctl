@@ -14,7 +14,7 @@ import (
 
 func init() {
 	inletsCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, equinix-metal, scaleway, linode, civo, hetzner or vultr")
+	deleteCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, scaleway, linode, hetzner or vultr")
 	deleteCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	deleteCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit node (gce)")
 
@@ -30,7 +30,7 @@ func init() {
 	deleteCmd.Flags().String("session-token-file", "", "Read this file for the session token for ec2 (when using with temporary credentials)")
 
 	deleteCmd.Flags().String("organisation-id", "", "Organisation ID (scaleway)")
-	deleteCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce)")
+	deleteCmd.Flags().String("project-id", "", "Project ID (gce)")
 	deleteCmd.Flags().String("subscription-id", "", "Subscription ID (azure)")
 
 	deleteCmd.Flags().String("endpoint", "ovh-eu", "API endpoint (ovh), default: ovh-eu")

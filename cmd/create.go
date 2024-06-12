@@ -26,7 +26,7 @@ func init() {
 
 	inletsCmd.AddCommand(createCmd)
 
-	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, equinix-metal, scaleway, linode, civo, hetzner, ovh or vultr")
+	createCmd.Flags().StringP("provider", "p", "digitalocean", "The cloud provider - digitalocean, gce, ec2, azure, scaleway, linode, hetzner, ovh or vultr")
 	createCmd.Flags().StringP("region", "r", "lon1", "The region for your cloud provider")
 	createCmd.Flags().StringP("plan", "s", "", "The plan or size for your cloud instance")
 	createCmd.Flags().StringP("zone", "z", "us-central1-a", "The zone for the exit-server (gce)")
@@ -43,7 +43,7 @@ func init() {
 	createCmd.Flags().String("session-token-file", "", "Read this file for the session token for ec2 (when using with temporary credentials)")
 
 	createCmd.Flags().String("organisation-id", "", "Organisation ID (scaleway)")
-	createCmd.Flags().String("project-id", "", "Project ID (equinix-metal, gce, ovh)")
+	createCmd.Flags().String("project-id", "", "Project ID (gce, ovh)")
 	createCmd.Flags().String("subscription-id", "", "Subscription ID (Azure)")
 
 	createCmd.Flags().String("endpoint", "ovh-eu", "API endpoint (ovh), default: ovh-eu")
@@ -82,7 +82,7 @@ project docs.`,
   inletsctl create \
     ssh-tunnel \
 	--tcp \
-    --provider [digitalocean|equinix-metal|ec2|scaleway|civo|gce|azure|linode|hetzner] \
+    --provider [digitalocean|ec2|scaleway|gce|azure|linode|hetzner] \
     --access-token-file $HOME/access-token \
     --region lon1
 
@@ -97,9 +97,6 @@ project docs.`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 }
-
-// EquinixMetalProvider is a constant string for Equinix Metal
-const EquinixMetalProvider = "equinix-metal"
 
 func runCreate(cmd *cobra.Command, _ []string) error {
 
@@ -131,11 +128,6 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
-	}
-
-	// Migrate to new name
-	if provider == "packet" {
-		provider = EquinixMetalProvider
 	}
 
 	serverMode := "L4 TCP"
@@ -189,8 +181,6 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 		region = "lon1"
 	} else if provider == "scaleway" {
 		region = "fr-par-1"
-	} else if provider == EquinixMetalProvider {
-		region = "ams1"
 	} else if provider == "ec2" {
 		region = "eu-west-1"
 	} else if provider == "hetzner" {
@@ -262,7 +252,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-	} else if provider == "gce" || provider == EquinixMetalProvider {
+	} else if provider == "gce" {
 		projectID, _ = cmd.Flags().GetString("project-id")
 		if len(projectID) == 0 {
 			return fmt.Errorf("--project-id flag must be set")
@@ -436,10 +426,6 @@ func getProvisioner(provider, accessToken, secretKey, organisationID, region, su
 	switch provider {
 	case "digitalocean":
 		return provision.NewDigitalOceanProvisioner(accessToken)
-	case EquinixMetalProvider:
-		return provision.NewEquinixMetalProvisioner(accessToken)
-	case "civo":
-		return provision.NewCivoProvisioner(accessToken)
 	case "scaleway":
 		return provision.NewScalewayProvisioner(accessToken, secretKey, organisationID, region)
 	case "gce":
@@ -480,22 +466,11 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 	} else if provider == "ovh" {
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "Ubuntu 20.04",
+			OS:         "Ubuntu 22.04",
 			Plan:       "s1-2",
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},
-		}, nil
-	} else if provider == EquinixMetalProvider {
-		return &provision.BasicHost{
-			Name:     name,
-			OS:       "ubuntu_20_04",
-			Plan:     "c3.small.x86",
-			Region:   region,
-			UserData: userData,
-			Additional: map[string]string{
-				"project_id": projectID,
-			},
 		}, nil
 	} else if provider == "scaleway" {
 		return &provision.BasicHost{
@@ -506,16 +481,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 			UserData:   userData,
 			Additional: map[string]string{},
 		}, nil
-	} else if provider == "civo" {
-		const ubuntu2004ID = "d927ad2f-5073-4ed6-b2eb-b8e61aef29a8"
-		return &provision.BasicHost{
-			Name:       name,
-			OS:         ubuntu2004ID,
-			Plan:       "g3.xsmall",
-			Region:     region,
-			UserData:   userData,
-			Additional: map[string]string{},
-		}, nil
+
 	} else if provider == "gce" {
 		return &provision.BasicHost{
 			Name:     name,
