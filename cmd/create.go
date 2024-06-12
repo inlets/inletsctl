@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsProDefaultVersion = "0.9.31"
+const inletsProDefaultVersion = "0.9.32"
 const inletsProControlPort = 8123
 
 func init() {
@@ -627,8 +627,8 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 		return &provision.BasicHost{
 			Name:     name,
 			Region:   region,
-			Plan:     "cx11",
-			OS:       "ubuntu-20.04",
+			Plan:     "cx22",
+			OS:       "ubuntu-22.04",
 			UserData: userData,
 		}, nil
 	}
