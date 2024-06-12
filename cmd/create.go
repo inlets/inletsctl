@@ -519,7 +519,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 	} else if provider == "gce" {
 		return &provision.BasicHost{
 			Name:     name,
-			OS:       "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2004-focal-v20210707",
+			OS:       "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-2204-jammy-v20240606",
 			Plan:     "f1-micro",
 			Region:   region,
 			UserData: userData,
