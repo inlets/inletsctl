@@ -37,8 +37,8 @@ func init() {
 
 	createCmd.Flags().String("vpc-id", "", "The VPC ID to create the exit-server in (ec2)")
 	createCmd.Flags().String("subnet-id", "", "The Subnet ID where the exit-server should be placed (ec2)")
-	createCmd.Flags().String("secret-key", "", "The access token for your cloud (scaleway, ec2)")
-	createCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (scaleway, ec2)")
+	createCmd.Flags().String("secret-key", "", "The secret key for your cloud (scaleway, ec2)")
+	createCmd.Flags().String("secret-key-file", "", "Read this file for the secret key for your cloud (scaleway, ec2)")
 	createCmd.Flags().String("session-token", "", "The session token for ec2 (when using with temporary credentials)")
 	createCmd.Flags().String("session-token-file", "", "Read this file for the session token for ec2 (when using with temporary credentials)")
 
