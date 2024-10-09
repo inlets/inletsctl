@@ -24,8 +24,8 @@ func init() {
 	deleteCmd.Flags().StringP("id", "i", "", "Host ID")
 	deleteCmd.Flags().String("ip", "", "Host IP")
 
-	deleteCmd.Flags().String("secret-key", "", "The access token for your cloud (scaleway, ec2)")
-	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the access token for your cloud (scaleway, ec2)")
+	deleteCmd.Flags().String("secret-key", "", "The secret key for your cloud (scaleway, ec2)")
+	deleteCmd.Flags().String("secret-key-file", "", "Read this file for the secret key for your cloud (scaleway, ec2)")
 	deleteCmd.Flags().String("session-token", "", "The session token for ec2 (when using with temporary credentials)")
 	deleteCmd.Flags().String("session-token-file", "", "Read this file for the session token for ec2 (when using with temporary credentials)")
 
