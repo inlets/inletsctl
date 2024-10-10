@@ -5,12 +5,12 @@ go 1.22
 require (
 	github.com/alexellis/go-execute/v2 v2.2.1
 	github.com/golang/mock v1.6.0
-	github.com/inlets/cloud-provision v0.6.9
+	github.com/inlets/cloud-provision v0.7.0
 	github.com/linode/linodego v1.27.1
 	github.com/morikuni/aec v1.0.0
 	github.com/pkg/errors v0.9.1
-	github.com/sethvargo/go-password v0.3.0
-	github.com/spf13/cobra v1.8.0
+	github.com/sethvargo/go-password v0.3.1
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 )
 
