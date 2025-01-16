@@ -2,9 +2,6 @@ package linodego
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"net/url"
 )
 
 type GrantPermissionLevel string
@@ -23,9 +20,12 @@ type GlobalUserGrants struct {
 	AddLinodes           bool                  `json:"add_linodes"`
 	AddLongview          bool                  `json:"add_longview"`
 	AddNodeBalancers     bool                  `json:"add_nodebalancers"`
+	AddPlacementGroups   bool                  `json:"add_placement_groups"`
 	AddStackScripts      bool                  `json:"add_stackscripts"`
 	AddVolumes           bool                  `json:"add_volumes"`
+	AddVPCs              bool                  `json:"add_vpcs"`
 	CancelAccount        bool                  `json:"cancel_account"`
+	ChildAccountAccess   bool                  `json:"child_account_access"`
 	LongviewSubscription bool                  `json:"longview_subscription"`
 }
 
@@ -41,58 +41,53 @@ type GrantedEntity struct {
 }
 
 type UserGrants struct {
-	Database     []GrantedEntity `json:"database"`
-	Domain       []GrantedEntity `json:"domain"`
-	Firewall     []GrantedEntity `json:"firewall"`
-	Image        []GrantedEntity `json:"image"`
-	Linode       []GrantedEntity `json:"linode"`
-	Longview     []GrantedEntity `json:"longview"`
-	NodeBalancer []GrantedEntity `json:"nodebalancer"`
-	StackScript  []GrantedEntity `json:"stackscript"`
-	Volume       []GrantedEntity `json:"volume"`
+	Database       []GrantedEntity `json:"database"`
+	Domain         []GrantedEntity `json:"domain"`
+	Firewall       []GrantedEntity `json:"firewall"`
+	Image          []GrantedEntity `json:"image"`
+	Linode         []GrantedEntity `json:"linode"`
+	Longview       []GrantedEntity `json:"longview"`
+	NodeBalancer   []GrantedEntity `json:"nodebalancer"`
+	PlacementGroup []GrantedEntity `json:"placement_group"`
+	StackScript    []GrantedEntity `json:"stackscript"`
+	Volume         []GrantedEntity `json:"volume"`
+	VPC            []GrantedEntity `json:"vpc"`
 
 	Global GlobalUserGrants `json:"global"`
 }
 
 type UserGrantsUpdateOptions struct {
-	Database     []GrantedEntity   `json:"database,omitempty"`
-	Domain       []EntityUserGrant `json:"domain,omitempty"`
-	Firewall     []EntityUserGrant `json:"firewall,omitempty"`
-	Image        []EntityUserGrant `json:"image,omitempty"`
-	Linode       []EntityUserGrant `json:"linode,omitempty"`
-	Longview     []EntityUserGrant `json:"longview,omitempty"`
-	NodeBalancer []EntityUserGrant `json:"nodebalancer,omitempty"`
-	StackScript  []EntityUserGrant `json:"stackscript,omitempty"`
-	Volume       []EntityUserGrant `json:"volume,omitempty"`
+	Database       []GrantedEntity   `json:"database,omitempty"`
+	Domain         []EntityUserGrant `json:"domain,omitempty"`
+	Firewall       []EntityUserGrant `json:"firewall,omitempty"`
+	Image          []EntityUserGrant `json:"image,omitempty"`
+	Linode         []EntityUserGrant `json:"linode,omitempty"`
+	Longview       []EntityUserGrant `json:"longview,omitempty"`
+	NodeBalancer   []EntityUserGrant `json:"nodebalancer,omitempty"`
+	PlacementGroup []EntityUserGrant `json:"placement_group,omitempty"`
+	StackScript    []EntityUserGrant `json:"stackscript,omitempty"`
+	Volume         []EntityUserGrant `json:"volume,omitempty"`
+	VPC            []EntityUserGrant `json:"vpc,omitempty"`
 
 	Global GlobalUserGrants `json:"global"`
 }
 
 func (c *Client) GetUserGrants(ctx context.Context, username string) (*UserGrants, error) {
-	username = url.PathEscape(username)
-	e := fmt.Sprintf("account/users/%s/grants", username)
-	req := c.R(ctx).SetResult(&UserGrants{})
-	r, err := coupleAPIErrors(req.Get(e))
+	e := formatAPIPath("account/users/%s/grants", username)
+	response, err := doGETRequest[UserGrants](ctx, c, e)
 	if err != nil {
 		return nil, err
 	}
 
-	return r.Result().(*UserGrants), nil
+	return response, nil
 }
 
 func (c *Client) UpdateUserGrants(ctx context.Context, username string, opts UserGrantsUpdateOptions) (*UserGrants, error) {
-	body, err := json.Marshal(opts)
+	e := formatAPIPath("account/users/%s/grants", username)
+	response, err := doPUTRequest[UserGrants](ctx, c, e, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	username = url.PathEscape(username)
-	e := fmt.Sprintf("account/users/%s/grants", username)
-	req := c.R(ctx).SetResult(&UserGrants{}).SetBody(string(body))
-	r, err := coupleAPIErrors(req.Put(e))
-	if err != nil {
-		return nil, err
-	}
-
-	return r.Result().(*UserGrants), nil
+	return response, nil
 }

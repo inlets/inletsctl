@@ -3,11 +3,8 @@ package linodego
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"net/url"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/linode/linodego/internal/parseabletime"
 )
 
@@ -16,6 +13,8 @@ type (
 	DatabaseDayOfWeek            int
 	DatabaseMaintenanceFrequency string
 	DatabaseStatus               string
+	DatabasePlatform             string
+	DatabaseMemberType           string
 )
 
 const (
@@ -53,81 +52,45 @@ const (
 	DatabaseStatusBackingUp    DatabaseStatus = "backing_up"
 )
 
-type DatabasesPagedResponse struct {
-	*PageOptions
-	Data []Database `json:"data"`
-}
+const (
+	DatabasePlatformRDBMSLegacy  DatabasePlatform = "rdbms-legacy"
+	DatabasePlatformRDBMSDefault DatabasePlatform = "rdbms-default"
+)
 
-func (DatabasesPagedResponse) endpoint(_ ...any) string {
-	return "databases/instances"
-}
-
-func (resp *DatabasesPagedResponse) castResult(r *resty.Request, e string) (int, int, error) {
-	res, err := coupleAPIErrors(r.SetResult(DatabasesPagedResponse{}).Get(e))
-	if err != nil {
-		return 0, 0, err
-	}
-	castedRes := res.Result().(*DatabasesPagedResponse)
-	resp.Data = append(resp.Data, castedRes.Data...)
-	return castedRes.Pages, castedRes.Results, nil
-}
-
-type DatabaseEnginesPagedResponse struct {
-	*PageOptions
-	Data []DatabaseEngine `json:"data"`
-}
-
-func (DatabaseEnginesPagedResponse) endpoint(_ ...any) string {
-	return "databases/engines"
-}
-
-func (resp *DatabaseEnginesPagedResponse) castResult(r *resty.Request, e string) (int, int, error) {
-	res, err := coupleAPIErrors(r.SetResult(DatabaseEnginesPagedResponse{}).Get(e))
-	if err != nil {
-		return 0, 0, err
-	}
-	castedRes := res.Result().(*DatabaseEnginesPagedResponse)
-	resp.Data = append(resp.Data, castedRes.Data...)
-	return castedRes.Pages, castedRes.Results, nil
-}
-
-type DatabaseTypesPagedResponse struct {
-	*PageOptions
-	Data []DatabaseType `json:"data"`
-}
-
-func (DatabaseTypesPagedResponse) endpoint(_ ...any) string {
-	return "databases/types"
-}
-
-func (resp *DatabaseTypesPagedResponse) castResult(r *resty.Request, e string) (int, int, error) {
-	res, err := coupleAPIErrors(r.SetResult(DatabaseTypesPagedResponse{}).Get(e))
-	if err != nil {
-		return 0, 0, err
-	}
-	castedRes := res.Result().(*DatabaseTypesPagedResponse)
-	resp.Data = append(resp.Data, castedRes.Data...)
-	return castedRes.Pages, castedRes.Results, nil
-}
+const (
+	DatabaseMemberTypePrimary  DatabaseMemberType = "primary"
+	DatabaseMemberTypeFailover DatabaseMemberType = "failover"
+)
 
 // A Database is a instance of Linode Managed Databases
 type Database struct {
-	ID              int            `json:"id"`
-	Status          DatabaseStatus `json:"status"`
-	Label           string         `json:"label"`
-	Hosts           DatabaseHost   `json:"hosts"`
-	Region          string         `json:"region"`
-	Type            string         `json:"type"`
-	Engine          string         `json:"engine"`
-	Version         string         `json:"version"`
-	ClusterSize     int            `json:"cluster_size"`
-	ReplicationType string         `json:"replication_type"`
-	SSLConnection   bool           `json:"ssl_connection"`
-	Encrypted       bool           `json:"encrypted"`
-	AllowList       []string       `json:"allow_list"`
-	InstanceURI     string         `json:"instance_uri"`
-	Created         *time.Time     `json:"-"`
-	Updated         *time.Time     `json:"-"`
+	ID          int              `json:"id"`
+	Status      DatabaseStatus   `json:"status"`
+	Label       string           `json:"label"`
+	Hosts       DatabaseHost     `json:"hosts"`
+	Region      string           `json:"region"`
+	Type        string           `json:"type"`
+	Engine      string           `json:"engine"`
+	Version     string           `json:"version"`
+	ClusterSize int              `json:"cluster_size"`
+	Platform    DatabasePlatform `json:"platform"`
+	Fork        *DatabaseFork    `json:"fork"`
+
+	// Members has dynamic keys so it is a map
+	Members map[string]DatabaseMemberType `json:"members"`
+
+	// Deprecated: ReplicationType is a deprecated property, as it is no longer supported in DBaaS V2.
+	ReplicationType string `json:"replication_type"`
+	// Deprecated: SSLConnection is a deprecated property, as it is no longer supported in DBaaS V2.
+	SSLConnection bool `json:"ssl_connection"`
+	// Deprecated: Encrypted is a deprecated property, as it is no longer supported in DBaaS V2.
+	Encrypted bool `json:"encrypted"`
+
+	AllowList         []string   `json:"allow_list"`
+	InstanceURI       string     `json:"instance_uri"`
+	Created           *time.Time `json:"-"`
+	Updated           *time.Time `json:"-"`
+	OldestRestoreTime *time.Time `json:"-"`
 }
 
 // DatabaseHost for Primary/Secondary of Database
@@ -145,11 +108,21 @@ type DatabaseEngine struct {
 
 // DatabaseMaintenanceWindow stores information about a MySQL cluster's maintenance window
 type DatabaseMaintenanceWindow struct {
-	DayOfWeek   DatabaseDayOfWeek            `json:"day_of_week"`
-	Duration    int                          `json:"duration"`
-	Frequency   DatabaseMaintenanceFrequency `json:"frequency"`
-	HourOfDay   int                          `json:"hour_of_day"`
-	WeekOfMonth *int                         `json:"week_of_month"`
+	DayOfWeek DatabaseDayOfWeek            `json:"day_of_week"`
+	Duration  int                          `json:"duration"`
+	Frequency DatabaseMaintenanceFrequency `json:"frequency"`
+	HourOfDay int                          `json:"hour_of_day"`
+
+	Pending []DatabaseMaintenanceWindowPending `json:"pending,omitempty"`
+
+	// Deprecated: WeekOfMonth is a deprecated property, as it is no longer supported in DBaaS V2.
+	WeekOfMonth *int `json:"week_of_month,omitempty"`
+}
+
+type DatabaseMaintenanceWindowPending struct {
+	Deadline    *time.Time `json:"-"`
+	Description string     `json:"description"`
+	PlannedFor  *time.Time `json:"-"`
 }
 
 // DatabaseType is information about the supported Database Types by Linode Managed Databases
@@ -180,13 +153,20 @@ type ClusterPrice struct {
 	Monthly float32 `json:"monthly"`
 }
 
+// DatabaseFork describes the source and restore time for the fork for forked DBs
+type DatabaseFork struct {
+	Source      int        `json:"source"`
+	RestoreTime *time.Time `json:"-,omitempty"`
+}
+
 func (d *Database) UnmarshalJSON(b []byte) error {
 	type Mask Database
 
 	p := struct {
 		*Mask
-		Created *parseabletime.ParseableTime `json:"created"`
-		Updated *parseabletime.ParseableTime `json:"updated"`
+		Created           *parseabletime.ParseableTime `json:"created"`
+		Updated           *parseabletime.ParseableTime `json:"updated"`
+		OldestRestoreTime *parseabletime.ParseableTime `json:"oldest_restore_time"`
 	}{
 		Mask: (*Mask)(d),
 	}
@@ -197,105 +177,96 @@ func (d *Database) UnmarshalJSON(b []byte) error {
 
 	d.Created = (*time.Time)(p.Created)
 	d.Updated = (*time.Time)(p.Updated)
+	d.OldestRestoreTime = (*time.Time)(p.OldestRestoreTime)
+	return nil
+}
+
+func (d *DatabaseFork) UnmarshalJSON(b []byte) error {
+	type Mask DatabaseFork
+
+	p := struct {
+		*Mask
+		RestoreTime *parseabletime.ParseableTime `json:"restore_time"`
+	}{
+		Mask: (*Mask)(d),
+	}
+
+	if err := json.Unmarshal(b, &p); err != nil {
+		return err
+	}
+
+	d.RestoreTime = (*time.Time)(p.RestoreTime)
+	return nil
+}
+
+func (d *DatabaseMaintenanceWindowPending) UnmarshalJSON(b []byte) error {
+	type Mask DatabaseMaintenanceWindowPending
+
+	p := struct {
+		*Mask
+		Deadline   *parseabletime.ParseableTime `json:"deadline"`
+		PlannedFor *parseabletime.ParseableTime `json:"planned_for"`
+	}{
+		Mask: (*Mask)(d),
+	}
+
+	if err := json.Unmarshal(b, &p); err != nil {
+		return err
+	}
+
+	d.Deadline = (*time.Time)(p.Deadline)
+	d.PlannedFor = (*time.Time)(p.PlannedFor)
 	return nil
 }
 
 // ListDatabases lists all Database instances in Linode Managed Databases for the account
 func (c *Client) ListDatabases(ctx context.Context, opts *ListOptions) ([]Database, error) {
-	response := DatabasesPagedResponse{}
-
-	err := c.listHelper(ctx, &response, opts)
+	response, err := getPaginatedResults[Database](ctx, c, "databases/instances", opts)
 	if err != nil {
 		return nil, err
 	}
 
-	return response.Data, nil
+	return response, nil
 }
 
 // ListDatabaseEngines lists all Database Engines. This endpoint is cached by default.
 func (c *Client) ListDatabaseEngines(ctx context.Context, opts *ListOptions) ([]DatabaseEngine, error) {
-	response := DatabaseEnginesPagedResponse{}
-
-	endpoint, err := generateListCacheURL(response.endpoint(), opts)
+	response, err := getPaginatedResults[DatabaseEngine](ctx, c, "databases/engines", opts)
 	if err != nil {
 		return nil, err
 	}
 
-	if result := c.getCachedResponse(endpoint); result != nil {
-		return result.([]DatabaseEngine), nil
-	}
-
-	err = c.listHelper(ctx, &response, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	c.addCachedResponse(endpoint, response.Data, &cacheExpiryTime)
-
-	return response.Data, nil
+	return response, nil
 }
 
 // GetDatabaseEngine returns a specific Database Engine. This endpoint is cached by default.
 func (c *Client) GetDatabaseEngine(ctx context.Context, _ *ListOptions, engineID string) (*DatabaseEngine, error) {
-	engineID = url.PathEscape(engineID)
-	e := fmt.Sprintf("databases/engines/%s", engineID)
-
-	if result := c.getCachedResponse(e); result != nil {
-		result := result.(DatabaseEngine)
-		return &result, nil
-	}
-
-	req := c.R(ctx).SetResult(&DatabaseEngine{})
-	r, err := coupleAPIErrors(req.Get(e))
+	e := formatAPIPath("databases/engines/%s", engineID)
+	response, err := doGETRequest[DatabaseEngine](ctx, c, e)
 	if err != nil {
 		return nil, err
 	}
 
-	c.addCachedResponse(e, r.Result(), &cacheExpiryTime)
-
-	return r.Result().(*DatabaseEngine), nil
+	return response, nil
 }
 
 // ListDatabaseTypes lists all Types of Database provided in Linode Managed Databases. This endpoint is cached by default.
 func (c *Client) ListDatabaseTypes(ctx context.Context, opts *ListOptions) ([]DatabaseType, error) {
-	response := DatabaseTypesPagedResponse{}
-
-	endpoint, err := generateListCacheURL(response.endpoint(), opts)
+	response, err := getPaginatedResults[DatabaseType](ctx, c, "databases/types", opts)
 	if err != nil {
 		return nil, err
 	}
 
-	if result := c.getCachedResponse(endpoint); result != nil {
-		return result.([]DatabaseType), nil
-	}
-
-	err = c.listHelper(ctx, &response, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	c.addCachedResponse(endpoint, response.Data, &cacheExpiryTime)
-
-	return response.Data, nil
+	return response, nil
 }
 
 // GetDatabaseType returns a specific Database Type. This endpoint is cached by default.
 func (c *Client) GetDatabaseType(ctx context.Context, _ *ListOptions, typeID string) (*DatabaseType, error) {
-	typeID = url.PathEscape(typeID)
-	e := fmt.Sprintf("databases/types/%s", typeID)
-
-	if result := c.getCachedResponse(e); result != nil {
-		result := result.(DatabaseType)
-		return &result, nil
-	}
-
-	req := c.R(ctx).SetResult(&DatabaseType{})
-	r, err := coupleAPIErrors(req.Get(e))
+	e := formatAPIPath("databases/types/%s", typeID)
+	response, err := doGETRequest[DatabaseType](ctx, c, e)
 	if err != nil {
 		return nil, err
 	}
 
-	c.addCachedResponse(e, r.Result(), &cacheExpiryTime)
-
-	return r.Result().(*DatabaseType), nil
+	return response, nil
 }
