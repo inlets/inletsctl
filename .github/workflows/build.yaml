@@ -13,7 +13,7 @@ jobs:
     concurrency: 
       group: ${{ github.ref }}
       cancel-in-progress: true
-    runs-on: alexellis/upload-assets
+    runs-on: actuated-8cpu-16gb
     steps:
       - uses: actions/checkout@master
         with:
