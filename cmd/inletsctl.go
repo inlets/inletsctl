@@ -33,11 +33,20 @@ var inletsCmd = &cobra.Command{
 	Use:   "inletsctl",
 	Short: "Create exit nodes for use with inlets.",
 	Long: `
-inletsctl automates the task of creating an exit-node on cloud infrastructure.
-Once provisioned, you'll receive a command to connect with. You can use this 
-tool whether you want to use inlets or inlets-pro for L4 TCP.
+Use inletsctl to create a VM (aka exit-node) with the inlets-server
+preinstalled on cloud infrastructure. Once provisioned, you'll receive a
+connection string for the inlets-pro client.
 
-See also: inlets-operator which does the same job, but for Kubernetes services.
+For HTTPS tunnels (L7):
+The tunnel server will terminate TLS for you, just include the 
+--letsencrypt-domain flag for each domain you want to expose via the exit-node.
+
+For TCP tunnels (L4):
+Use the --tcp flag to create a TCP tunnel via inletsctl create. This is
+best suited to SSH, TLS, reverse proxies, databases, etc.
+
+See also: inlets-operator which automates L4 TCP tunnels for any
+Kubernetes LoadBalancer services found in a cluster.
 `,
 	Run:           runInlets,
 	SilenceErrors: true,
