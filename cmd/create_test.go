@@ -9,18 +9,18 @@ import (
 )
 
 func Test_MakeHTTPSUserdata_OneDomain(t *testing.T) {
-	got := MakeHTTPSUserdata("token", "0.9.25", "contact@example.com", "prod", []string{"example.com"})
+	got := MakeHTTPSUserdata("token", "0.9.40", "contact@example.com", "prod", []string{"example.com"})
 
 	os.WriteFile("/tmp/t.txt", []byte(got), 0600)
 	want := `#!/bin/bash
 export AUTHTOKEN="token"
 export IP=$(curl -sfSL https://checkip.amazonaws.com)
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.25/inlets-pro -o /tmp/inlets-pro && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-pro -o /tmp/inlets-pro && \
   chmod +x /tmp/inlets-pro  && \
   mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.25/inlets-pro-http.service -o inlets-pro.service && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-pro-http.service -o inlets-pro.service && \
   mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
   echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
   echo "IP=$IP" >> /etc/default/inlets-pro && \
@@ -37,7 +37,7 @@ curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.25/inlets-
 }
 
 func Test_MakeHTTPSUserdata_TwoDomains(t *testing.T) {
-	got := MakeHTTPSUserdata("token", "0.9.25", "contact@example.com", "prod",
+	got := MakeHTTPSUserdata("token", "0.9.40", "contact@example.com", "prod",
 		[]string{"a.example.com", "b.example.com"})
 
 	os.WriteFile("/tmp/t.txt", []byte(got), 0600)
@@ -45,11 +45,11 @@ func Test_MakeHTTPSUserdata_TwoDomains(t *testing.T) {
 export AUTHTOKEN="token"
 export IP=$(curl -sfSL https://checkip.amazonaws.com)
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.25/inlets-pro -o /tmp/inlets-pro && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-pro -o /tmp/inlets-pro && \
   chmod +x /tmp/inlets-pro  && \
   mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.25/inlets-pro-http.service -o inlets-pro.service && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-pro-http.service -o inlets-pro.service && \
   mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
   echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
   echo "IP=$IP" >> /etc/default/inlets-pro && \
