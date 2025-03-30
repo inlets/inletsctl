@@ -22,10 +22,10 @@ func makeUpdate() *cobra.Command {
 const updateStr = `You can update inletsctl with the following:
 
 # For Linux/MacOS:
-curl -SLfs https://inletsctl.inlets.dev | sudo sh
+curl -SLfs https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sudo sh
 
 # For Windows (using Git Bash)
-curl -SLfs https://inletsctl.inlets.dev | sh
+curl -SLfs https://raw.githubusercontent.com/inlets/inletsctl/master/get.sh | sh
 
 # Or download from GitHub: https://github.com/inlets/inletsctl/releases
 
