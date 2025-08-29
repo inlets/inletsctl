@@ -524,7 +524,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20230516",
+			OS:         "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20250822",
 			Plan:       "t3.nano",
 			Region:     region,
 			UserData:   base64.StdEncoding.EncodeToString([]byte(userData)),
