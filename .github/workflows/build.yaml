@@ -13,7 +13,7 @@ jobs:
     concurrency: 
       group: ${{ github.ref }}
       cancel-in-progress: true
-    runs-on: actuated-8cpu-16gb
+    runs-on: actuated-8cpu-12gb
     steps:
       - uses: actions/checkout@v5
         with:
