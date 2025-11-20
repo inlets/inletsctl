@@ -232,12 +232,12 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 		res, err := task.Execute(context.TODO())
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, err.Error())
+			fmt.Fprintf(os.Stderr, "%s", err.Error())
 			return
 		}
 
 		if res.ExitCode != 0 {
-			fmt.Fprintf(os.Stderr, fmt.Errorf("exit code unexpected from kubectl delete: %d, stderr: %s", res.ExitCode, res.Stderr).Error())
+			fmt.Fprintf(os.Stderr, "%s", fmt.Errorf("exit code unexpected from kubectl delete: %d, stderr: %s", res.ExitCode, res.Stderr).Error())
 			return
 		}
 	}()

@@ -21,6 +21,6 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@master
         with:
-          go-version: 1.23.x
+          go-version: 1.25.x
       - name: Make
         run: make all
