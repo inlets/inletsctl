@@ -65,12 +65,12 @@ func init() {
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create an exit-server with inlets preinstalled.",
-	Long: `Create an exit-server with inlets preinstalled on cloud infrastructure 
-with inlets preloaded as a systemd service. The estimated cost of each 
-VM along with what OS version and spec will be used is explained in the 
+	Long: `Create an exit-server with inlets preinstalled on cloud infrastructure
+with inlets preloaded as a systemd service. The estimated cost of each
+VM along with what OS version and spec will be used is explained in the
 project docs.`,
 	Example: `
-  # Create a HTTPS tunnel server, terminating TLS with a certificate 
+  # Create a HTTPS tunnel server, terminating TLS with a certificate
   # from Let's Encrypt called "tunnel-richardcase" so your team mates
   # don't delete your VM unintentionally.
   inletsctl create  \
@@ -593,7 +593,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 		return &provision.BasicHost{
 			Name:     name,
 			Region:   region,
-			Plan:     "cx22",
+			Plan:     "cx23",
 			OS:       "ubuntu-22.04",
 			UserData: userData,
 		}, nil
