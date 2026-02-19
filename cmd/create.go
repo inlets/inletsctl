@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsProDefaultVersion = "0.11.4"
+const inletsProDefaultVersion = "0.11.5"
 const inletsProControlPort = 8123
 
 func init() {
@@ -54,7 +54,6 @@ func init() {
 
 	createCmd.Flags().StringArray("letsencrypt-domain", []string{}, `Domains you want to get a Let's Encrypt certificate for`)
 	createCmd.Flags().String("letsencrypt-issuer", "prod", `The issuer endpoint to use with Let's Encrypt - "prod" or "staging"`)
-	createCmd.Flags().String("letsencrypt-email", "", `The email to register with Let's Encrypt for renewal notices (required)`)
 
 	createCmd.Flags().DurationP("poll", "n", time.Second*2, "poll every N seconds, use a higher value if you encounter rate-limiting")
 
@@ -75,8 +74,7 @@ project docs.`,
   # don't delete your VM unintentionally.
   inletsctl create  \
     tunnel-richardcase \
-    --letsencrypt-domain inlets.example.com \
-    --letsencrypt-email webmaster@example.com
+    --letsencrypt-domain inlets.example.com
 
   # Create a TCP tunnel server with a VM name of ssh-tunnel
   inletsctl create \
@@ -90,8 +88,7 @@ project docs.`,
   # VM name
   inletsctl create  \
     --letsencrypt-domain tunnel1.example.com \
-    --letsencrypt-domain tunnel2.example.com \
-    --letsencrypt-email webmaster@example.com
+    --letsencrypt-domain tunnel2.example.com
 `,
 	RunE:          runCreate,
 	SilenceUsage:  true,
@@ -283,7 +280,6 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	letsencryptDomains, _ := cmd.Flags().GetStringArray("letsencrypt-domain")
-	letsencryptEmail, _ := cmd.Flags().GetString("letsencrypt-email")
 	letsencryptIssuer, _ := cmd.Flags().GetString("letsencrypt-issuer")
 
 	if len(letsencryptDomains) == 0 && !tcp {
@@ -291,9 +287,6 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	if len(letsencryptDomains) > 0 {
-		if len(letsencryptEmail) == 0 {
-			return fmt.Errorf("--letsencrypt-email is required when --letsencrypt-domain is given")
-		}
 		if len(letsencryptIssuer) == 0 {
 			return fmt.Errorf("--letsencrypt-issuer is required when --letsencrypt-domain is given")
 		}
@@ -304,7 +297,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	if len(letsencryptDomains) > 0 {
 		userData = MakeHTTPSUserdata(inletsToken,
 			inletsProVersion,
-			letsencryptEmail, letsencryptIssuer, letsencryptDomains)
+			letsencryptIssuer, letsencryptDomains)
 	} else {
 		userData = provision.MakeExitServerUserdata(
 			inletsToken,
@@ -604,7 +597,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 
 // MakeHTTPSUserdata makes a user-data script in bash to setup inlets
 // PRO with a systemd service and the given version.
-func MakeHTTPSUserdata(authToken, version, letsEncryptEmail, letsEncryptIssuer string, domains []string) string {
+func MakeHTTPSUserdata(authToken, version, letsEncryptIssuer string, domains []string) string {
 
 	domainFlags := ""
 	for _, domain := range domains {
@@ -625,7 +618,6 @@ curl -SLsf https://github.com/inlets/inlets-pro/releases/download/` + version + 
   echo "IP=$IP" >> /etc/default/inlets-pro && \
   echo "DOMAINS=` + strings.TrimSpace(domainFlags) + `" >> /etc/default/inlets-pro && \
   echo "ISSUER=--letsencrypt-issuer=` + letsEncryptIssuer + `" >> /etc/default/inlets-pro && \
-  echo "EMAIL=--letsencrypt-email=` + letsEncryptEmail + `" >> /etc/default/inlets-pro && \
   systemctl daemon-reload && \
   systemctl start inlets-pro && \
   systemctl enable inlets-pro
