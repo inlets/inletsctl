@@ -9,7 +9,7 @@ import (
 )
 
 func Test_MakeHTTPSUserdata_OneDomain(t *testing.T) {
-	got := MakeHTTPSUserdata("token", "0.9.40", "contact@example.com", "prod", []string{"example.com"})
+	got := MakeHTTPSUserdata("token", "0.9.40", "prod", []string{"example.com"})
 
 	os.WriteFile("/tmp/t.txt", []byte(got), 0600)
 	want := `#!/bin/bash
@@ -26,7 +26,6 @@ curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-
   echo "IP=$IP" >> /etc/default/inlets-pro && \
   echo "DOMAINS=--letsencrypt-domain=example.com" >> /etc/default/inlets-pro && \
   echo "ISSUER=--letsencrypt-issuer=prod" >> /etc/default/inlets-pro && \
-  echo "EMAIL=--letsencrypt-email=contact@example.com" >> /etc/default/inlets-pro && \
   systemctl daemon-reload && \
   systemctl start inlets-pro && \
   systemctl enable inlets-pro
@@ -37,7 +36,7 @@ curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-
 }
 
 func Test_MakeHTTPSUserdata_TwoDomains(t *testing.T) {
-	got := MakeHTTPSUserdata("token", "0.9.40", "contact@example.com", "prod",
+	got := MakeHTTPSUserdata("token", "0.9.40", "prod",
 		[]string{"a.example.com", "b.example.com"})
 
 	os.WriteFile("/tmp/t.txt", []byte(got), 0600)
@@ -55,7 +54,6 @@ curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-
   echo "IP=$IP" >> /etc/default/inlets-pro && \
   echo "DOMAINS=--letsencrypt-domain=a.example.com --letsencrypt-domain=b.example.com" >> /etc/default/inlets-pro && \
   echo "ISSUER=--letsencrypt-issuer=prod" >> /etc/default/inlets-pro && \
-  echo "EMAIL=--letsencrypt-email=contact@example.com" >> /etc/default/inlets-pro && \
   systemctl daemon-reload && \
   systemctl start inlets-pro && \
   systemctl enable inlets-pro
