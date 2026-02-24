@@ -8,19 +8,47 @@ import (
 	"testing"
 )
 
+func Test_MakeTCPUserdata_OneTunnel(t *testing.T) {
+	got := makeExitServerUserdata("token", "0.11.5")
+	os.WriteFile("/tmp/tcp.txt", []byte(got), 0600)
+	want := `#!/bin/bash
+export AUTHTOKEN="token"
+export IP=$(curl -sfSL https://checkip.amazonaws.com)
+export VERSION="0.11.5"
+
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro -o /tmp/inlets-pro && \
+  chmod +x /tmp/inlets-pro  && \
+  mv /tmp/inlets-pro /usr/local/bin/inlets-pro
+
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro.service -o inlets-pro.service && \
+  mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
+  echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
+  echo "IP=$IP" >> /etc/default/inlets-pro && \
+  systemctl daemon-reload && \
+  systemctl start inlets-pro && \
+  systemctl enable inlets-pro
+`
+
+	if want != got {
+		t.Fatalf("want\n\n%s\n\nbut got\n\n%s\n\n", want, got)
+	}
+
+}
+
 func Test_MakeHTTPSUserdata_OneDomain(t *testing.T) {
-	got := MakeHTTPSUserdata("token", "0.9.40", "prod", []string{"example.com"})
+	got := makeHTTPSUserdata("token", "0.9.40", "prod", []string{"example.com"})
 
 	os.WriteFile("/tmp/t.txt", []byte(got), 0600)
 	want := `#!/bin/bash
 export AUTHTOKEN="token"
 export IP=$(curl -sfSL https://checkip.amazonaws.com)
+export VERSION="0.9.40"
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-pro -o /tmp/inlets-pro && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro -o /tmp/inlets-pro && \
   chmod +x /tmp/inlets-pro  && \
   mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-pro-http.service -o inlets-pro.service && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro-http.service -o inlets-pro.service && \
   mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
   echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
   echo "IP=$IP" >> /etc/default/inlets-pro && \
@@ -36,19 +64,20 @@ curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-
 }
 
 func Test_MakeHTTPSUserdata_TwoDomains(t *testing.T) {
-	got := MakeHTTPSUserdata("token", "0.9.40", "prod",
+	got := makeHTTPSUserdata("token", "0.9.40", "prod",
 		[]string{"a.example.com", "b.example.com"})
 
 	os.WriteFile("/tmp/t.txt", []byte(got), 0600)
 	want := `#!/bin/bash
 export AUTHTOKEN="token"
 export IP=$(curl -sfSL https://checkip.amazonaws.com)
+export VERSION="0.9.40"
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-pro -o /tmp/inlets-pro && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro -o /tmp/inlets-pro && \
   chmod +x /tmp/inlets-pro  && \
   mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/0.9.40/inlets-pro-http.service -o inlets-pro.service && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro-http.service -o inlets-pro.service && \
   mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
   echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
   echo "IP=$IP" >> /etc/default/inlets-pro && \

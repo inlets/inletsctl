@@ -295,11 +295,11 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 
 	var userData string
 	if len(letsencryptDomains) > 0 {
-		userData = MakeHTTPSUserdata(inletsToken,
+		userData = makeHTTPSUserdata(inletsToken,
 			inletsProVersion,
 			letsencryptIssuer, letsencryptDomains)
 	} else {
-		userData = provision.MakeExitServerUserdata(
+		userData = makeExitServerUserdata(
 			inletsToken,
 			inletsProVersion)
 	}
@@ -595,31 +595,55 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 	return nil, fmt.Errorf("no provisioner for provider: %q", provider)
 }
 
-// MakeHTTPSUserdata makes a user-data script in bash to setup inlets
-// PRO with a systemd service and the given version.
-func MakeHTTPSUserdata(authToken, version, letsEncryptIssuer string, domains []string) string {
+// makeHTTPSUserdata makes a user-data script in bash to setup inlets
+// with a systemd service and the given version.
+func makeHTTPSUserdata(authToken, version, letsEncryptIssuer string, domains []string) string {
 
 	domainFlags := ""
 	for _, domain := range domains {
 		domainFlags += fmt.Sprintf("--letsencrypt-domain=%s ", domain)
 	}
-
-	return `#!/bin/bash
-export AUTHTOKEN="` + authToken + `"
+	domainFlags = strings.TrimSpace(domainFlags)
+	return fmt.Sprintf(`#!/bin/bash
+export AUTHTOKEN="%s"
 export IP=$(curl -sfSL https://checkip.amazonaws.com)
+export VERSION="%s"
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/` + version + `/inlets-pro -o /tmp/inlets-pro && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro -o /tmp/inlets-pro && \
   chmod +x /tmp/inlets-pro  && \
   mv /tmp/inlets-pro /usr/local/bin/inlets-pro
 
-curl -SLsf https://github.com/inlets/inlets-pro/releases/download/` + version + `/inlets-pro-http.service -o inlets-pro.service && \
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro-http.service -o inlets-pro.service && \
   mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
   echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
   echo "IP=$IP" >> /etc/default/inlets-pro && \
-  echo "DOMAINS=` + strings.TrimSpace(domainFlags) + `" >> /etc/default/inlets-pro && \
-  echo "ISSUER=--letsencrypt-issuer=` + letsEncryptIssuer + `" >> /etc/default/inlets-pro && \
+  echo "DOMAINS=%s" >> /etc/default/inlets-pro && \
+  echo "ISSUER=--letsencrypt-issuer=%s" >> /etc/default/inlets-pro && \
   systemctl daemon-reload && \
   systemctl start inlets-pro && \
   systemctl enable inlets-pro
-`
+`, authToken, version, domainFlags, letsEncryptIssuer)
+}
+
+// makeExitServerUserdata makes a user-data script in bash to setup inlets
+// with systemd service and the given version.
+func makeExitServerUserdata(authToken, version string) string {
+
+	return fmt.Sprintf(`#!/bin/bash
+export AUTHTOKEN="%s"
+export IP=$(curl -sfSL https://checkip.amazonaws.com)
+export VERSION="%s"
+
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro -o /tmp/inlets-pro && \
+  chmod +x /tmp/inlets-pro  && \
+  mv /tmp/inlets-pro /usr/local/bin/inlets-pro
+
+curl -SLsf https://github.com/inlets/inlets-pro/releases/download/$VERSION/inlets-pro.service -o inlets-pro.service && \
+  mv inlets-pro.service /etc/systemd/system/inlets-pro.service && \
+  echo "AUTHTOKEN=$AUTHTOKEN" >> /etc/default/inlets-pro && \
+  echo "IP=$IP" >> /etc/default/inlets-pro && \
+  systemctl daemon-reload && \
+  systemctl start inlets-pro && \
+  systemctl enable inlets-pro
+`, authToken, version)
 }
