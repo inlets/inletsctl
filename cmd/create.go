@@ -450,8 +450,8 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 	if provider == "digitalocean" {
 		return &provision.BasicHost{
 			Name:       name,
-			OS:         "ubuntu-22-04-x64",
-			Plan:       "s-1vcpu-1gb",
+			OS:         "debian-13-x64",
+			Plan:       "s-1vcpu-512mb-10gb",
 			Region:     region,
 			UserData:   userData,
 			Additional: map[string]string{},
@@ -587,7 +587,7 @@ func createHost(provider, name, region, zone, projectID, userData, inletsProCont
 			Name:     name,
 			Region:   region,
 			Plan:     "cx23",
-			OS:       "ubuntu-22.04",
+			OS:       "debian-13",
 			UserData: userData,
 		}, nil
 	}
