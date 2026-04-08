@@ -1,7 +1,9 @@
 Version := $(shell git describe --tags --dirty)
 GitCommit := $(shell git rev-parse HEAD)
 LDFLAGS := "-s -w -X main.Version=$(Version) -X main.GitCommit=$(GitCommit)"
+
 export GO111MODULE=on
+
 .PHONY: all
 all: gofmt test dist compress hashgen
 SOURCE_DIRS=cmd pkg mock main.go
@@ -26,9 +28,9 @@ dist:
 	mkdir -p bin/
 	mkdir -p uploads/
 	rm -rf bin/inlets*
-	CGO_ENABLED=0 GOOS=linux go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/inletsctl
-	CGO_ENABLED=0 GOOS=darwin go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/inletsctl-darwin
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/inletsctl-darwin-arm64
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/inletsctl.exe
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/inletsctl-armhf
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/inletsctl-arm64
+	CGO_ENABLED=0 GOOS=linux go build -ldflags $(LDFLAGS) -o bin/inletsctl
+	CGO_ENABLED=0 GOOS=darwin go build -ldflags $(LDFLAGS) -o bin/inletsctl-darwin
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags $(LDFLAGS) -o bin/inletsctl-darwin-arm64
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags $(LDFLAGS) -o bin/inletsctl.exe
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -ldflags $(LDFLAGS) -o bin/inletsctl-armhf
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags $(LDFLAGS) -o bin/inletsctl-arm64

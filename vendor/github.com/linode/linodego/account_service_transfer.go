@@ -50,6 +50,7 @@ func (ast *AccountServiceTransfer) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Expiry  *parseabletime.ParseableTime `json:"expiry"`
 		Updated *parseabletime.ParseableTime `json:"updated"`
@@ -70,8 +71,7 @@ func (ast *AccountServiceTransfer) UnmarshalJSON(b []byte) error {
 
 // ListAccountServiceTransfer gets a paginated list of AccountServiceTransfer for the Account.
 func (c *Client) ListAccountServiceTransfer(ctx context.Context, opts *ListOptions) ([]AccountServiceTransfer, error) {
-	e := "account/service-transfers"
-	return getPaginatedResults[AccountServiceTransfer](ctx, c, e, opts)
+	return getPaginatedResults[AccountServiceTransfer](ctx, c, "account/service-transfers", opts)
 }
 
 // GetAccountServiceTransfer gets the details of the AccountServiceTransfer for the provided token.
@@ -82,16 +82,14 @@ func (c *Client) GetAccountServiceTransfer(ctx context.Context, token string) (*
 
 // RequestAccountServiceTransfer creates a transfer request for the specified services.
 func (c *Client) RequestAccountServiceTransfer(ctx context.Context, opts AccountServiceTransferRequestOptions) (*AccountServiceTransfer, error) {
-	e := "account/service-transfers"
-	return doPOSTRequest[AccountServiceTransfer](ctx, c, e, opts)
+	return doPOSTRequest[AccountServiceTransfer](ctx, c, "account/service-transfers", opts)
 }
 
 // AcceptAccountServiceTransfer accepts an AccountServiceTransfer for the provided token to
 // receive the services included in the transfer to the Account.
 func (c *Client) AcceptAccountServiceTransfer(ctx context.Context, token string) error {
 	e := formatAPIPath("account/service-transfers/%s/accept", token)
-	_, err := doPOSTRequest[AccountServiceTransfer, any](ctx, c, e)
-	return err
+	return doPOSTRequestNoRequestResponseBody(ctx, c, e)
 }
 
 // CancelAccountServiceTransfer cancels the AccountServiceTransfer for the provided token.

@@ -14,10 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/scaleway/scaleway-sdk-go/internal/errors"
-	"github.com/scaleway/scaleway-sdk-go/internal/marshaler"
-	"github.com/scaleway/scaleway-sdk-go/internal/parameter"
+	"github.com/scaleway/scaleway-sdk-go/errors"
+	"github.com/scaleway/scaleway-sdk-go/marshaler"
 	"github.com/scaleway/scaleway-sdk-go/namegenerator"
+	"github.com/scaleway/scaleway-sdk-go/parameter"
 	"github.com/scaleway/scaleway-sdk-go/scw"
 )
 
@@ -51,7 +51,7 @@ const (
 func (enum Arch) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_arch"
+		return string(ArchUnknownArch)
 	}
 	return string(enum)
 }
@@ -85,14 +85,15 @@ type AttachServerVolumeRequestVolumeType string
 const (
 	AttachServerVolumeRequestVolumeTypeUnknownVolumeType = AttachServerVolumeRequestVolumeType("unknown_volume_type")
 	AttachServerVolumeRequestVolumeTypeLSSD              = AttachServerVolumeRequestVolumeType("l_ssd")
-	AttachServerVolumeRequestVolumeTypeBSSD              = AttachServerVolumeRequestVolumeType("b_ssd")
-	AttachServerVolumeRequestVolumeTypeSbsVolume         = AttachServerVolumeRequestVolumeType("sbs_volume")
+	// Deprecated.
+	AttachServerVolumeRequestVolumeTypeBSSD      = AttachServerVolumeRequestVolumeType("b_ssd")
+	AttachServerVolumeRequestVolumeTypeSbsVolume = AttachServerVolumeRequestVolumeType("sbs_volume")
 )
 
 func (enum AttachServerVolumeRequestVolumeType) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_volume_type"
+		return string(AttachServerVolumeRequestVolumeTypeUnknownVolumeType)
 	}
 	return string(enum)
 }
@@ -132,7 +133,7 @@ const (
 func (enum BootType) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "local"
+		return string(BootTypeLocal)
 	}
 	return string(enum)
 }
@@ -173,7 +174,7 @@ const (
 func (enum IPState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_state"
+		return string(IPStateUnknownState)
 	}
 	return string(enum)
 }
@@ -207,7 +208,6 @@ type IPType string
 
 const (
 	IPTypeUnknownIptype = IPType("unknown_iptype")
-	IPTypeNat           = IPType("nat")
 	IPTypeRoutedIPv4    = IPType("routed_ipv4")
 	IPTypeRoutedIPv6    = IPType("routed_ipv6")
 )
@@ -215,7 +215,7 @@ const (
 func (enum IPType) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_iptype"
+		return string(IPTypeUnknownIptype)
 	}
 	return string(enum)
 }
@@ -223,7 +223,6 @@ func (enum IPType) String() string {
 func (enum IPType) Values() []IPType {
 	return []IPType{
 		"unknown_iptype",
-		"nat",
 		"routed_ipv4",
 		"routed_ipv6",
 	}
@@ -255,7 +254,7 @@ const (
 func (enum ImageState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "available"
+		return string(ImageStateAvailable)
 	}
 	return string(enum)
 }
@@ -295,7 +294,7 @@ const (
 func (enum ListServersRequestOrder) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "creation_date_desc"
+		return string(ListServersRequestOrderCreationDateDesc)
 	}
 	return string(enum)
 }
@@ -334,7 +333,7 @@ const (
 func (enum PlacementGroupPolicyMode) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "optional"
+		return string(PlacementGroupPolicyModeOptional)
 	}
 	return string(enum)
 }
@@ -371,7 +370,7 @@ const (
 func (enum PlacementGroupPolicyType) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "max_availability"
+		return string(PlacementGroupPolicyTypeMaxAvailability)
 	}
 	return string(enum)
 }
@@ -409,7 +408,7 @@ const (
 func (enum PrivateNICState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "available"
+		return string(PrivateNICStateAvailable)
 	}
 	return string(enum)
 }
@@ -448,7 +447,7 @@ const (
 func (enum SecurityGroupPolicy) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_policy"
+		return string(SecurityGroupPolicyUnknownPolicy)
 	}
 	return string(enum)
 }
@@ -487,7 +486,7 @@ const (
 func (enum SecurityGroupRuleAction) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_action"
+		return string(SecurityGroupRuleActionUnknownAction)
 	}
 	return string(enum)
 }
@@ -526,7 +525,7 @@ const (
 func (enum SecurityGroupRuleDirection) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_direction"
+		return string(SecurityGroupRuleDirectionUnknownDirection)
 	}
 	return string(enum)
 }
@@ -567,7 +566,7 @@ const (
 func (enum SecurityGroupRuleProtocol) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_protocol"
+		return string(SecurityGroupRuleProtocolUnknownProtocol)
 	}
 	return string(enum)
 }
@@ -608,7 +607,7 @@ const (
 func (enum SecurityGroupState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "available"
+		return string(SecurityGroupStateAvailable)
 	}
 	return string(enum)
 }
@@ -651,7 +650,7 @@ const (
 func (enum ServerAction) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "poweron"
+		return string(ServerActionPoweron)
 	}
 	return string(enum)
 }
@@ -683,6 +682,47 @@ func (enum *ServerAction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type ServerFilesystemState string
+
+const (
+	ServerFilesystemStateUnknownState = ServerFilesystemState("unknown_state")
+	ServerFilesystemStateAttaching    = ServerFilesystemState("attaching")
+	ServerFilesystemStateAvailable    = ServerFilesystemState("available")
+	ServerFilesystemStateDetaching    = ServerFilesystemState("detaching")
+)
+
+func (enum ServerFilesystemState) String() string {
+	if enum == "" {
+		// return default value if empty
+		return string(ServerFilesystemStateUnknownState)
+	}
+	return string(enum)
+}
+
+func (enum ServerFilesystemState) Values() []ServerFilesystemState {
+	return []ServerFilesystemState{
+		"unknown_state",
+		"attaching",
+		"available",
+		"detaching",
+	}
+}
+
+func (enum ServerFilesystemState) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, enum)), nil
+}
+
+func (enum *ServerFilesystemState) UnmarshalJSON(data []byte) error {
+	tmp := ""
+
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+
+	*enum = ServerFilesystemState(ServerFilesystemState(tmp).String())
+	return nil
+}
+
 type ServerIPIPFamily string
 
 const (
@@ -693,7 +733,7 @@ const (
 func (enum ServerIPIPFamily) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "inet"
+		return string(ServerIPIPFamilyInet)
 	}
 	return string(enum)
 }
@@ -731,7 +771,7 @@ const (
 func (enum ServerIPProvisioningMode) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "manual"
+		return string(ServerIPProvisioningModeManual)
 	}
 	return string(enum)
 }
@@ -772,7 +812,7 @@ const (
 func (enum ServerIPState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_state"
+		return string(ServerIPStateUnknownState)
 	}
 	return string(enum)
 }
@@ -816,7 +856,7 @@ const (
 func (enum ServerState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "running"
+		return string(ServerStateRunning)
 	}
 	return string(enum)
 }
@@ -858,7 +898,7 @@ const (
 func (enum ServerTypesAvailability) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "available"
+		return string(ServerTypesAvailabilityAvailable)
 	}
 	return string(enum)
 }
@@ -900,7 +940,7 @@ const (
 func (enum SnapshotState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "available"
+		return string(SnapshotStateAvailable)
 	}
 	return string(enum)
 }
@@ -936,14 +976,16 @@ type SnapshotVolumeType string
 const (
 	SnapshotVolumeTypeUnknownVolumeType = SnapshotVolumeType("unknown_volume_type")
 	SnapshotVolumeTypeLSSD              = SnapshotVolumeType("l_ssd")
-	SnapshotVolumeTypeBSSD              = SnapshotVolumeType("b_ssd")
-	SnapshotVolumeTypeUnified           = SnapshotVolumeType("unified")
+	// Deprecated.
+	SnapshotVolumeTypeBSSD = SnapshotVolumeType("b_ssd")
+	// Deprecated.
+	SnapshotVolumeTypeUnified = SnapshotVolumeType("unified")
 )
 
 func (enum SnapshotVolumeType) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "unknown_volume_type"
+		return string(SnapshotVolumeTypeUnknownVolumeType)
 	}
 	return string(enum)
 }
@@ -985,7 +1027,7 @@ const (
 func (enum TaskStatus) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "pending"
+		return string(TaskStatusPending)
 	}
 	return string(enum)
 }
@@ -1020,17 +1062,18 @@ type VolumeServerState string
 const (
 	VolumeServerStateAvailable    = VolumeServerState("available")
 	VolumeServerStateSnapshotting = VolumeServerState("snapshotting")
-	VolumeServerStateFetching     = VolumeServerState("fetching")
 	VolumeServerStateResizing     = VolumeServerState("resizing")
+	VolumeServerStateFetching     = VolumeServerState("fetching")
 	VolumeServerStateSaving       = VolumeServerState("saving")
 	VolumeServerStateHotsyncing   = VolumeServerState("hotsyncing")
+	VolumeServerStateAttaching    = VolumeServerState("attaching")
 	VolumeServerStateError        = VolumeServerState("error")
 )
 
 func (enum VolumeServerState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "available"
+		return string(VolumeServerStateAvailable)
 	}
 	return string(enum)
 }
@@ -1039,10 +1082,11 @@ func (enum VolumeServerState) Values() []VolumeServerState {
 	return []VolumeServerState{
 		"available",
 		"snapshotting",
-		"fetching",
 		"resizing",
+		"fetching",
 		"saving",
 		"hotsyncing",
+		"attaching",
 		"error",
 	}
 }
@@ -1065,7 +1109,8 @@ func (enum *VolumeServerState) UnmarshalJSON(data []byte) error {
 type VolumeServerVolumeType string
 
 const (
-	VolumeServerVolumeTypeLSSD      = VolumeServerVolumeType("l_ssd")
+	VolumeServerVolumeTypeLSSD = VolumeServerVolumeType("l_ssd")
+	// Deprecated.
 	VolumeServerVolumeTypeBSSD      = VolumeServerVolumeType("b_ssd")
 	VolumeServerVolumeTypeSbsVolume = VolumeServerVolumeType("sbs_volume")
 	VolumeServerVolumeTypeScratch   = VolumeServerVolumeType("scratch")
@@ -1074,7 +1119,7 @@ const (
 func (enum VolumeServerVolumeType) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "l_ssd"
+		return string(VolumeServerVolumeTypeLSSD)
 	}
 	return string(enum)
 }
@@ -1109,8 +1154,9 @@ const (
 	VolumeStateAvailable    = VolumeState("available")
 	VolumeStateSnapshotting = VolumeState("snapshotting")
 	VolumeStateFetching     = VolumeState("fetching")
-	VolumeStateResizing     = VolumeState("resizing")
 	VolumeStateSaving       = VolumeState("saving")
+	VolumeStateAttaching    = VolumeState("attaching")
+	VolumeStateResizing     = VolumeState("resizing")
 	VolumeStateHotsyncing   = VolumeState("hotsyncing")
 	VolumeStateError        = VolumeState("error")
 )
@@ -1118,7 +1164,7 @@ const (
 func (enum VolumeState) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "available"
+		return string(VolumeStateAvailable)
 	}
 	return string(enum)
 }
@@ -1128,8 +1174,9 @@ func (enum VolumeState) Values() []VolumeState {
 		"available",
 		"snapshotting",
 		"fetching",
-		"resizing",
 		"saving",
+		"attaching",
+		"resizing",
 		"hotsyncing",
 		"error",
 	}
@@ -1153,8 +1200,10 @@ func (enum *VolumeState) UnmarshalJSON(data []byte) error {
 type VolumeVolumeType string
 
 const (
-	VolumeVolumeTypeLSSD        = VolumeVolumeType("l_ssd")
-	VolumeVolumeTypeBSSD        = VolumeVolumeType("b_ssd")
+	VolumeVolumeTypeLSSD = VolumeVolumeType("l_ssd")
+	// Deprecated.
+	VolumeVolumeTypeBSSD = VolumeVolumeType("b_ssd")
+	// Deprecated.
 	VolumeVolumeTypeUnified     = VolumeVolumeType("unified")
 	VolumeVolumeTypeScratch     = VolumeVolumeType("scratch")
 	VolumeVolumeTypeSbsVolume   = VolumeVolumeType("sbs_volume")
@@ -1164,7 +1213,7 @@ const (
 func (enum VolumeVolumeType) String() string {
 	if enum == "" {
 		// return default value if empty
-		return "l_ssd"
+		return string(VolumeVolumeTypeLSSD)
 	}
 	return string(enum)
 }
@@ -1204,41 +1253,30 @@ type ServerSummary struct {
 
 // Bootscript: bootscript.
 type Bootscript struct {
-	// Bootcmdargs: bootscript arguments.
-	Bootcmdargs string `json:"bootcmdargs"`
-
-	// Default: display if the bootscript is the default bootscript (if no other boot option is configured).
-	Default bool `json:"default"`
-
-	// Dtb: provide information regarding a Device Tree Binary (DTB) for use with C1 servers.
-	Dtb string `json:"dtb"`
-
-	// ID: bootscript ID.
-	ID string `json:"id"`
-
-	// Initrd: initrd (initial ramdisk) configuration.
-	Initrd string `json:"initrd"`
-
-	// Kernel: instance kernel version.
-	Kernel string `json:"kernel"`
-
-	// Organization: bootscript Organization ID.
-	Organization string `json:"organization"`
-
-	// Project: bootscript Project ID.
-	Project string `json:"project"`
-
-	// Public: provide information if the bootscript is public.
-	Public bool `json:"public"`
-
-	// Title: bootscript title.
-	Title string `json:"title"`
-
-	// Architecture: bootscript architecture.
-	// Default value: unknown_arch
+	// Architecture: default value: unknown_arch
 	Architecture Arch `json:"architecture"`
 
-	// Zone: zone in which the bootscript is located.
+	Bootcmdargs string `json:"bootcmdargs"`
+
+	Default bool `json:"default"`
+
+	Dtb string `json:"dtb"`
+
+	ID string `json:"id"`
+
+	Initrd string `json:"initrd"`
+
+	Kernel string `json:"kernel"`
+
+	Organization string `json:"organization"`
+
+	Public bool `json:"public"`
+
+	Title string `json:"title"`
+
+	Project string `json:"project"`
+
+	// Zone: zone to target. If none is passed will use default zone from the config.
 	Zone scw.Zone `json:"zone"`
 }
 
@@ -1249,9 +1287,6 @@ type Volume struct {
 
 	// Name: volume name.
 	Name string `json:"name"`
-
-	// Deprecated: ExportURI: show the volume NBD export URI.
-	ExportURI *string `json:"export_uri"`
 
 	// Size: volume disk size.
 	Size scw.Size `json:"size"`
@@ -1378,7 +1413,8 @@ type PlacementGroup struct {
 	// Default value: max_availability
 	PolicyType PlacementGroupPolicyType `json:"policy_type"`
 
-	// PolicyRespected: returns true if the policy is respected, false otherwise.
+	// PolicyRespected: in the server endpoints the value is always false as it is deprecated.
+	// In the placement group endpoints the value is correct.
 	PolicyRespected bool `json:"policy_respected"`
 
 	// Zone: zone in which the placement group is located.
@@ -1405,6 +1441,12 @@ type PrivateNIC struct {
 
 	// Tags: private NIC tags.
 	Tags []string `json:"tags"`
+
+	// CreationDate: private NIC creation date.
+	CreationDate *time.Time `json:"creation_date"`
+
+	// Zone: the zone in which the Private NIC is located.
+	Zone scw.Zone `json:"zone"`
 }
 
 // SecurityGroupSummary: security group summary.
@@ -1412,6 +1454,14 @@ type SecurityGroupSummary struct {
 	ID string `json:"id"`
 
 	Name string `json:"name"`
+}
+
+// ServerFilesystem: server filesystem.
+type ServerFilesystem struct {
+	FilesystemID string `json:"filesystem_id"`
+
+	// State: default value: unknown_state
+	State ServerFilesystemState `json:"state"`
 }
 
 // ServerIP: server ip.
@@ -1486,16 +1536,16 @@ type ServerMaintenance struct {
 type VolumeServer struct {
 	ID string `json:"id"`
 
-	Name string `json:"name"`
+	Name *string `json:"name"`
 
 	// Deprecated
 	ExportURI *string `json:"export_uri"`
 
-	Organization string `json:"organization"`
+	Organization *string `json:"organization"`
 
 	Server *ServerSummary `json:"server"`
 
-	Size scw.Size `json:"size"`
+	Size *scw.Size `json:"size"`
 
 	// VolumeType: default value: l_ssd
 	VolumeType VolumeServerVolumeType `json:"volume_type"`
@@ -1505,9 +1555,9 @@ type VolumeServer struct {
 	ModificationDate *time.Time `json:"modification_date"`
 
 	// State: default value: available
-	State VolumeServerState `json:"state"`
+	State *VolumeServerState `json:"state"`
 
-	Project string `json:"project"`
+	Project *string `json:"project"`
 
 	Boot bool `json:"boot"`
 
@@ -1531,6 +1581,21 @@ type ServerTypeCapabilities struct {
 
 	// BootTypes: list of supported boot types.
 	BootTypes []BootType `json:"boot_types"`
+
+	// MaxFileSystems: max number of SFS (Scaleway File Systems) that can be attached to the Instance.
+	MaxFileSystems uint32 `json:"max_file_systems"`
+}
+
+// ServerTypeGPUInfo: server type gpu info.
+type ServerTypeGPUInfo struct {
+	// GpuManufacturer: gPU manufacturer.
+	GpuManufacturer string `json:"gpu_manufacturer"`
+
+	// GpuName: gPU model name.
+	GpuName string `json:"gpu_name"`
+
+	// GpuMemory: RAM of a single GPU, in bytes.
+	GpuMemory scw.Size `json:"gpu_memory"`
 }
 
 // ServerTypeNetwork: server type network.
@@ -1595,8 +1660,8 @@ type Server struct {
 	// DynamicIPRequired: true if a dynamic IPv4 is required.
 	DynamicIPRequired bool `json:"dynamic_ip_required"`
 
-	// RoutedIPEnabled: true to configure the instance so it uses the new routed IP mode.
-	RoutedIPEnabled bool `json:"routed_ip_enabled"`
+	// Deprecated: RoutedIPEnabled: true to configure the instance so it uses the routed IP mode. Use of `routed_ip_enabled` as `False` is deprecated.
+	RoutedIPEnabled *bool `json:"routed_ip_enabled"`
 
 	// Deprecated: EnableIPv6: true if IPv6 is enabled (deprecated and always `False` when `routed_ip_enabled` is `True`).
 	EnableIPv6 *bool `json:"enable_ipv6"`
@@ -1635,9 +1700,6 @@ type Server struct {
 	// Deprecated: IPv6: instance IPv6 address (deprecated when `routed_ip_enabled` is `True`).
 	IPv6 *ServerIPv6 `json:"ipv6"`
 
-	// Deprecated: Bootscript: instance bootscript.
-	Bootscript *Bootscript `json:"bootscript"`
-
 	// BootType: instance boot type.
 	// Default value: local
 	BootType BootType `json:"boot_type"`
@@ -1672,6 +1734,12 @@ type Server struct {
 
 	// AdminPasswordEncryptedValue: this value is reset when admin_password_encryption_ssh_key_id is set to an empty string.
 	AdminPasswordEncryptedValue *string `json:"admin_password_encrypted_value"`
+
+	// Filesystems: list of attached filesystems.
+	Filesystems []*ServerFilesystem `json:"filesystems"`
+
+	// EndOfService: true if the Instance type has reached end of service.
+	EndOfService bool `json:"end_of_service"`
 }
 
 // IP: ip.
@@ -1909,7 +1977,7 @@ type Task struct {
 
 	HrefResult string `json:"href_result"`
 
-	// Zone: zone in which the task is excecuted.
+	// Zone: zone in which the task is executed.
 	Zone scw.Zone `json:"zone"`
 }
 
@@ -1935,11 +2003,13 @@ type Dashboard struct {
 
 	VolumesLSSDCount uint32 `json:"volumes_l_ssd_count"`
 
-	VolumesBSSDCount uint32 `json:"volumes_b_ssd_count"`
+	// Deprecated
+	VolumesBSSDCount *uint32 `json:"volumes_b_ssd_count"`
 
 	VolumesLSSDTotalSize scw.Size `json:"volumes_l_ssd_total_size"`
 
-	VolumesBSSDTotalSize scw.Size `json:"volumes_b_ssd_total_size"`
+	// Deprecated
+	VolumesBSSDTotalSize *scw.Size `json:"volumes_b_ssd_total_size"`
 
 	PrivateNicsCount uint32 `json:"private_nics_count"`
 
@@ -1990,12 +2060,12 @@ type ServerType struct {
 	// RAM: available RAM in bytes.
 	RAM uint64 `json:"ram"`
 
+	// GpuInfo: gPU information.
+	GpuInfo *ServerTypeGPUInfo `json:"gpu_info"`
+
 	// Arch: CPU architecture.
 	// Default value: unknown_arch
 	Arch Arch `json:"arch"`
-
-	// Baremetal: true if it is a baremetal Instance.
-	Baremetal bool `json:"baremetal"`
 
 	// Network: network available for the Instance.
 	Network *ServerTypeNetwork `json:"network"`
@@ -2005,6 +2075,12 @@ type ServerType struct {
 
 	// ScratchStorageMaxSize: maximum available scratch storage.
 	ScratchStorageMaxSize *scw.Size `json:"scratch_storage_max_size"`
+
+	// BlockBandwidth: the maximum bandwidth allocated to block storage access (in bytes per second).
+	BlockBandwidth *uint64 `json:"block_bandwidth"`
+
+	// EndOfService: true if this Instance type has reached end of service.
+	EndOfService bool `json:"end_of_service"`
 }
 
 // VolumeType: volume type.
@@ -2085,16 +2161,31 @@ type ApplyBlockMigrationRequest struct {
 	// Zone: zone to target. If none is passed will use default zone from the config.
 	Zone scw.Zone `json:"-"`
 
-	// VolumeID: the volume to migrate, along with potentially other resources, according to the migration plan generated with a call to the "Plan a migration" endpoint.
+	// VolumeID: the volume to migrate, along with potentially other resources, according to the migration plan generated with a call to the [Get a volume or snapshot's migration plan](#path-volumes-get-a-volume-or-snapshots-migration-plan) endpoint.
 	// Precisely one of VolumeID, SnapshotID must be set.
 	VolumeID *string `json:"volume_id,omitempty"`
 
-	// SnapshotID: the snapshot to migrate, along with potentially other resources, according to the migration plan generated with a call to the "Plan a migration" endpoint.
+	// SnapshotID: the snapshot to migrate, along with potentially other resources, according to the migration plan generated with a call to the [Get a volume or snapshot's migration plan](#path-volumes-get-a-volume-or-snapshots-migration-plan) endpoint.
 	// Precisely one of VolumeID, SnapshotID must be set.
 	SnapshotID *string `json:"snapshot_id,omitempty"`
 
-	// ValidationKey: a value to be retrieved from a call to the "Plan a migration" endpoint, to confirm that the volume and/or snapshots specified in said plan should be migrated.
+	// ValidationKey: a value to be retrieved from a call to the [Get a volume or snapshot's migration plan](#path-volumes-get-a-volume-or-snapshots-migration-plan) endpoint, to confirm that the volume and/or snapshots specified in said plan should be migrated.
 	ValidationKey string `json:"validation_key,omitempty"`
+}
+
+// AttachServerFileSystemRequest: attach server file system request.
+type AttachServerFileSystemRequest struct {
+	// Zone: zone to target. If none is passed will use default zone from the config.
+	Zone scw.Zone `json:"-"`
+
+	ServerID string `json:"-"`
+
+	FilesystemID string `json:"filesystem_id,omitempty"`
+}
+
+// AttachServerFileSystemResponse: attach server file system response.
+type AttachServerFileSystemResponse struct {
+	Server *Server `json:"server"`
 }
 
 // AttachServerVolumeRequest: attach server volume request.
@@ -2117,6 +2208,14 @@ type AttachServerVolumeResponse struct {
 	Server *Server `json:"server"`
 }
 
+// CheckBlockMigrationOrganizationQuotasRequest: check block migration organization quotas request.
+type CheckBlockMigrationOrganizationQuotasRequest struct {
+	// Zone: zone to target. If none is passed will use default zone from the config.
+	Zone scw.Zone `json:"-"`
+
+	Organization string `json:"organization,omitempty"`
+}
+
 // CreateIPRequest: create ip request.
 type CreateIPRequest struct {
 	// Zone: zone to target. If none is passed will use default zone from the config.
@@ -2136,7 +2235,7 @@ type CreateIPRequest struct {
 	// Server: UUID of the Instance you want to attach the IP to.
 	Server *string `json:"server,omitempty"`
 
-	// Type: IP type to reserve (either 'nat', 'routed_ipv4' or 'routed_ipv6').
+	// Type: IP type to reserve (either 'routed_ipv4' or 'routed_ipv6').
 	// Default value: unknown_iptype
 	Type IPType `json:"type,omitempty"`
 }
@@ -2160,9 +2259,6 @@ type CreateImageRequest struct {
 	// Arch: architecture of the image.
 	// Default value: unknown_arch
 	Arch Arch `json:"arch,omitempty"`
-
-	// Deprecated: DefaultBootscript: default bootscript of the image.
-	DefaultBootscript *string `json:"default_bootscript,omitempty"`
 
 	// ExtraVolumes: additional volumes of the image.
 	ExtraVolumes map[string]*VolumeTemplate `json:"extra_volumes,omitempty"`
@@ -2341,17 +2437,17 @@ type CreateServerRequest struct {
 	// Name: instance name.
 	Name string `json:"name,omitempty"`
 
-	// DynamicIPRequired: define if a dynamic IPv4 is required for the Instance.
+	// DynamicIPRequired: by default, `dynamic_ip_required` is true, a dynamic ip is attached to the instance (if no flexible ip is already attached).
 	DynamicIPRequired *bool `json:"dynamic_ip_required,omitempty"`
 
-	// RoutedIPEnabled: if true, configure the Instance so it uses the new routed IP mode.
+	// Deprecated: RoutedIPEnabled: if true, configure the Instance so it uses the new routed IP mode.
 	RoutedIPEnabled *bool `json:"routed_ip_enabled,omitempty"`
 
 	// CommercialType: define the Instance commercial type (i.e. GP1-S).
 	CommercialType string `json:"commercial_type,omitempty"`
 
 	// Image: instance image ID or label.
-	Image string `json:"image,omitempty"`
+	Image *string `json:"image,omitempty"`
 
 	// Volumes: volumes attached to the server.
 	Volumes map[string]*VolumeServerTemplate `json:"volumes,omitempty"`
@@ -2368,9 +2464,6 @@ type CreateServerRequest struct {
 	// BootType: boot type to use.
 	// Default value: local
 	BootType *BootType `json:"boot_type,omitempty"`
-
-	// Deprecated: Bootscript: bootscript ID to use when `boot_type` is set to `bootscript`.
-	Bootscript *string `json:"bootscript,omitempty"`
 
 	// Deprecated: Organization: instance Organization ID.
 	// Precisely one of Project, Organization must be set.
@@ -2391,6 +2484,9 @@ type CreateServerRequest struct {
 
 	// AdminPasswordEncryptionSSHKeyID: the public_key value of this key is used to encrypt the admin password.
 	AdminPasswordEncryptionSSHKeyID *string `json:"admin_password_encryption_ssh_key_id,omitempty"`
+
+	// Protected: true to activate server protection option.
+	Protected bool `json:"protected,omitempty"`
 }
 
 // CreateServerResponse: create server response.
@@ -2575,6 +2671,21 @@ type DeleteVolumeRequest struct {
 	VolumeID string `json:"-"`
 }
 
+// DetachServerFileSystemRequest: detach server file system request.
+type DetachServerFileSystemRequest struct {
+	// Zone: zone to target. If none is passed will use default zone from the config.
+	Zone scw.Zone `json:"-"`
+
+	ServerID string `json:"-"`
+
+	FilesystemID string `json:"filesystem_id,omitempty"`
+}
+
+// DetachServerFileSystemResponse: detach server file system response.
+type DetachServerFileSystemResponse struct {
+	Server *Server `json:"server"`
+}
+
 // DetachServerVolumeRequest: detach server volume request.
 type DetachServerVolumeRequest struct {
 	// Zone: zone to target. If none is passed will use default zone from the config.
@@ -2598,29 +2709,16 @@ type ExportSnapshotRequest struct {
 	// SnapshotID: snapshot ID.
 	SnapshotID string `json:"-"`
 
-	// Bucket: s3 bucket name.
+	// Bucket: object Storage bucket name.
 	Bucket string `json:"bucket,omitempty"`
 
-	// Key: s3 object key.
+	// Key: object key.
 	Key string `json:"key,omitempty"`
 }
 
 // ExportSnapshotResponse: export snapshot response.
 type ExportSnapshotResponse struct {
 	Task *Task `json:"task"`
-}
-
-// GetBootscriptRequest: get bootscript request.
-type GetBootscriptRequest struct {
-	// Zone: zone to target. If none is passed will use default zone from the config.
-	Zone scw.Zone `json:"-"`
-
-	BootscriptID string `json:"-"`
-}
-
-// GetBootscriptResponse: get bootscript response.
-type GetBootscriptResponse struct {
-	Bootscript *Bootscript `json:"bootscript"`
 }
 
 // GetDashboardRequest: get dashboard request.
@@ -2741,6 +2839,15 @@ type GetSecurityGroupRuleResponse struct {
 	Rule *SecurityGroupRule `json:"rule"`
 }
 
+// GetServerCompatibleTypesRequest: get server compatible types request.
+type GetServerCompatibleTypesRequest struct {
+	// Zone: zone to target. If none is passed will use default zone from the config.
+	Zone scw.Zone `json:"-"`
+
+	// ServerID: UUID of the Instance you want to get.
+	ServerID string `json:"-"`
+}
+
 // GetServerRequest: get server request.
 type GetServerRequest struct {
 	// Zone: zone to target. If none is passed will use default zone from the config.
@@ -2783,7 +2890,7 @@ func (r *GetServerTypesAvailabilityResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *GetServerTypesAvailabilityResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *GetServerTypesAvailabilityResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*GetServerTypesAvailabilityResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -2827,52 +2934,6 @@ type GetVolumeResponse struct {
 	Volume *Volume `json:"volume"`
 }
 
-// ListBootscriptsRequest: list bootscripts request.
-type ListBootscriptsRequest struct {
-	// Zone: zone to target. If none is passed will use default zone from the config.
-	Zone scw.Zone `json:"-"`
-
-	Arch *string `json:"-"`
-
-	Title *string `json:"-"`
-
-	Default *bool `json:"-"`
-
-	Public *bool `json:"-"`
-
-	PerPage *uint32 `json:"-"`
-
-	Page *int32 `json:"-"`
-}
-
-// ListBootscriptsResponse: list bootscripts response.
-type ListBootscriptsResponse struct {
-	// TotalCount: total number of bootscripts.
-	TotalCount uint32 `json:"total_count"`
-
-	// Bootscripts: list of bootscripts.
-	Bootscripts []*Bootscript `json:"bootscripts"`
-}
-
-// UnsafeGetTotalCount should not be used
-// Internal usage only
-func (r *ListBootscriptsResponse) UnsafeGetTotalCount() uint32 {
-	return r.TotalCount
-}
-
-// UnsafeAppend should not be used
-// Internal usage only
-func (r *ListBootscriptsResponse) UnsafeAppend(res interface{}) (uint32, error) {
-	results, ok := res.(*ListBootscriptsResponse)
-	if !ok {
-		return 0, errors.New("%T type cannot be appended to type %T", res, r)
-	}
-
-	r.Bootscripts = append(r.Bootscripts, results.Bootscripts...)
-	r.TotalCount += uint32(len(results.Bootscripts))
-	return uint32(len(results.Bootscripts)), nil
-}
-
 // ListDefaultSecurityGroupRulesRequest: list default security group rules request.
 type ListDefaultSecurityGroupRulesRequest struct {
 	// Zone: zone to target. If none is passed will use default zone from the config.
@@ -2902,7 +2963,7 @@ type ListIPsRequest struct {
 	// Page: a positive integer to choose the page to return.
 	Page *int32 `json:"-"`
 
-	// Type: filter on the IP Mobility IP type (whose value should be either 'nat', 'routed_ipv4' or 'routed_ipv6').
+	// Type: filter on the IP Mobility IP type (whose value should be either 'routed_ipv4' or 'routed_ipv6').
 	Type *string `json:"-"`
 }
 
@@ -2923,7 +2984,7 @@ func (r *ListIPsResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListIPsResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListIPsResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListIPsResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -2973,7 +3034,7 @@ func (r *ListImagesResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListImagesResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListImagesResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListImagesResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3025,7 +3086,7 @@ func (r *ListPlacementGroupsResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListPlacementGroupsResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListPlacementGroupsResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListPlacementGroupsResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3069,7 +3130,7 @@ func (r *ListPrivateNICsResponse) UnsafeGetTotalCount() uint64 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListPrivateNICsResponse) UnsafeAppend(res interface{}) (uint64, error) {
+func (r *ListPrivateNICsResponse) UnsafeAppend(res any) (uint64, error) {
 	results, ok := res.(*ListPrivateNICsResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3112,7 +3173,7 @@ func (r *ListSecurityGroupRulesResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListSecurityGroupRulesResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListSecurityGroupRulesResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListSecurityGroupRulesResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3167,7 +3228,7 @@ func (r *ListSecurityGroupsResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListSecurityGroupsResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListSecurityGroupsResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListSecurityGroupsResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3278,7 +3339,7 @@ func (r *ListServersResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListServersResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListServersResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListServersResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3316,7 +3377,7 @@ func (r *ListServersTypesResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListServersTypesResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListServersTypesResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListServersTypesResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3376,7 +3437,7 @@ func (r *ListSnapshotsResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListSnapshotsResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListSnapshotsResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListSnapshotsResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3432,7 +3493,7 @@ func (r *ListVolumesResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListVolumesResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListVolumesResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListVolumesResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3470,7 +3531,7 @@ func (r *ListVolumesTypesResponse) UnsafeGetTotalCount() uint32 {
 
 // UnsafeAppend should not be used
 // Internal usage only
-func (r *ListVolumesTypesResponse) UnsafeAppend(res interface{}) (uint32, error) {
+func (r *ListVolumesTypesResponse) UnsafeAppend(res any) (uint32, error) {
 	results, ok := res.(*ListVolumesTypesResponse)
 	if !ok {
 		return 0, errors.New("%T type cannot be appended to type %T", res, r)
@@ -3494,7 +3555,7 @@ type MigrationPlan struct {
 	// Snapshots: a list of snapshots which will be migrated to SBS together and with the volume, if present.
 	Snapshots []*Snapshot `json:"snapshots"`
 
-	// ValidationKey: a value to be passed to the call to the "Apply a migration plan" endpoint, to confirm that the execution of the plan is being requested.
+	// ValidationKey: a value to be passed to the call to the [Migrate a volume and/or snapshots to SBS](#path-volumes-migrate-a-volume-andor-snapshots-to-sbs-scaleway-block-storage) endpoint, to confirm that the execution of the plan is being requested.
 	ValidationKey string `json:"validation_key"`
 }
 
@@ -3510,6 +3571,15 @@ type PlanBlockMigrationRequest struct {
 	// SnapshotID: the snapshot for which the migration plan will be generated.
 	// Precisely one of VolumeID, SnapshotID must be set.
 	SnapshotID *string `json:"snapshot_id,omitempty"`
+}
+
+// ReleaseIPToIpamRequest: release ip to ipam request.
+type ReleaseIPToIpamRequest struct {
+	// Zone: zone to target. If none is passed will use default zone from the config.
+	Zone scw.Zone `json:"-"`
+
+	// IPID: ID of the IP you want to release from the Instance but retain in IPAM.
+	IPID string `json:"-"`
 }
 
 // ServerActionRequest: server action request.
@@ -3531,11 +3601,21 @@ type ServerActionRequest struct {
 	// Volumes: for each volume UUID, the snapshot parameters of the volume.
 	// This field should only be specified when performing a backup action.
 	Volumes map[string]*ServerActionRequestVolumeBackupTemplate `json:"volumes,omitempty"`
+
+	// DisableIPv6: disable IPv6 on the Instance while performing migration to routed IPs.
+	// This field should only be specified when performing a enable_routed_ip action.
+	DisableIPv6 *bool `json:"disable_ipv6,omitempty"`
 }
 
 // ServerActionResponse: server action response.
 type ServerActionResponse struct {
 	Task *Task `json:"task"`
+}
+
+// ServerCompatibleTypes: server compatible types.
+type ServerCompatibleTypes struct {
+	// CompatibleTypes: instance compatible types.
+	CompatibleTypes []string `json:"compatible_types"`
 }
 
 // SetImageRequest: set image request.
@@ -3648,7 +3728,7 @@ type UpdateIPRequest struct {
 	// Reverse: reverse domain name.
 	Reverse *NullableStringValue `json:"reverse,omitempty"`
 
-	// Type: convert a 'nat' IP to a 'routed_ipv4'.
+	// Type: should have no effect.
 	// Default value: unknown_iptype
 	Type IPType `json:"type,omitempty"`
 
@@ -3857,12 +3937,9 @@ type UpdateServerRequest struct {
 
 	Volumes *map[string]*VolumeServerTemplate `json:"volumes,omitempty"`
 
-	// Deprecated
-	Bootscript *string `json:"bootscript,omitempty"`
-
 	DynamicIPRequired *bool `json:"dynamic_ip_required,omitempty"`
 
-	// RoutedIPEnabled: true to configure the instance so it uses the new routed IP mode (once this is set to True you cannot set it back to False).
+	// Deprecated: RoutedIPEnabled: true to configure the instance so it uses the new routed IP mode (once this is set to True you cannot set it back to False).
 	RoutedIPEnabled *bool `json:"routed_ip_enabled,omitempty"`
 
 	// PublicIPs: a list of reserved IP IDs to attach to the Instance.
@@ -3871,6 +3948,7 @@ type UpdateServerRequest struct {
 	// Deprecated
 	EnableIPv6 *bool `json:"enable_ipv6,omitempty"`
 
+	// Protected: true to activate server protection option.
 	Protected *bool `json:"protected,omitempty"`
 
 	SecurityGroup *SecurityGroupTemplate `json:"security_group,omitempty"`
@@ -4071,7 +4149,7 @@ type setServerRequest struct {
 	// DynamicIPRequired: true if a dynamic IPv4 is required.
 	DynamicIPRequired bool `json:"dynamic_ip_required"`
 
-	// RoutedIPEnabled: true to configure the instance so it uses the new routed IP mode (once this is set to True you cannot set it back to False).
+	// Deprecated: RoutedIPEnabled: true to configure the instance so it uses the new routed IP mode (once this is set to True you cannot set it back to False).
 	RoutedIPEnabled *bool `json:"routed_ip_enabled,omitempty"`
 
 	// Deprecated: EnableIPv6: true if IPv6 is enabled (deprecated and always `False` when `routed_ip_enabled` is `True`).
@@ -4107,9 +4185,6 @@ type setServerRequest struct {
 
 	// Deprecated: IPv6: instance IPv6 address (deprecated when `routed_ip_enabled` is `True`).
 	IPv6 *ServerIPv6 `json:"ipv6,omitempty"`
-
-	// Deprecated: Bootscript: instance bootscript.
-	Bootscript *Bootscript `json:"bootscript,omitempty"`
 
 	// BootType: instance boot type.
 	// Default value: local
@@ -4183,7 +4258,7 @@ type setSnapshotResponse struct {
 	Snapshot *Snapshot `json:"snapshot"`
 }
 
-// This API allows you to manage your Instances.
+// This API allows you to manage your CPU and GPU Instances.
 type API struct {
 	client *scw.Client
 }
@@ -4194,6 +4269,7 @@ func NewAPI(client *scw.Client) *API {
 		client: client,
 	}
 }
+
 func (s *API) Zones() []scw.Zone {
 	return []scw.Zone{scw.ZoneFrPar1, scw.ZoneFrPar2, scw.ZoneFrPar3, scw.ZoneNlAms1, scw.ZoneNlAms2, scw.ZoneNlAms3, scw.ZonePlWaw1, scw.ZonePlWaw2, scw.ZonePlWaw3}
 }
@@ -4573,12 +4649,15 @@ func (s *API) ListServerActions(req *ListServerActionsRequest, opts ...scw.Reque
 // * `stop_in_place`: Stop the Instance, but keep the slot on the hypervisor.
 // * `reboot`: Stop the instance and restart it.
 // * `backup`:  Create an image with all the volumes of an Instance.
-// * `terminate`: Delete the Instance along with all attached volumes.
+// * `terminate`: Delete the Instance along with its attached local volumes.
 // * `enable_routed_ip`: Migrate the Instance to the new network stack.
 //
-// Keep in mind that terminating an Instance will result in the deletion of all attached volumes, including local and block storage.
-// If you want to preserve your local volumes, you should use the `archive` action instead of `terminate`. Similarly, if you want to keep your block storage volumes, you must first detach them before issuing the `terminate` command.
-// For more information, read the [Volumes](#path-volumes-list-volumes) documentation.
+// The `terminate` action will result in the deletion of `l_ssd` and `scratch` volumes types, `sbs_volume` volumes will only be detached.
+// If you want to preserve your `l_ssd` volumes, you should stop your Instance, detach the volumes to be preserved, then delete your Instance.
+//
+// The `backup` action can be done with:
+// * No `volumes` key in the body: an image is created with snapshots of all the server volumes, except for the `scratch` volumes types.
+// * `volumes` key in the body with a dictionary as value, in this dictionary volumes UUID as keys and empty dictionaries as values : an image is created with the snapshots of the volumes in `volumes` key. `scratch` volumes types can't be shapshotted.
 func (s *API) ServerAction(req *ServerActionRequest, opts ...scw.RequestOption) (*ServerActionResponse, error) {
 	var err error
 
@@ -4678,7 +4757,43 @@ func (s *API) DeleteServerUserData(req *DeleteServerUserDataRequest, opts ...scw
 	return nil
 }
 
-// AttachServerVolume:
+// GetServerCompatibleTypes: Get compatible commercial types that can be used to update the Instance. The compatibility of an Instance offer is based on:
+// * the CPU architecture
+// * the OS type
+// * the required l_ssd storage size
+// * the required scratch storage size
+// If the specified Instance offer is flagged as end of service, the best compatible offer is the first returned.
+func (s *API) GetServerCompatibleTypes(req *GetServerCompatibleTypesRequest, opts ...scw.RequestOption) (*ServerCompatibleTypes, error) {
+	var err error
+
+	if req.Zone == "" {
+		defaultZone, _ := s.client.GetDefaultZone()
+		req.Zone = defaultZone
+	}
+
+	if fmt.Sprint(req.Zone) == "" {
+		return nil, errors.New("field Zone cannot be empty in request")
+	}
+
+	if fmt.Sprint(req.ServerID) == "" {
+		return nil, errors.New("field ServerID cannot be empty in request")
+	}
+
+	scwReq := &scw.ScalewayRequest{
+		Method: "GET",
+		Path:   "/instance/v1/zones/" + fmt.Sprint(req.Zone) + "/servers/" + fmt.Sprint(req.ServerID) + "/compatible-types",
+	}
+
+	var resp ServerCompatibleTypes
+
+	err = s.client.Do(scwReq, &resp, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// AttachServerVolume: Attach a volume to an Instance.
 func (s *API) AttachServerVolume(req *AttachServerVolumeRequest, opts ...scw.RequestOption) (*AttachServerVolumeResponse, error) {
 	var err error
 
@@ -4714,7 +4829,7 @@ func (s *API) AttachServerVolume(req *AttachServerVolumeRequest, opts ...scw.Req
 	return &resp, nil
 }
 
-// DetachServerVolume:
+// DetachServerVolume: Detach a volume from an Instance.
 func (s *API) DetachServerVolume(req *DetachServerVolumeRequest, opts ...scw.RequestOption) (*DetachServerVolumeResponse, error) {
 	var err error
 
@@ -4742,6 +4857,78 @@ func (s *API) DetachServerVolume(req *DetachServerVolumeRequest, opts ...scw.Req
 	}
 
 	var resp DetachServerVolumeResponse
+
+	err = s.client.Do(scwReq, &resp, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// AttachServerFileSystem: Attach a filesystem volume to an Instance.
+func (s *API) AttachServerFileSystem(req *AttachServerFileSystemRequest, opts ...scw.RequestOption) (*AttachServerFileSystemResponse, error) {
+	var err error
+
+	if req.Zone == "" {
+		defaultZone, _ := s.client.GetDefaultZone()
+		req.Zone = defaultZone
+	}
+
+	if fmt.Sprint(req.Zone) == "" {
+		return nil, errors.New("field Zone cannot be empty in request")
+	}
+
+	if fmt.Sprint(req.ServerID) == "" {
+		return nil, errors.New("field ServerID cannot be empty in request")
+	}
+
+	scwReq := &scw.ScalewayRequest{
+		Method: "POST",
+		Path:   "/instance/v1/zones/" + fmt.Sprint(req.Zone) + "/servers/" + fmt.Sprint(req.ServerID) + "/attach-filesystem",
+	}
+
+	err = scwReq.SetBody(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp AttachServerFileSystemResponse
+
+	err = s.client.Do(scwReq, &resp, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// DetachServerFileSystem: Detach a filesystem volume from an Instance.
+func (s *API) DetachServerFileSystem(req *DetachServerFileSystemRequest, opts ...scw.RequestOption) (*DetachServerFileSystemResponse, error) {
+	var err error
+
+	if req.Zone == "" {
+		defaultZone, _ := s.client.GetDefaultZone()
+		req.Zone = defaultZone
+	}
+
+	if fmt.Sprint(req.Zone) == "" {
+		return nil, errors.New("field Zone cannot be empty in request")
+	}
+
+	if fmt.Sprint(req.ServerID) == "" {
+		return nil, errors.New("field ServerID cannot be empty in request")
+	}
+
+	scwReq := &scw.ScalewayRequest{
+		Method: "POST",
+		Path:   "/instance/v1/zones/" + fmt.Sprint(req.Zone) + "/servers/" + fmt.Sprint(req.ServerID) + "/detach-filesystem",
+	}
+
+	err = scwReq.SetBody(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp DetachServerFileSystemResponse
 
 	err = s.client.Do(scwReq, &resp, opts...)
 	if err != nil {
@@ -5201,7 +5388,7 @@ func (s *API) DeleteSnapshot(req *DeleteSnapshotRequest, opts ...scw.RequestOpti
 	return nil
 }
 
-// ExportSnapshot: Export a snapshot to a specified S3 bucket in the same region.
+// ExportSnapshot: Export a snapshot to a specified Object Storage bucket in the same region.
 func (s *API) ExportSnapshot(req *ExportSnapshotRequest, opts ...scw.RequestOption) (*ExportSnapshotResponse, error) {
 	var err error
 
@@ -5353,7 +5540,7 @@ func (s *API) GetVolume(req *GetVolumeRequest, opts ...scw.RequestOption) (*GetV
 	return &resp, nil
 }
 
-// UpdateVolume: Replace the name and/or size properties of a volume specified by its ID, with the specified value(s). Any volume name can be changed, however only `b_ssd` volumes can currently be increased in size.
+// UpdateVolume: Replace the name and/or size properties of a volume specified by its ID, with the specified value(s).
 func (s *API) UpdateVolume(req *UpdateVolumeRequest, opts ...scw.RequestOption) (*UpdateVolumeResponse, error) {
 	var err error
 
@@ -6617,73 +6804,6 @@ func (s *API) DeletePrivateNIC(req *DeletePrivateNICRequest, opts ...scw.Request
 	return nil
 }
 
-// Deprecated: ListBootscripts: List bootscripts.
-func (s *API) ListBootscripts(req *ListBootscriptsRequest, opts ...scw.RequestOption) (*ListBootscriptsResponse, error) {
-	var err error
-
-	if req.Zone == "" {
-		defaultZone, _ := s.client.GetDefaultZone()
-		req.Zone = defaultZone
-	}
-
-	query := url.Values{}
-	parameter.AddToQuery(query, "arch", req.Arch)
-	parameter.AddToQuery(query, "title", req.Title)
-	parameter.AddToQuery(query, "default", req.Default)
-	parameter.AddToQuery(query, "public", req.Public)
-	parameter.AddToQuery(query, "per_page", req.PerPage)
-	parameter.AddToQuery(query, "page", req.Page)
-
-	if fmt.Sprint(req.Zone) == "" {
-		return nil, errors.New("field Zone cannot be empty in request")
-	}
-
-	scwReq := &scw.ScalewayRequest{
-		Method: "GET",
-		Path:   "/instance/v1/zones/" + fmt.Sprint(req.Zone) + "/bootscripts",
-		Query:  query,
-	}
-
-	var resp ListBootscriptsResponse
-
-	err = s.client.Do(scwReq, &resp, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &resp, nil
-}
-
-// Deprecated: GetBootscript: Get details of a bootscript with the specified ID.
-func (s *API) GetBootscript(req *GetBootscriptRequest, opts ...scw.RequestOption) (*GetBootscriptResponse, error) {
-	var err error
-
-	if req.Zone == "" {
-		defaultZone, _ := s.client.GetDefaultZone()
-		req.Zone = defaultZone
-	}
-
-	if fmt.Sprint(req.Zone) == "" {
-		return nil, errors.New("field Zone cannot be empty in request")
-	}
-
-	if fmt.Sprint(req.BootscriptID) == "" {
-		return nil, errors.New("field BootscriptID cannot be empty in request")
-	}
-
-	scwReq := &scw.ScalewayRequest{
-		Method: "GET",
-		Path:   "/instance/v1/zones/" + fmt.Sprint(req.Zone) + "/bootscripts/" + fmt.Sprint(req.BootscriptID) + "",
-	}
-
-	var resp GetBootscriptResponse
-
-	err = s.client.Do(scwReq, &resp, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return &resp, nil
-}
-
 // GetDashboard:
 func (s *API) GetDashboard(req *GetDashboardRequest, opts ...scw.RequestOption) (*GetDashboardResponse, error) {
 	var err error
@@ -6716,7 +6836,11 @@ func (s *API) GetDashboard(req *GetDashboardRequest, opts ...scw.RequestOption) 
 	return &resp, nil
 }
 
-// PlanBlockMigration: Given a volume or snapshot, returns the migration plan for a call to the "Apply a migration plan" endpoint. This plan will include zero or one volume, and zero or more snapshots, which will need to be migrated together. This endpoint does not perform the actual migration itself, the "Apply a migration plan" endpoint must be used. The validation_key value returned by this endpoint must be provided to the call to the "Apply a migration plan" endpoint to confirm that all resources listed in the plan should be migrated.
+// PlanBlockMigration: Given a volume or snapshot, returns the migration plan but does not perform the actual migration. To perform the migration, you have to call the [Migrate a volume and/or snapshots to SBS](#path-volumes-migrate-a-volume-andor-snapshots-to-sbs-scaleway-block-storage) endpoint afterward.
+// The endpoint returns the resources that should be migrated together:
+// - the volume and any snapshots created from the volume, if the call was made to plan a volume migration.
+// - the base volume of the snapshot (if the volume is not deleted) and its related snapshots, if the call was made to plan a snapshot migration.
+// The endpoint also returns the validation_key, which must be provided to the [Migrate a volume and/or snapshots to SBS](#path-volumes-migrate-a-volume-andor-snapshots-to-sbs-scaleway-block-storage) endpoint to confirm that all resources listed in the plan should be migrated.
 func (s *API) PlanBlockMigration(req *PlanBlockMigrationRequest, opts ...scw.RequestOption) (*MigrationPlan, error) {
 	var err error
 
@@ -6748,7 +6872,7 @@ func (s *API) PlanBlockMigration(req *PlanBlockMigrationRequest, opts ...scw.Req
 	return &resp, nil
 }
 
-// ApplyBlockMigration: To be used, the call to this endpoint must be preceded by a call to the "Plan a migration" endpoint. To migrate all resources mentioned in the migration plan, the validation_key returned in the plan must be provided.
+// ApplyBlockMigration: To be used, the call to this endpoint must be preceded by a call to the [Get a volume or snapshot's migration plan](#path-volumes-get-a-volume-or-snapshots-migration-plan) endpoint. To migrate all resources mentioned in the migration plan, the validation_key returned in the plan must be provided.
 func (s *API) ApplyBlockMigration(req *ApplyBlockMigrationRequest, opts ...scw.RequestOption) error {
 	var err error
 
@@ -6764,6 +6888,75 @@ func (s *API) ApplyBlockMigration(req *ApplyBlockMigrationRequest, opts ...scw.R
 	scwReq := &scw.ScalewayRequest{
 		Method: "POST",
 		Path:   "/instance/v1/zones/" + fmt.Sprint(req.Zone) + "/block-migration/apply",
+	}
+
+	err = scwReq.SetBody(req)
+	if err != nil {
+		return err
+	}
+
+	err = s.client.Do(scwReq, nil, opts...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CheckBlockMigrationOrganizationQuotas:
+func (s *API) CheckBlockMigrationOrganizationQuotas(req *CheckBlockMigrationOrganizationQuotasRequest, opts ...scw.RequestOption) error {
+	var err error
+
+	if req.Zone == "" {
+		defaultZone, _ := s.client.GetDefaultZone()
+		req.Zone = defaultZone
+	}
+
+	if req.Organization == "" {
+		defaultOrganization, _ := s.client.GetDefaultOrganizationID()
+		req.Organization = defaultOrganization
+	}
+
+	if fmt.Sprint(req.Zone) == "" {
+		return errors.New("field Zone cannot be empty in request")
+	}
+
+	scwReq := &scw.ScalewayRequest{
+		Method: "POST",
+		Path:   "/instance/v1/zones/" + fmt.Sprint(req.Zone) + "/block-migration/check-organization-quotas",
+	}
+
+	err = scwReq.SetBody(req)
+	if err != nil {
+		return err
+	}
+
+	err = s.client.Do(scwReq, nil, opts...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// ReleaseIPToIpam: **The IP remains available in IPAM**, which means that it is still reserved by the Organization, and can be reattached to another resource (Instance or other product).
+func (s *API) ReleaseIPToIpam(req *ReleaseIPToIpamRequest, opts ...scw.RequestOption) error {
+	var err error
+
+	if req.Zone == "" {
+		defaultZone, _ := s.client.GetDefaultZone()
+		req.Zone = defaultZone
+	}
+
+	if fmt.Sprint(req.Zone) == "" {
+		return errors.New("field Zone cannot be empty in request")
+	}
+
+	if fmt.Sprint(req.IPID) == "" {
+		return errors.New("field IPID cannot be empty in request")
+	}
+
+	scwReq := &scw.ScalewayRequest{
+		Method: "POST",
+		Path:   "/instance/v1/zones/" + fmt.Sprint(req.Zone) + "/ips/" + fmt.Sprint(req.IPID) + "/release-to-ipam",
 	}
 
 	err = scwReq.SetBody(req)

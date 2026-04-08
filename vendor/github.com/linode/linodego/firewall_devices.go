@@ -13,8 +13,9 @@ type FirewallDeviceType string
 
 // FirewallDeviceType constants start with FirewallDevice
 const (
-	FirewallDeviceLinode       FirewallDeviceType = "linode"
-	FirewallDeviceNodeBalancer FirewallDeviceType = "nodebalancer"
+	FirewallDeviceLinode          FirewallDeviceType = "linode"
+	FirewallDeviceNodeBalancer    FirewallDeviceType = "nodebalancer"
+	FirewallDeviceLinodeInterface FirewallDeviceType = "linode_interface"
 )
 
 // FirewallDevice represents a device governed by a Firewall
@@ -37,6 +38,7 @@ func (device *FirewallDevice) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Updated *parseabletime.ParseableTime `json:"updated"`
 	}{
@@ -49,52 +51,38 @@ func (device *FirewallDevice) UnmarshalJSON(b []byte) error {
 
 	device.Created = (*time.Time)(p.Created)
 	device.Updated = (*time.Time)(p.Updated)
+
 	return nil
 }
 
 // FirewallDeviceEntity contains information about a device associated with a Firewall
 type FirewallDeviceEntity struct {
-	ID    int                `json:"id"`
-	Type  FirewallDeviceType `json:"type"`
-	Label string             `json:"label"`
-	URL   string             `json:"url"`
+	ID           int                   `json:"id"`
+	Type         FirewallDeviceType    `json:"type"`
+	Label        string                `json:"label"`
+	URL          string                `json:"url"`
+	ParentEntity *FirewallDeviceEntity `json:"parent_entity"`
 }
 
 // ListFirewallDevices get devices associated with a given Firewall
 func (c *Client) ListFirewallDevices(ctx context.Context, firewallID int, opts *ListOptions) ([]FirewallDevice, error) {
-	response, err := getPaginatedResults[FirewallDevice](ctx, c, formatAPIPath("networking/firewalls/%d/devices", firewallID), opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[FirewallDevice](ctx, c, formatAPIPath("networking/firewalls/%d/devices", firewallID), opts)
 }
 
 // GetFirewallDevice gets a FirewallDevice given an ID
 func (c *Client) GetFirewallDevice(ctx context.Context, firewallID, deviceID int) (*FirewallDevice, error) {
 	e := formatAPIPath("networking/firewalls/%d/devices/%d", firewallID, deviceID)
-	response, err := doGETRequest[FirewallDevice](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[FirewallDevice](ctx, c, e)
 }
 
-// AddFirewallDevice associates a Device with a given Firewall
+// CreateFirewallDevice associates a Device with a given Firewall
 func (c *Client) CreateFirewallDevice(ctx context.Context, firewallID int, opts FirewallDeviceCreateOptions) (*FirewallDevice, error) {
 	e := formatAPIPath("networking/firewalls/%d/devices", firewallID)
-	response, err := doPOSTRequest[FirewallDevice](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPOSTRequest[FirewallDevice](ctx, c, e, opts)
 }
 
 // DeleteFirewallDevice disassociates a Device with a given Firewall
 func (c *Client) DeleteFirewallDevice(ctx context.Context, firewallID, deviceID int) error {
 	e := formatAPIPath("networking/firewalls/%d/devices/%d", firewallID, deviceID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }

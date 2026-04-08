@@ -20,7 +20,6 @@ type GlobalUserGrants struct {
 	AddLinodes           bool                  `json:"add_linodes"`
 	AddLongview          bool                  `json:"add_longview"`
 	AddNodeBalancers     bool                  `json:"add_nodebalancers"`
-	AddPlacementGroups   bool                  `json:"add_placement_groups"`
 	AddStackScripts      bool                  `json:"add_stackscripts"`
 	AddVolumes           bool                  `json:"add_volumes"`
 	AddVPCs              bool                  `json:"add_vpcs"`
@@ -74,20 +73,10 @@ type UserGrantsUpdateOptions struct {
 
 func (c *Client) GetUserGrants(ctx context.Context, username string) (*UserGrants, error) {
 	e := formatAPIPath("account/users/%s/grants", username)
-	response, err := doGETRequest[UserGrants](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[UserGrants](ctx, c, e)
 }
 
 func (c *Client) UpdateUserGrants(ctx context.Context, username string, opts UserGrantsUpdateOptions) (*UserGrants, error) {
 	e := formatAPIPath("account/users/%s/grants", username)
-	response, err := doPUTRequest[UserGrants](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPUTRequest[UserGrants](ctx, c, e, opts)
 }

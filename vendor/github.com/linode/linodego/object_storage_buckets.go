@@ -67,6 +67,7 @@ func (i *ObjectStorageBucket) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 	}{
 		Mask: (*Mask)(i),
@@ -142,11 +143,11 @@ func (c *Client) GetObjectStorageBucket(ctx context.Context, clusterOrRegionID, 
 
 // CreateObjectStorageBucket creates an ObjectStorageBucket
 func (c *Client) CreateObjectStorageBucket(ctx context.Context, opts ObjectStorageBucketCreateOptions) (*ObjectStorageBucket, error) {
-	e := "object-storage/buckets"
-	return doPOSTRequest[ObjectStorageBucket](ctx, c, e, opts)
+	return doPOSTRequest[ObjectStorageBucket](ctx, c, "object-storage/buckets", opts)
 }
 
 // GetObjectStorageBucketAccess gets the current access config for a bucket
+//
 // Deprecated: use GetObjectStorageBucketAccessV2 for new implementations
 func (c *Client) GetObjectStorageBucketAccess(ctx context.Context, clusterOrRegionID, label string) (*ObjectStorageBucketAccess, error) {
 	e := formatAPIPath("object-storage/buckets/%s/%s/access", clusterOrRegionID, label)
@@ -156,12 +157,10 @@ func (c *Client) GetObjectStorageBucketAccess(ctx context.Context, clusterOrRegi
 // UpdateObjectStorageBucketAccess updates the access configuration for an ObjectStorageBucket
 func (c *Client) UpdateObjectStorageBucketAccess(ctx context.Context, clusterOrRegionID, label string, opts ObjectStorageBucketUpdateAccessOptions) error {
 	e := formatAPIPath("object-storage/buckets/%s/%s/access", clusterOrRegionID, label)
-	_, err := doPOSTRequest[ObjectStorageBucketAccess](ctx, c, e, opts)
-
-	return err
+	return doPOSTRequestNoResponseBody(ctx, c, e, opts)
 }
 
-// GetObjectStorageBucketAccess gets the current access config for a bucket
+// GetObjectStorageBucketAccessV2 gets the current access config for a bucket
 func (c *Client) GetObjectStorageBucketAccessV2(ctx context.Context, clusterOrRegionID, label string) (*ObjectStorageBucketAccessV2, error) {
 	e := formatAPIPath("object-storage/buckets/%s/%s/access", clusterOrRegionID, label)
 	return doGETRequest[ObjectStorageBucketAccessV2](ctx, c, e)
@@ -173,19 +172,26 @@ func (c *Client) DeleteObjectStorageBucket(ctx context.Context, clusterOrRegionI
 	return doDELETERequest(ctx, c, e)
 }
 
-// Lists the contents of the specified ObjectStorageBucket
-func (c *Client) ListObjectStorageBucketContents(ctx context.Context, clusterOrRegionID, label string, params *ObjectStorageBucketListContentsParams) (*ObjectStorageBucketContent, error) {
+// ListObjectStorageBucketContents lists the contents of the specified ObjectStorageBucket
+func (c *Client) ListObjectStorageBucketContents(
+	ctx context.Context,
+	clusterOrRegionID, label string,
+	params *ObjectStorageBucketListContentsParams,
+) (*ObjectStorageBucketContent, error) {
 	basePath := formatAPIPath("object-storage/buckets/%s/%s/object-list", clusterOrRegionID, label)
 
 	queryString := ""
+
 	if params != nil {
 		values, err := query.Values(params)
 		if err != nil {
 			return nil, fmt.Errorf("failed to encode query params: %w", err)
 		}
+
 		queryString = "?" + values.Encode()
 	}
 
 	e := basePath + queryString
+
 	return doGETRequest[ObjectStorageBucketContent](ctx, c, e)
 }

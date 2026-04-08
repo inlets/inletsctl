@@ -11,8 +11,9 @@ import (
 // VPCSubnetLinodeInterface represents an interface on a Linode that is currently
 // assigned to this VPC subnet.
 type VPCSubnetLinodeInterface struct {
-	ID     int  `json:"id"`
-	Active bool `json:"active"`
+	ID       int  `json:"id"`
+	Active   bool `json:"active"`
+	ConfigID *int `json:"config_id"`
 }
 
 // VPCSubnetLinode represents a Linode currently assigned to a VPC subnet.
@@ -21,18 +22,54 @@ type VPCSubnetLinode struct {
 	Interfaces []VPCSubnetLinodeInterface `json:"interfaces"`
 }
 
+// VPCSubnetDatabase represents a Linode currently assigned to a VPC subnet.
+type VPCSubnetDatabase struct {
+	ID         int      `json:"id"`
+	IPv4Range  *string  `json:"ipv4_range"`
+	IPv6Ranges []string `json:"ipv6_ranges"`
+}
+
+// VPCSubnetNodebalancersRanges represents a single range assigned to a node balancer.
+type VPCSubnetNodebalancersRanges struct {
+	Range string `json:"range"`
+}
+
+// VPCSubnetNodebalancers represents a node balancer currently assigned to a VPC subnet.
+type VPCSubnetNodebalancers struct {
+	ID         int                            `json:"id"`
+	Ipv4Range  string                         `json:"ipv4_range"`
+	Ipv6Ranges []VPCSubnetNodebalancersRanges `json:"ipv6_ranges"`
+}
+
 type VPCSubnet struct {
-	ID      int               `json:"id"`
-	Label   string            `json:"label"`
-	IPv4    string            `json:"ipv4"`
-	Linodes []VPCSubnetLinode `json:"linodes"`
-	Created *time.Time        `json:"-"`
-	Updated *time.Time        `json:"-"`
+	ID    int    `json:"id"`
+	Label string `json:"label"`
+	IPv4  string `json:"ipv4"`
+
+	// NOTE: IPv6 VPCs may not currently be available to all users.
+	IPv6 []VPCIPv6Range `json:"ipv6"`
+
+	Linodes       []VPCSubnetLinode        `json:"linodes"`
+	Databases     []VPCSubnetDatabase      `json:"databases"`
+	Nodebalancers []VPCSubnetNodebalancers `json:"nodebalancers"`
+
+	Created *time.Time `json:"-"`
+	Updated *time.Time `json:"-"`
 }
 
 type VPCSubnetCreateOptions struct {
 	Label string `json:"label"`
 	IPv4  string `json:"ipv4"`
+
+	// NOTE: IPv6 VPCs may not currently be available to all users.
+	IPv6 []VPCSubnetCreateOptionsIPv6 `json:"ipv6,omitempty"`
+}
+
+// VPCSubnetCreateOptionsIPv6 represents a single IPv6 range assigned to a VPC
+// which is specified during a VPC subnet's creation.
+// NOTE: IPv6 VPCs may not currently be available to all users.
+type VPCSubnetCreateOptionsIPv6 struct {
+	Range *string `json:"range,omitempty"`
 }
 
 type VPCSubnetUpdateOptions struct {
@@ -41,8 +78,10 @@ type VPCSubnetUpdateOptions struct {
 
 func (v *VPCSubnet) UnmarshalJSON(b []byte) error {
 	type Mask VPCSubnet
+
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Updated *parseabletime.ParseableTime `json:"updated"`
 	}{
@@ -62,6 +101,11 @@ func (v VPCSubnet) GetCreateOptions() VPCSubnetCreateOptions {
 	return VPCSubnetCreateOptions{
 		Label: v.Label,
 		IPv4:  v.IPv4,
+		IPv6: mapSlice(v.IPv6, func(i VPCIPv6Range) VPCSubnetCreateOptionsIPv6 {
+			return VPCSubnetCreateOptionsIPv6{
+				Range: copyValue(&i.Range),
+			}
+		}),
 	}
 }
 
@@ -75,8 +119,7 @@ func (c *Client) CreateVPCSubnet(
 	vpcID int,
 ) (*VPCSubnet, error) {
 	e := formatAPIPath("vpcs/%d/subnets", vpcID)
-	response, err := doPOSTRequest[VPCSubnet](ctx, c, e, opts)
-	return response, err
+	return doPOSTRequest[VPCSubnet](ctx, c, e, opts)
 }
 
 func (c *Client) GetVPCSubnet(
@@ -85,8 +128,7 @@ func (c *Client) GetVPCSubnet(
 	subnetID int,
 ) (*VPCSubnet, error) {
 	e := formatAPIPath("vpcs/%d/subnets/%d", vpcID, subnetID)
-	response, err := doGETRequest[VPCSubnet](ctx, c, e)
-	return response, err
+	return doGETRequest[VPCSubnet](ctx, c, e)
 }
 
 func (c *Client) ListVPCSubnets(
@@ -94,8 +136,7 @@ func (c *Client) ListVPCSubnets(
 	vpcID int,
 	opts *ListOptions,
 ) ([]VPCSubnet, error) {
-	response, err := getPaginatedResults[VPCSubnet](ctx, c, formatAPIPath("vpcs/%d/subnets", vpcID), opts)
-	return response, err
+	return getPaginatedResults[VPCSubnet](ctx, c, formatAPIPath("vpcs/%d/subnets", vpcID), opts)
 }
 
 func (c *Client) UpdateVPCSubnet(
@@ -105,12 +146,10 @@ func (c *Client) UpdateVPCSubnet(
 	opts VPCSubnetUpdateOptions,
 ) (*VPCSubnet, error) {
 	e := formatAPIPath("vpcs/%d/subnets/%d", vpcID, subnetID)
-	response, err := doPUTRequest[VPCSubnet](ctx, c, e, opts)
-	return response, err
+	return doPUTRequest[VPCSubnet](ctx, c, e, opts)
 }
 
 func (c *Client) DeleteVPCSubnet(ctx context.Context, vpcID int, subnetID int) error {
 	e := formatAPIPath("vpcs/%d/subnets/%d", vpcID, subnetID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }

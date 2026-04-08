@@ -45,13 +45,11 @@ const (
 // Linode regarding the Account. This collection includes all Support Tickets generated
 // on the Account, with open tickets returned first.
 func (c *Client) ListTickets(ctx context.Context, opts *ListOptions) ([]Ticket, error) {
-	response, err := getPaginatedResults[Ticket](ctx, c, "support/tickets", opts)
-	return response, err
+	return getPaginatedResults[Ticket](ctx, c, "support/tickets", opts)
 }
 
 // GetTicket gets a Support Ticket on the Account with the specified ID
 func (c *Client) GetTicket(ctx context.Context, ticketID int) (*Ticket, error) {
 	e := formatAPIPath("support/tickets/%d", ticketID)
-	response, err := doGETRequest[Ticket](ctx, c, e)
-	return response, err
+	return doGETRequest[Ticket](ctx, c, e)
 }

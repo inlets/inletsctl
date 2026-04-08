@@ -45,7 +45,7 @@ const (
 	APIEnvVar = "LINODE_TOKEN"
 	// APISecondsPerPoll how frequently to poll for new Events or Status in WaitFor functions
 	APISecondsPerPoll = 3
-	// Maximum wait time for retries
+	// APIRetryMaxWaitTime is the maximum wait time for retries
 	APIRetryMaxWaitTime       = time.Duration(30) * time.Second
 	APIDefaultCacheExpiration = time.Minute * 15
 )
@@ -65,6 +65,12 @@ Body: {{.Body}}`))
 )
 
 var envDebug = false
+
+// redactHeadersMap is a map of headers that should be redacted in logs,
+// mapping the header name to its redacted value.
+var redactHeadersMap = map[string]string{
+	"Authorization": "Bearer *******************************",
+}
 
 // Client is a wrapper around the Resty client
 type Client struct {
@@ -121,6 +127,101 @@ func init() {
 	}
 }
 
+// NewClient factory to create new Client struct
+func NewClient(hc *http.Client) (client Client) {
+	if hc != nil {
+		client.resty = resty.NewWithClient(hc)
+	} else {
+		client.resty = resty.New()
+	}
+
+	client.shouldCache = true
+	client.cacheExpiration = APIDefaultCacheExpiration
+	client.cachedEntries = make(map[string]clientCacheEntry)
+	client.cachedEntryLock = &sync.RWMutex{}
+
+	client.SetUserAgent(DefaultUserAgent)
+
+	baseURL, baseURLExists := os.LookupEnv(APIHostVar)
+
+	if baseURLExists {
+		client.SetBaseURL(baseURL)
+	}
+
+	apiVersion, apiVersionExists := os.LookupEnv(APIVersionVar)
+	if apiVersionExists {
+		client.SetAPIVersion(apiVersion)
+	} else {
+		client.SetAPIVersion(APIVersion)
+	}
+
+	certPath, certPathExists := os.LookupEnv(APIHostCert)
+
+	if certPathExists && !hasCustomTransport(hc) {
+		cert, err := os.ReadFile(filepath.Clean(certPath))
+		if err != nil {
+			log.Fatalf("[ERROR] Error when reading cert at %s: %s\n", certPath, err.Error())
+		}
+
+		client.SetRootCertificate(certPath)
+
+		if envDebug {
+			log.Printf("[DEBUG] Set API root certificate to %s with contents %s\n", certPath, cert)
+		}
+	}
+
+	client.
+		SetRetryWaitTime(APISecondsPerPoll * time.Second).
+		SetPollDelay(APISecondsPerPoll * time.Second).
+		SetRetries().
+		SetDebug(envDebug).
+		enableLogSanitization()
+
+	return client
+}
+
+// NewClientFromEnv creates a Client and initializes it with values
+// from the LINODE_CONFIG file and the LINODE_TOKEN environment variable.
+func NewClientFromEnv(hc *http.Client) (*Client, error) {
+	client := NewClient(hc)
+
+	// Users are expected to chain NewClient(...) and LoadConfig(...) to customize these options
+	configPath, err := resolveValidConfigPath()
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate the token from the environment.
+	// Tokens should be first priority to maintain backwards compatibility
+	if token, ok := os.LookupEnv(APIEnvVar); ok && token != "" {
+		client.SetToken(token)
+		return &client, nil
+	}
+
+	if p, ok := os.LookupEnv(APIConfigEnvVar); ok {
+		configPath = p
+	} else if !ok && configPath == "" {
+		return nil, fmt.Errorf("no linode config file or token found")
+	}
+
+	configProfile := DefaultConfigProfile
+
+	if p, ok := os.LookupEnv(APIConfigProfileEnvVar); ok {
+		configProfile = p
+	}
+
+	client.selectedProfile = configProfile
+
+	// We should only load the config if the config file exists
+	if _, err = os.Stat(configPath); err != nil {
+		return nil, fmt.Errorf("error loading config file %s: %w", configPath, err)
+	}
+
+	err = client.preLoadConfig(configPath)
+
+	return &client, err
+}
+
 // SetUserAgent sets a custom user-agent for HTTP requests
 func (c *Client) SetUserAgent(ua string) *Client {
 	c.userAgent = ua
@@ -166,16 +267,20 @@ func (c *httpClient) doRequest(ctx context.Context, method, url string, params R
 					err = closeErr
 				}
 			}()
+
 			if err = c.checkHTTPError(resp); err != nil {
 				return err
 			}
+
 			if c.debug && c.logger != nil {
 				var logErr error
+
 				resp, logErr = c.logResponse(resp)
 				if logErr != nil {
 					return logErr
 				}
 			}
+
 			if params.Response != nil {
 				if err = c.decodeResponseBody(resp, params.Response); err != nil {
 					return err
@@ -222,13 +327,16 @@ func (c *httpClient) shouldRetry(resp *http.Response, err error) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 // nolint:unused
 func (c *httpClient) createRequest(ctx context.Context, method, url string, params RequestParams) (*http.Request, *bytes.Buffer, error) {
-	var bodyReader io.Reader
-	var bodyBuffer *bytes.Buffer
+	var (
+		bodyReader io.Reader
+		bodyBuffer *bytes.Buffer
+	)
 
 	if params.Body != nil {
 		bodyBuffer = new(bytes.Buffer)
@@ -236,8 +344,10 @@ func (c *httpClient) createRequest(ctx context.Context, method, url string, para
 			if c.debug && c.logger != nil {
 				c.logger.Errorf("failed to encode body: %v", err)
 			}
+
 			return nil, nil, fmt.Errorf("failed to encode body: %w", err)
 		}
+
 		bodyReader = bodyBuffer
 	}
 
@@ -246,11 +356,13 @@ func (c *httpClient) createRequest(ctx context.Context, method, url string, para
 		if c.debug && c.logger != nil {
 			c.logger.Errorf("failed to create request: %v", err)
 		}
+
 		return nil, nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+
 	if c.userAgent != "" {
 		req.Header.Set("User-Agent", c.userAgent)
 	}
@@ -265,9 +377,11 @@ func (c *httpClient) applyBeforeRequest(req *http.Request) error {
 			if c.debug && c.logger != nil {
 				c.logger.Errorf("failed to mutate before request: %v", err)
 			}
+
 			return fmt.Errorf("failed to mutate before request: %w", err)
 		}
 	}
+
 	return nil
 }
 
@@ -278,10 +392,25 @@ func (c *httpClient) applyAfterResponse(resp *http.Response) error {
 			if c.debug && c.logger != nil {
 				c.logger.Errorf("failed to mutate after response: %v", err)
 			}
+
 			return fmt.Errorf("failed to mutate after response: %w", err)
 		}
 	}
+
 	return nil
+}
+
+// nolint:unused
+func redactHeaders(headers http.Header) http.Header {
+	redacted := headers.Clone()
+
+	for header, redactedValue := range redactHeadersMap {
+		if headers.Get(header) != "" {
+			redacted.Set(header, redactedValue)
+		}
+	}
+
+	return redacted
 }
 
 // nolint:unused
@@ -294,10 +423,11 @@ func (c *httpClient) logRequest(req *http.Request, method, url string, bodyBuffe
 	}
 
 	var logBuf bytes.Buffer
-	err := reqLogTemplate.Execute(&logBuf, map[string]interface{}{
+
+	err := reqLogTemplate.Execute(&logBuf, map[string]any{
 		"Method":  method,
 		"URL":     url,
-		"Headers": req.Header,
+		"Headers": redactHeaders(req.Header),
 		"Body":    reqBody,
 	})
 	if err == nil {
@@ -307,13 +437,16 @@ func (c *httpClient) logRequest(req *http.Request, method, url string, bodyBuffe
 
 // nolint:unused
 func (c *httpClient) sendRequest(req *http.Request) (*http.Response, error) {
+	// #nosec G704
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		if c.debug && c.logger != nil {
 			c.logger.Errorf("failed to send request: %v", err)
 		}
+
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
+
 	return resp, nil
 }
 
@@ -324,8 +457,10 @@ func (c *httpClient) checkHTTPError(resp *http.Response) error {
 		if c.debug && c.logger != nil {
 			c.logger.Errorf("received HTTP error: %v", err)
 		}
+
 		return err
 	}
+
 	return nil
 }
 
@@ -337,9 +472,10 @@ func (c *httpClient) logResponse(resp *http.Response) (*http.Response, error) {
 	}
 
 	var logBuf bytes.Buffer
-	err := respLogTemplate.Execute(&logBuf, map[string]interface{}{
+
+	err := respLogTemplate.Execute(&logBuf, map[string]any{
 		"Status":  resp.Status,
-		"Headers": resp.Header,
+		"Headers": redactHeaders(resp.Header),
 		"Body":    respBody.String(),
 	})
 	if err == nil {
@@ -347,17 +483,20 @@ func (c *httpClient) logResponse(resp *http.Response) (*http.Response, error) {
 	}
 
 	resp.Body = io.NopCloser(bytes.NewReader(respBody.Bytes()))
+
 	return resp, nil
 }
 
 // nolint:unused
-func (c *httpClient) decodeResponseBody(resp *http.Response, response interface{}) error {
+func (c *httpClient) decodeResponseBody(resp *http.Response, response any) error {
 	if err := json.NewDecoder(resp.Body).Decode(response); err != nil {
 		if c.debug && c.logger != nil {
 			c.logger.Errorf("failed to decode response: %v", err)
 		}
+
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
+
 	return nil
 }
 
@@ -439,6 +578,10 @@ func (c *Client) UseURL(apiURL string) (*Client, error) {
 		return nil, fmt.Errorf("failed to parse URL: %w", err)
 	}
 
+	if parsedURL.Scheme == "" || parsedURL.Host == "" {
+		return nil, fmt.Errorf("need both scheme and host in API URL, got %q", apiURL)
+	}
+
 	// Create a new URL excluding the path to use as the base URL
 	baseURL := &url.URL{
 		Host:   parsedURL.Host,
@@ -480,33 +623,6 @@ func (c *Client) SetAPIVersion(apiVersion string) *Client {
 	return c
 }
 
-func (c *Client) updateHostURL() {
-	apiProto := APIProto
-	baseURL := APIHost
-	apiVersion := APIVersion
-
-	if c.baseURL != "" {
-		baseURL = c.baseURL
-	}
-
-	if c.apiVersion != "" {
-		apiVersion = c.apiVersion
-	}
-
-	if c.apiProto != "" {
-		apiProto = c.apiProto
-	}
-
-	c.resty.SetBaseURL(
-		fmt.Sprintf(
-			"%s://%s/%s",
-			apiProto,
-			baseURL,
-			url.PathEscape(apiVersion),
-		),
-	)
-}
-
 // SetRootCertificate adds a root certificate to the underlying TLS client config
 func (c *Client) SetRootCertificate(path string) *Client {
 	c.resty.SetRootCertificate(path)
@@ -531,6 +647,7 @@ func (c *Client) SetRetries() *Client {
 		addRetryConditional(requestNGINXRetryCondition).
 		SetRetryMaxWaitTime(APIRetryMaxWaitTime)
 	configureRetries(c)
+
 	return c
 }
 
@@ -538,85 +655,6 @@ func (c *Client) SetRetries() *Client {
 func (c *Client) AddRetryCondition(retryCondition RetryConditional) *Client {
 	c.resty.AddRetryCondition(resty.RetryConditionFunc(retryCondition))
 	return c
-}
-
-func (c *Client) addRetryConditional(retryConditional RetryConditional) *Client {
-	c.retryConditionals = append(c.retryConditionals, retryConditional)
-	return c
-}
-
-func (c *Client) addCachedResponse(endpoint string, response any, expiry *time.Duration) {
-	if !c.shouldCache {
-		return
-	}
-
-	responseValue := reflect.ValueOf(response)
-
-	entry := clientCacheEntry{
-		Created:        time.Now(),
-		ExpiryOverride: expiry,
-	}
-
-	switch responseValue.Kind() {
-	case reflect.Ptr:
-		// We want to automatically deref pointers to
-		// avoid caching mutable data.
-		entry.Data = responseValue.Elem().Interface()
-	default:
-		entry.Data = response
-	}
-
-	c.cachedEntryLock.Lock()
-	defer c.cachedEntryLock.Unlock()
-
-	c.cachedEntries[endpoint] = entry
-}
-
-func (c *Client) getCachedResponse(endpoint string) any {
-	if !c.shouldCache {
-		return nil
-	}
-
-	c.cachedEntryLock.RLock()
-
-	// Hacky logic to dynamically RUnlock
-	// only if it is still locked by the
-	// end of the function.
-	// This is necessary as we take write
-	// access if the entry has expired.
-	rLocked := true
-	defer func() {
-		if rLocked {
-			c.cachedEntryLock.RUnlock()
-		}
-	}()
-
-	entry, ok := c.cachedEntries[endpoint]
-	if !ok {
-		return nil
-	}
-
-	// Handle expired entries
-	elapsedTime := time.Since(entry.Created)
-
-	hasExpired := elapsedTime > c.cacheExpiration
-	if entry.ExpiryOverride != nil {
-		hasExpired = elapsedTime > *entry.ExpiryOverride
-	}
-
-	if hasExpired {
-		// We need to give up our read access and request read-write access
-		c.cachedEntryLock.RUnlock()
-		rLocked = false
-
-		c.cachedEntryLock.Lock()
-		defer c.cachedEntryLock.Unlock()
-
-		delete(c.cachedEntries, endpoint)
-		return nil
-	}
-
-	return c.cachedEntries[endpoint].Data
 }
 
 // InvalidateCache clears all cached responses for all endpoints.
@@ -699,107 +737,135 @@ func (c *Client) SetHeader(name, value string) {
 	c.resty.SetHeader(name, value)
 }
 
+func (c *Client) addRetryConditional(retryConditional RetryConditional) *Client {
+	c.retryConditionals = append(c.retryConditionals, retryConditional)
+	return c
+}
+
+func (c *Client) addCachedResponse(endpoint string, response any, expiry *time.Duration) {
+	if !c.shouldCache {
+		return
+	}
+
+	responseValue := reflect.ValueOf(response)
+
+	entry := clientCacheEntry{
+		Created:        time.Now(),
+		ExpiryOverride: expiry,
+	}
+
+	switch responseValue.Kind() {
+	case reflect.Ptr:
+		// We want to automatically deref pointers to
+		// avoid caching mutable data.
+		entry.Data = responseValue.Elem().Interface()
+	default:
+		entry.Data = response
+	}
+
+	c.cachedEntryLock.Lock()
+	defer c.cachedEntryLock.Unlock()
+
+	c.cachedEntries[endpoint] = entry
+}
+
+func (c *Client) getCachedResponse(endpoint string) any {
+	if !c.shouldCache {
+		return nil
+	}
+
+	c.cachedEntryLock.RLock()
+
+	// Hacky logic to dynamically RUnlock
+	// only if it is still locked by the
+	// end of the function.
+	// This is necessary as we take write
+	// access if the entry has expired.
+	rLocked := true
+
+	defer func() {
+		if rLocked {
+			c.cachedEntryLock.RUnlock()
+		}
+	}()
+
+	entry, ok := c.cachedEntries[endpoint]
+	if !ok {
+		return nil
+	}
+
+	// Handle expired entries
+	elapsedTime := time.Since(entry.Created)
+
+	hasExpired := elapsedTime > c.cacheExpiration
+	if entry.ExpiryOverride != nil {
+		hasExpired = elapsedTime > *entry.ExpiryOverride
+	}
+
+	if hasExpired {
+		// We need to give up our read access and request read-write access
+		c.cachedEntryLock.RUnlock()
+
+		rLocked = false
+
+		c.cachedEntryLock.Lock()
+		defer c.cachedEntryLock.Unlock()
+
+		delete(c.cachedEntries, endpoint)
+
+		return nil
+	}
+
+	return c.cachedEntries[endpoint].Data
+}
+
+func (c *Client) updateHostURL() {
+	apiProto := APIProto
+	baseURL := APIHost
+	apiVersion := APIVersion
+
+	if c.baseURL != "" {
+		baseURL = c.baseURL
+	}
+
+	if c.apiVersion != "" {
+		apiVersion = c.apiVersion
+	}
+
+	if c.apiProto != "" {
+		apiProto = c.apiProto
+	}
+
+	c.resty.SetBaseURL(
+		fmt.Sprintf(
+			"%s://%s/%s",
+			apiProto,
+			baseURL,
+			url.PathEscape(apiVersion),
+		),
+	)
+}
+
+func redactLogHeaders(header http.Header) {
+	for h, redactedValue := range redactHeadersMap {
+		if header.Get(h) != "" {
+			header.Set(h, redactedValue)
+		}
+	}
+}
+
 func (c *Client) enableLogSanitization() *Client {
 	c.resty.OnRequestLog(func(r *resty.RequestLog) error {
-		// masking authorization header
-		r.Header.Set("Authorization", "Bearer *******************************")
+		redactLogHeaders(r.Header)
+		return nil
+	})
+
+	c.resty.OnResponseLog(func(r *resty.ResponseLog) error {
+		redactLogHeaders(r.Header)
 		return nil
 	})
 
 	return c
-}
-
-// NewClient factory to create new Client struct
-func NewClient(hc *http.Client) (client Client) {
-	if hc != nil {
-		client.resty = resty.NewWithClient(hc)
-	} else {
-		client.resty = resty.New()
-	}
-
-	client.shouldCache = true
-	client.cacheExpiration = APIDefaultCacheExpiration
-	client.cachedEntries = make(map[string]clientCacheEntry)
-	client.cachedEntryLock = &sync.RWMutex{}
-
-	client.SetUserAgent(DefaultUserAgent)
-
-	baseURL, baseURLExists := os.LookupEnv(APIHostVar)
-
-	if baseURLExists {
-		client.SetBaseURL(baseURL)
-	}
-	apiVersion, apiVersionExists := os.LookupEnv(APIVersionVar)
-	if apiVersionExists {
-		client.SetAPIVersion(apiVersion)
-	} else {
-		client.SetAPIVersion(APIVersion)
-	}
-
-	certPath, certPathExists := os.LookupEnv(APIHostCert)
-
-	if certPathExists && !hasCustomTransport(hc) {
-		cert, err := os.ReadFile(filepath.Clean(certPath))
-		if err != nil {
-			log.Fatalf("[ERROR] Error when reading cert at %s: %s\n", certPath, err.Error())
-		}
-
-		client.SetRootCertificate(certPath)
-
-		if envDebug {
-			log.Printf("[DEBUG] Set API root certificate to %s with contents %s\n", certPath, cert)
-		}
-	}
-
-	client.
-		SetRetryWaitTime(APISecondsPerPoll * time.Second).
-		SetPollDelay(APISecondsPerPoll * time.Second).
-		SetRetries().
-		SetDebug(envDebug).
-		enableLogSanitization()
-
-	return
-}
-
-// NewClientFromEnv creates a Client and initializes it with values
-// from the LINODE_CONFIG file and the LINODE_TOKEN environment variable.
-func NewClientFromEnv(hc *http.Client) (*Client, error) {
-	client := NewClient(hc)
-
-	// Users are expected to chain NewClient(...) and LoadConfig(...) to customize these options
-	configPath, err := resolveValidConfigPath()
-	if err != nil {
-		return nil, err
-	}
-
-	// Populate the token from the environment.
-	// Tokens should be first priority to maintain backwards compatibility
-	if token, ok := os.LookupEnv(APIEnvVar); ok && token != "" {
-		client.SetToken(token)
-		return &client, nil
-	}
-
-	if p, ok := os.LookupEnv(APIConfigEnvVar); ok {
-		configPath = p
-	} else if !ok && configPath == "" {
-		return nil, fmt.Errorf("no linode config file or token found")
-	}
-
-	configProfile := DefaultConfigProfile
-
-	if p, ok := os.LookupEnv(APIConfigProfileEnvVar); ok {
-		configProfile = p
-	}
-
-	client.selectedProfile = configProfile
-
-	// We should only load the config if the config file exists
-	if _, err = os.Stat(configPath); err != nil {
-		return nil, fmt.Errorf("error loading config file %s: %w", configPath, err)
-	}
-
-	err = client.preLoadConfig(configPath)
-	return &client, err
 }
 
 func (c *Client) preLoadConfig(configPath string) error {
@@ -858,6 +924,18 @@ func copyString(sPtr *string) *string {
 	return &t
 }
 
+// copyValue returns a pointer to a new value copied from the value
+// at the given pointer.
+func copyValue[T any](ptr *T) *T {
+	if ptr == nil {
+		return nil
+	}
+
+	t := *ptr
+
+	return &t
+}
+
 func copyTime(tPtr *time.Time) *time.Time {
 	if tPtr == nil {
 		return nil
@@ -882,12 +960,14 @@ func generateListCacheURL(endpoint string, opts *ListOptions) (string, error) {
 }
 
 func hasCustomTransport(hc *http.Client) bool {
-	if hc == nil {
+	if hc == nil || hc.Transport == nil {
 		return false
 	}
-	if hc.Transport != http.DefaultTransport.(*http.Transport) {
+
+	if _, ok := hc.Transport.(*http.Transport); !ok {
 		log.Println("[WARN] Custom transport is not allowed with a custom root CA.")
 		return true
 	}
+
 	return false
 }

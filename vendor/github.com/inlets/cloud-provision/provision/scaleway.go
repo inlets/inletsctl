@@ -53,10 +53,12 @@ func (p *ScalewayProvisioner) Provision(host BasicHost) (*ProvisionedHost, error
 		host.Plan = "DEV1-S"
 	}
 
+	hostOS := host.OS
+
 	res, err := p.instanceAPI.CreateServer(&instance.CreateServerRequest{
 		Name:           host.Name,
 		CommercialType: host.Plan,
-		Image:          host.OS,
+		Image:          &hostOS,
 		Tags:           []string{"inlets"},
 		// DynamicIPRequired is mandatory to get a public IP
 		// otherwise scaleway doesn't attach a public IP to the instance

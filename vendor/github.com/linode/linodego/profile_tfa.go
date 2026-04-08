@@ -29,6 +29,7 @@ func (s *TwoFactorSecret) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Expiry *parseabletime.ParseableTime `json:"expiry"`
 	}{
 		Mask: (*Mask)(s),
@@ -45,29 +46,15 @@ func (s *TwoFactorSecret) UnmarshalJSON(b []byte) error {
 
 // CreateTwoFactorSecret generates a Two Factor secret for your User.
 func (c *Client) CreateTwoFactorSecret(ctx context.Context) (*TwoFactorSecret, error) {
-	e := "profile/tfa-enable"
-	response, err := doPOSTRequest[TwoFactorSecret, any](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPOSTRequest[TwoFactorSecret, any](ctx, c, "profile/tfa-enable")
 }
 
 // DisableTwoFactor disables Two Factor Authentication for your User.
 func (c *Client) DisableTwoFactor(ctx context.Context) error {
-	e := "profile/tfa-disable"
-	_, err := doPOSTRequest[TwoFactorSecret, any](ctx, c, e)
-	return err
+	return doPOSTRequestNoRequestResponseBody(ctx, c, "profile/tfa-disable")
 }
 
 // ConfirmTwoFactor confirms that you can successfully generate Two Factor codes and enables TFA on your Account.
 func (c *Client) ConfirmTwoFactor(ctx context.Context, opts ConfirmTwoFactorOptions) (*ConfirmTwoFactorResponse, error) {
-	e := "profile/tfa-enable-confirm"
-	response, err := doPOSTRequest[ConfirmTwoFactorResponse](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPOSTRequest[ConfirmTwoFactorResponse](ctx, c, "profile/tfa-enable-confirm", opts)
 }

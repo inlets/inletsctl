@@ -3,8 +3,8 @@ package block
 import (
 	"time"
 
+	"github.com/scaleway/scaleway-sdk-go/errors"
 	"github.com/scaleway/scaleway-sdk-go/internal/async"
-	"github.com/scaleway/scaleway-sdk-go/internal/errors"
 	"github.com/scaleway/scaleway-sdk-go/scw"
 )
 
@@ -51,7 +51,7 @@ func (s *API) WaitForVolume(req *WaitForVolumeRequest, opts ...scw.RequestOption
 	}
 
 	volume, err := async.WaitSync(&async.WaitSyncConfig{
-		Get: func() (interface{}, bool, error) {
+		Get: func() (any, bool, error) {
 			res, err := s.GetVolume(&GetVolumeRequest{
 				VolumeID: req.VolumeID,
 				Zone:     req.Zone,
@@ -117,7 +117,7 @@ func (s *API) WaitForVolumeAndReferences(req *WaitForVolumeAndReferencesRequest,
 	}
 
 	volume, err := async.WaitSync(&async.WaitSyncConfig{
-		Get: func() (interface{}, bool, error) {
+		Get: func() (any, bool, error) {
 			volume, err := s.GetVolume(&GetVolumeRequest{
 				VolumeID: req.VolumeID,
 				Zone:     req.Zone,

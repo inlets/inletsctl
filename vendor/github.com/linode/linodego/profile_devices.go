@@ -35,6 +35,7 @@ func (pd *ProfileDevice) UnmarshalJSON(b []byte) error {
 
 	l := struct {
 		*Mask
+
 		Created           *parseabletime.ParseableTime `json:"created"`
 		Expiry            *parseabletime.ParseableTime `json:"expiry"`
 		LastAuthenticated *parseabletime.ParseableTime `json:"last_authenticated"`
@@ -67,6 +68,5 @@ func (c *Client) ListProfileDevices(ctx context.Context, opts *ListOptions) ([]P
 // DeleteProfileDevice revokes the given ProfileDevice's status as a trusted device
 func (c *Client) DeleteProfileDevice(ctx context.Context, deviceID int) error {
 	e := formatAPIPath("profile/devices/%d", deviceID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }

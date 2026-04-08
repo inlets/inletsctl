@@ -1,75 +1,85 @@
+version: "2"
 run:
   tests: false
-
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-
-  govet:
-    enable:
-      - atomicalign
-      - shadow
-    enable-all: false
-    disable-all: false
-  gocyclo:
-    min-complexity: 30
-  gocognit:
-    min-complexity: 30
-  dupl:
-    threshold: 100
-
 linters:
-  enable-all: true
+  default: all
   disable:
-    # deprecated linters
-    - exportloopref
-    ####################
-
-    # conflicted with go fmt
-    - nolintlint
-
-    # workaround to avoid linter failures of getting malformed json
-    - musttag
-
-    - err113
-
     - bodyclose
-    - contextcheck
-    - nilerr
-    - noctx
-    - rowserrcheck
-    - sqlclosecheck
-    - tparallel
-    - errname
-    - forcetypeassert
-    - gocyclo
-    - unparam
-    - nakedret
-    - lll
-    - dupl
-    - gosec
-    - gochecknoinits
-    - gochecknoglobals
-    - exhaustruct
-    - nonamedreturns
-    - errcheck
-    - staticcheck
-    - stylecheck
-    - wsl
-    - varnamelen
-    - tagliatelle
-    - nlreturn
-    - wrapcheck
-    - wastedassign
-    - durationcheck
-    - errorlint
     - cyclop
-    - godot
-    - exhaustive
     - depguard
-    - tagalign
+    - dupl
+    - err113
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exhaustruct
+    - forcetypeassert
+    - gochecknoglobals
+    - gochecknoinits
+    - godot
+    - godox
     - inamedparam
+    - lll
+    - musttag
+    - nilerr
+    - nlreturn
+    - noinlineerr
+    - nolintlint
+    - nonamedreturns
     - perfsprint
     - recvcheck
-  fast: false
+    - staticcheck
+    - tagliatelle
+    - varnamelen
+    - wrapcheck
+    - wsl
+  settings:
+    dupl:
+      threshold: 100
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    gocognit:
+      min-complexity: 30
+    gocyclo:
+      min-complexity: 30
+    govet:
+      enable:
+        - atomicalign
+        - shadow
+      enable-all: false
+      disable-all: false
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - gosec
+        # "matches secret pattern" linodego necessarily serializes and
+        # deserializes API structs that contain secrets
+        text: G117
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  settings:
+    golines:
+      max-len: 160
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - golines
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

@@ -37,11 +37,10 @@ type Volume struct {
 	Tags           []string     `json:"tags"`
 	HardwareType   string       `json:"hardware_type"`
 	LinodeLabel    string       `json:"linode_label"`
+	IOReady        bool         `json:"io_ready"`
 	Created        *time.Time   `json:"-"`
 	Updated        *time.Time   `json:"-"`
-
-	// Note: Block Storage Disk Encryption is not currently available to all users.
-	Encryption string `json:"encryption"`
+	Encryption     string       `json:"encryption"`
 }
 
 // VolumeCreateOptions fields are those accepted by CreateVolume
@@ -77,6 +76,7 @@ func (v *Volume) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Updated *parseabletime.ParseableTime `json:"updated"`
 	}{
@@ -97,7 +97,8 @@ func (v *Volume) UnmarshalJSON(b []byte) error {
 func (v Volume) GetUpdateOptions() (updateOpts VolumeUpdateOptions) {
 	updateOpts.Label = v.Label
 	updateOpts.Tags = &v.Tags
-	return
+
+	return updateOpts
 }
 
 // GetCreateOptions converts a Volume to VolumeCreateOptions for use in CreateVolume
@@ -105,45 +106,41 @@ func (v Volume) GetCreateOptions() (createOpts VolumeCreateOptions) {
 	createOpts.Label = v.Label
 	createOpts.Tags = v.Tags
 	createOpts.Region = v.Region
+
 	createOpts.Size = v.Size
 	if v.LinodeID != nil && *v.LinodeID > 0 {
 		createOpts.LinodeID = *v.LinodeID
 	}
-	return
+
+	return createOpts
 }
 
 // ListVolumes lists Volumes
 func (c *Client) ListVolumes(ctx context.Context, opts *ListOptions) ([]Volume, error) {
-	response, err := getPaginatedResults[Volume](ctx, c, "volumes", opts)
-	return response, err
+	return getPaginatedResults[Volume](ctx, c, "volumes", opts)
 }
 
 // GetVolume gets the template with the provided ID
 func (c *Client) GetVolume(ctx context.Context, volumeID int) (*Volume, error) {
 	e := formatAPIPath("volumes/%d", volumeID)
-	response, err := doGETRequest[Volume](ctx, c, e)
-	return response, err
+	return doGETRequest[Volume](ctx, c, e)
 }
 
 // AttachVolume attaches a volume to a Linode instance
 func (c *Client) AttachVolume(ctx context.Context, volumeID int, opts *VolumeAttachOptions) (*Volume, error) {
 	e := formatAPIPath("volumes/%d/attach", volumeID)
-	response, err := doPOSTRequest[Volume](ctx, c, e, opts)
-	return response, err
+	return doPOSTRequest[Volume](ctx, c, e, opts)
 }
 
 // CreateVolume creates a Linode Volume
 func (c *Client) CreateVolume(ctx context.Context, opts VolumeCreateOptions) (*Volume, error) {
-	e := "volumes"
-	response, err := doPOSTRequest[Volume](ctx, c, e, opts)
-	return response, err
+	return doPOSTRequest[Volume](ctx, c, "volumes", opts)
 }
 
 // UpdateVolume updates the Volume with the specified id
 func (c *Client) UpdateVolume(ctx context.Context, volumeID int, opts VolumeUpdateOptions) (*Volume, error) {
 	e := formatAPIPath("volumes/%d", volumeID)
-	response, err := doPUTRequest[Volume](ctx, c, e, opts)
-	return response, err
+	return doPUTRequest[Volume](ctx, c, e, opts)
 }
 
 // CloneVolume clones a Linode volume
@@ -153,15 +150,14 @@ func (c *Client) CloneVolume(ctx context.Context, volumeID int, label string) (*
 	}
 
 	e := formatAPIPath("volumes/%d/clone", volumeID)
-	response, err := doPOSTRequest[Volume](ctx, c, e, opts)
-	return response, err
+
+	return doPOSTRequest[Volume](ctx, c, e, opts)
 }
 
 // DetachVolume detaches a Linode volume
 func (c *Client) DetachVolume(ctx context.Context, volumeID int) error {
 	e := formatAPIPath("volumes/%d/detach", volumeID)
-	_, err := doPOSTRequest[Volume, any](ctx, c, e)
-	return err
+	return doPOSTRequestNoRequestResponseBody(ctx, c, e)
 }
 
 // ResizeVolume resizes an instance to new Linode type
@@ -171,13 +167,12 @@ func (c *Client) ResizeVolume(ctx context.Context, volumeID int, size int) error
 	}
 
 	e := formatAPIPath("volumes/%d/resize", volumeID)
-	_, err := doPOSTRequest[Volume](ctx, c, e, opts)
-	return err
+
+	return doPOSTRequestNoResponseBody(ctx, c, e, opts)
 }
 
 // DeleteVolume deletes the Volume with the specified id
 func (c *Client) DeleteVolume(ctx context.Context, volumeID int) error {
 	e := formatAPIPath("volumes/%d", volumeID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }

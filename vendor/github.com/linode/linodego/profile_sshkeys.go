@@ -33,6 +33,7 @@ func (i *SSHKey) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 	}{
 		Mask: (*Mask)(i),
@@ -51,61 +52,40 @@ func (i *SSHKey) UnmarshalJSON(b []byte) error {
 func (i SSHKey) GetCreateOptions() (o SSHKeyCreateOptions) {
 	o.Label = i.Label
 	o.SSHKey = i.SSHKey
-	return
+
+	return o
 }
 
 // GetUpdateOptions converts a SSHKey to SSHKeyCreateOptions for use in UpdateSSHKey
 func (i SSHKey) GetUpdateOptions() (o SSHKeyUpdateOptions) {
 	o.Label = i.Label
-	return
+	return o
 }
 
 // ListSSHKeys lists SSHKeys
 func (c *Client) ListSSHKeys(ctx context.Context, opts *ListOptions) ([]SSHKey, error) {
-	response, err := getPaginatedResults[SSHKey](ctx, c, "profile/sshkeys", opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[SSHKey](ctx, c, "profile/sshkeys", opts)
 }
 
 // GetSSHKey gets the sshkey with the provided ID
 func (c *Client) GetSSHKey(ctx context.Context, keyID int) (*SSHKey, error) {
 	e := formatAPIPath("profile/sshkeys/%d", keyID)
-	response, err := doGETRequest[SSHKey](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[SSHKey](ctx, c, e)
 }
 
 // CreateSSHKey creates a SSHKey
 func (c *Client) CreateSSHKey(ctx context.Context, opts SSHKeyCreateOptions) (*SSHKey, error) {
-	e := "profile/sshkeys"
-	response, err := doPOSTRequest[SSHKey](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPOSTRequest[SSHKey](ctx, c, "profile/sshkeys", opts)
 }
 
 // UpdateSSHKey updates the SSHKey with the specified id
 func (c *Client) UpdateSSHKey(ctx context.Context, keyID int, opts SSHKeyUpdateOptions) (*SSHKey, error) {
 	e := formatAPIPath("profile/sshkeys/%d", keyID)
-	response, err := doPUTRequest[SSHKey](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPUTRequest[SSHKey](ctx, c, e, opts)
 }
 
 // DeleteSSHKey deletes the SSHKey with the specified id
 func (c *Client) DeleteSSHKey(ctx context.Context, keyID int) error {
 	e := formatAPIPath("profile/sshkeys/%d", keyID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }

@@ -35,6 +35,7 @@ func (i *Payment) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Date *parseabletime.ParseableTime `json:"date"`
 	}{
 		Mask: (*Mask)(i),
@@ -52,37 +53,21 @@ func (i *Payment) UnmarshalJSON(b []byte) error {
 // GetCreateOptions converts a Payment to PaymentCreateOptions for use in CreatePayment
 func (i Payment) GetCreateOptions() (o PaymentCreateOptions) {
 	o.USD = i.USD
-	return
+	return o
 }
 
 // ListPayments lists Payments
 func (c *Client) ListPayments(ctx context.Context, opts *ListOptions) ([]Payment, error) {
-	response, err := getPaginatedResults[Payment](ctx, c, "account/payments", opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[Payment](ctx, c, "account/payments", opts)
 }
 
 // GetPayment gets the payment with the provided ID
 func (c *Client) GetPayment(ctx context.Context, paymentID int) (*Payment, error) {
 	e := formatAPIPath("account/payments/%d", paymentID)
-	response, err := doGETRequest[Payment](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[Payment](ctx, c, e)
 }
 
 // CreatePayment creates a Payment
 func (c *Client) CreatePayment(ctx context.Context, opts PaymentCreateOptions) (*Payment, error) {
-	e := "account/payments"
-	response, err := doPOSTRequest[Payment](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPOSTRequest[Payment](ctx, c, "account/payments", opts)
 }

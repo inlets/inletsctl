@@ -57,7 +57,7 @@ func parseRequestURL(c *Client, r *Request) error {
 			buf := acquireBuffer()
 			defer releaseBuffer(buf)
 			// search for the next or first opened curly bracket
-			for curr := strings.Index(r.URL, "{"); curr == 0 || curr > prev; curr = prev + strings.Index(r.URL[prev:], "{") {
+			for curr := strings.Index(r.URL, "{"); curr == 0 || curr >= prev; curr = prev + strings.Index(r.URL[prev:], "{") {
 				// write everything from the previous position up to the current
 				if curr > prev {
 					buf.WriteString(r.URL[prev:curr])
@@ -196,6 +196,10 @@ func parseRequestBody(c *Client, r *Request) error {
 			}
 		case len(c.FormData) > 0 || len(r.FormData) > 0: // Handling Form Data
 			handleFormData(c, r)
+		case r.Body == nil && r.bodyBuf == nil: // Handling Request body when nil body
+			// Go http library omits Content-Length if body is nil; use http.NoBody to force it if SetContentLength is true
+			r.Body = http.NoBody
+			fallthrough
 		case r.Body != nil: // Handling Request body
 			handleContentType(c, r)
 
@@ -240,7 +244,7 @@ func createHTTPRequest(c *Client, r *Request) (err error) {
 	r.RawRequest.Close = c.closeConnection
 
 	// Add headers into http request
-	r.RawRequest.Header = r.Header
+	r.RawRequest.Header = r.Header.Clone()
 
 	// Add cookies from client instance into http request
 	for _, cookie := range c.Cookies {
@@ -298,21 +302,11 @@ func addCredentials(c *Client, r *Request) error {
 		}
 	}
 
-	// Set the Authorization Header Scheme
-	var authScheme string
-	if !IsStringEmpty(r.AuthScheme) {
-		authScheme = r.AuthScheme
-	} else if !IsStringEmpty(c.AuthScheme) {
-		authScheme = c.AuthScheme
-	} else {
-		authScheme = "Bearer"
-	}
-
-	// Build the Token Auth header
-	if !IsStringEmpty(r.Token) { // takes precedence
-		r.RawRequest.Header.Set(c.HeaderAuthorizationKey, authScheme+" "+r.Token)
+	// Build the token Auth header
+	if !IsStringEmpty(r.Token) {
+		r.RawRequest.Header.Set(c.HeaderAuthorizationKey, strings.TrimSpace(r.AuthScheme+" "+r.Token))
 	} else if !IsStringEmpty(c.Token) {
-		r.RawRequest.Header.Set(c.HeaderAuthorizationKey, authScheme+" "+c.Token)
+		r.RawRequest.Header.Set(c.HeaderAuthorizationKey, strings.TrimSpace(r.AuthScheme+" "+c.Token))
 	}
 
 	return nil
@@ -325,6 +319,7 @@ func createCurlCmd(c *Client, r *Request) (err error) {
 		}
 		*r.resultCurlCmd = buildCurlRequest(r.RawRequest, c.httpClient.Jar)
 	}
+
 	return nil
 }
 
@@ -506,6 +501,9 @@ func handleFormData(c *Client, r *Request) {
 }
 
 func handleContentType(c *Client, r *Request) {
+	if r.Body == http.NoBody {
+		return
+	}
 	contentType := r.Header.Get(hdrContentTypeKey)
 	if IsStringEmpty(contentType) {
 		contentType = DetectContentType(r.Body)

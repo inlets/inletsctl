@@ -10,15 +10,13 @@ import (
 
 // InstanceDisk represents an Instance Disk object
 type InstanceDisk struct {
-	ID         int            `json:"id"`
-	Label      string         `json:"label"`
-	Status     DiskStatus     `json:"status"`
-	Size       int            `json:"size"`
-	Filesystem DiskFilesystem `json:"filesystem"`
-	Created    *time.Time     `json:"-"`
-	Updated    *time.Time     `json:"-"`
-
-	// NOTE: Disk encryption may not currently be available to all users.
+	ID             int                    `json:"id"`
+	Label          string                 `json:"label"`
+	Status         DiskStatus             `json:"status"`
+	Size           int                    `json:"size"`
+	Filesystem     DiskFilesystem         `json:"filesystem"`
+	Created        *time.Time             `json:"-"`
+	Updated        *time.Time             `json:"-"`
 	DiskEncryption InstanceDiskEncryption `json:"disk_encryption"`
 }
 
@@ -69,12 +67,7 @@ type InstanceDiskCloneOptions struct{}
 
 // ListInstanceDisks lists InstanceDisks
 func (c *Client) ListInstanceDisks(ctx context.Context, linodeID int, opts *ListOptions) ([]InstanceDisk, error) {
-	response, err := getPaginatedResults[InstanceDisk](ctx, c, formatAPIPath("linode/instances/%d/disks", linodeID), opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[InstanceDisk](ctx, c, formatAPIPath("linode/instances/%d/disks", linodeID), opts)
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface
@@ -83,6 +76,7 @@ func (i *InstanceDisk) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Updated *parseabletime.ParseableTime `json:"updated"`
 	}{
@@ -102,34 +96,19 @@ func (i *InstanceDisk) UnmarshalJSON(b []byte) error {
 // GetInstanceDisk gets the template with the provided ID
 func (c *Client) GetInstanceDisk(ctx context.Context, linodeID int, diskID int) (*InstanceDisk, error) {
 	e := formatAPIPath("linode/instances/%d/disks/%d", linodeID, diskID)
-	response, err := doGETRequest[InstanceDisk](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[InstanceDisk](ctx, c, e)
 }
 
 // CreateInstanceDisk creates a new InstanceDisk for the given Instance
 func (c *Client) CreateInstanceDisk(ctx context.Context, linodeID int, opts InstanceDiskCreateOptions) (*InstanceDisk, error) {
 	e := formatAPIPath("linode/instances/%d/disks", linodeID)
-	response, err := doPOSTRequest[InstanceDisk](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPOSTRequest[InstanceDisk](ctx, c, e, opts)
 }
 
 // UpdateInstanceDisk creates a new InstanceDisk for the given Instance
 func (c *Client) UpdateInstanceDisk(ctx context.Context, linodeID int, diskID int, opts InstanceDiskUpdateOptions) (*InstanceDisk, error) {
 	e := formatAPIPath("linode/instances/%d/disks/%d", linodeID, diskID)
-	response, err := doPUTRequest[InstanceDisk](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPUTRequest[InstanceDisk](ctx, c, e, opts)
 }
 
 // RenameInstanceDisk renames an InstanceDisk
@@ -144,9 +123,8 @@ func (c *Client) ResizeInstanceDisk(ctx context.Context, linodeID int, diskID in
 	}
 
 	e := formatAPIPath("linode/instances/%d/disks/%d/resize", linodeID, diskID)
-	_, err := doPOSTRequest[InstanceDisk](ctx, c, e, opts)
 
-	return err
+	return doPOSTRequestNoResponseBody(ctx, c, e, opts)
 }
 
 // PasswordResetInstanceDisk resets the "root" account password on the Instance disk
@@ -156,16 +134,14 @@ func (c *Client) PasswordResetInstanceDisk(ctx context.Context, linodeID int, di
 	}
 
 	e := formatAPIPath("linode/instances/%d/disks/%d/password", linodeID, diskID)
-	_, err := doPOSTRequest[InstanceDisk](ctx, c, e, opts)
 
-	return err
+	return doPOSTRequestNoResponseBody(ctx, c, e, opts)
 }
 
 // DeleteInstanceDisk deletes a Linode Instance Disk
 func (c *Client) DeleteInstanceDisk(ctx context.Context, linodeID int, diskID int) error {
 	e := formatAPIPath("linode/instances/%d/disks/%d", linodeID, diskID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }
 
 // CloneInstanceDisk clones the given InstanceDisk for the given Instance

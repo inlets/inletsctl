@@ -52,6 +52,24 @@ type Event struct {
 
 	// The total duration in seconds that it takes for the Event to complete.
 	Duration float64 `json:"duration"`
+
+	// The maintenance policy configured by the user for the event.
+	MaintenancePolicySet string `json:"maintenance_policy_set"`
+
+	// Describes the nature of the event (e.g., whether it is scheduled or emergency).
+	Description string `json:"description"`
+
+	// The origin of the event (e.g., platform, user).
+	Source string `json:"source"`
+
+	// Scheduled start time for the event.
+	NotBefore *time.Time `json:"-"`
+
+	// The actual start time of the event.
+	StartTime *time.Time `json:"-"`
+
+	// The actual completion time of the event.
+	CompleteTime *time.Time `json:"-"`
 }
 
 // EventAction constants start with Action and include all known Linode API Event Actions.
@@ -72,6 +90,7 @@ const (
 	ActionDatabaseDelete                          EventAction = "database_delete"
 	ActionDatabaseFailed                          EventAction = "database_failed"
 	ActionDatabaseUpdate                          EventAction = "database_update"
+	ActionDatabaseResize                          EventAction = "database_resize"
 	ActionDatabaseCreateFailed                    EventAction = "database_create_failed"
 	ActionDatabaseUpdateFailed                    EventAction = "database_update_failed"
 	ActionDatabaseBackupCreate                    EventAction = "database_backup_create"
@@ -102,6 +121,10 @@ const (
 	ActionFirewallUpdate                          EventAction = "firewall_update"
 	ActionFirewallDeviceAdd                       EventAction = "firewall_device_add"
 	ActionFirewallDeviceRemove                    EventAction = "firewall_device_remove"
+	ActionFirewallRuleSetCreate                   EventAction = "firewall_ruleset_create"
+	ActionFirewallRuleSetUpdate                   EventAction = "firewall_ruleset_update"
+	ActionFirewallRuleSetDelete                   EventAction = "firewall_ruleset_delete"
+	ActionFirewallRuleSetFirewallUpdate           EventAction = "firewall_ruleset_firewall_update"
 	ActionHostReboot                              EventAction = "host_reboot"
 	ActionImageDelete                             EventAction = "image_delete"
 	ActionImageUpdate                             EventAction = "image_update"
@@ -120,6 +143,7 @@ const (
 	ActionLinodeMigrateDatacenterCreate           EventAction = "linode_migrate_datacenter_create"
 	ActionLinodeMutate                            EventAction = "linode_mutate"
 	ActionLinodeMutateCreate                      EventAction = "linode_mutate_create"
+	ActionLinodePowerOffOn                        EventAction = "linode_poweroff_on"
 	ActionLinodeReboot                            EventAction = "linode_reboot"
 	ActionLinodeRebuild                           EventAction = "linode_rebuild"
 	ActionLinodeResize                            EventAction = "linode_resize"
@@ -220,7 +244,7 @@ const (
 // EntityType constants start with Entity and include Linode API Event Entity Types
 type EntityType string
 
-// EntityType contants are the entities an Event can be related to.
+// EntityType constants are the entities an Event can be related to.
 const (
 	EntityAccount        EntityType = "account"
 	EntityBackups        EntityType = "backups"
@@ -233,6 +257,8 @@ const (
 	EntityImage          EntityType = "image"
 	EntityIPAddress      EntityType = "ipaddress"
 	EntityLinode         EntityType = "linode"
+	EntityLKECluster     EntityType = "lkecluster"
+	EntityLKENodePool    EntityType = "lkenodepool"
 	EntityLongview       EntityType = "longview"
 	EntityManagedService EntityType = "managed_service"
 	EntityNodebalancer   EntityType = "nodebalancer"
@@ -260,6 +286,7 @@ const (
 	EventNotification EventStatus = "notification"
 	EventScheduled    EventStatus = "scheduled"
 	EventStarted      EventStatus = "started"
+	EventCanceled     EventStatus = "canceled"
 )
 
 // EventEntity provides detailed information about the Event's
@@ -280,8 +307,12 @@ func (i *Event) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created       *parseabletime.ParseableTime `json:"created"`
 		TimeRemaining json.RawMessage              `json:"time_remaining"`
+		NotBefore     *parseabletime.ParseableTime `json:"not_before"`
+		StartTime     *parseabletime.ParseableTime `json:"start_time"`
+		CompleteTime  *parseabletime.ParseableTime `json:"complete_time"`
 	}{
 		Mask: (*Mask)(i),
 	}
@@ -292,6 +323,9 @@ func (i *Event) UnmarshalJSON(b []byte) error {
 
 	i.Created = (*time.Time)(p.Created)
 	i.TimeRemaining = duration.UnmarshalTimeRemaining(p.TimeRemaining)
+	i.NotBefore = (*time.Time)(p.NotBefore)
+	i.StartTime = (*time.Time)(p.StartTime)
+	i.CompleteTime = (*time.Time)(p.CompleteTime)
 
 	return nil
 }
@@ -300,35 +334,27 @@ func (i *Event) UnmarshalJSON(b []byte) error {
 // on the Account. The Events returned depend on the token grants and the grants
 // of the associated user.
 func (c *Client) ListEvents(ctx context.Context, opts *ListOptions) ([]Event, error) {
-	response, err := getPaginatedResults[Event](ctx, c, "account/events", opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[Event](ctx, c, "account/events", opts)
 }
 
 // GetEvent gets the Event with the Event ID
 func (c *Client) GetEvent(ctx context.Context, eventID int) (*Event, error) {
 	e := formatAPIPath("account/events/%d", eventID)
-	response, err := doGETRequest[Event](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[Event](ctx, c, e)
 }
 
 // MarkEventRead marks a single Event as read.
+//
+// Deprecated: `MarkEventRead` is a deprecated API, please consider using `MarkEventsSeen` instead.
+// Please note that the `MarkEventsSeen` API functions differently and will mark all events up to and
+// including the referenced event-id as "seen" rather than individual events.
 func (c *Client) MarkEventRead(ctx context.Context, event *Event) error {
 	e := formatAPIPath("account/events/%d/read", event.ID)
-	_, err := doPOSTRequest[Event](ctx, c, e, []any{})
-	return err
+	return doPOSTRequestNoRequestResponseBody(ctx, c, e)
 }
 
 // MarkEventsSeen marks all Events up to and including this Event by ID as seen.
 func (c *Client) MarkEventsSeen(ctx context.Context, event *Event) error {
 	e := formatAPIPath("account/events/%d/seen", event.ID)
-	_, err := doPOSTRequest[Event](ctx, c, e, []any{})
-	return err
+	return doPOSTRequestNoRequestResponseBody(ctx, c, e)
 }

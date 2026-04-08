@@ -34,6 +34,7 @@ type InstanceConfigDevice struct {
 
 // InstanceConfigDeviceMap contains SDA-SDH InstanceConfigDevice settings
 type InstanceConfigDeviceMap struct {
+	// sda-sdz
 	SDA *InstanceConfigDevice `json:"sda,omitempty"`
 	SDB *InstanceConfigDevice `json:"sdb,omitempty"`
 	SDC *InstanceConfigDevice `json:"sdc,omitempty"`
@@ -42,6 +43,66 @@ type InstanceConfigDeviceMap struct {
 	SDF *InstanceConfigDevice `json:"sdf,omitempty"`
 	SDG *InstanceConfigDevice `json:"sdg,omitempty"`
 	SDH *InstanceConfigDevice `json:"sdh,omitempty"`
+	SDI *InstanceConfigDevice `json:"sdi,omitempty"`
+	SDJ *InstanceConfigDevice `json:"sdj,omitempty"`
+	SDK *InstanceConfigDevice `json:"sdk,omitempty"`
+	SDL *InstanceConfigDevice `json:"sdl,omitempty"`
+	SDM *InstanceConfigDevice `json:"sdm,omitempty"`
+	SDN *InstanceConfigDevice `json:"sdn,omitempty"`
+	SDO *InstanceConfigDevice `json:"sdo,omitempty"`
+	SDP *InstanceConfigDevice `json:"sdp,omitempty"`
+	SDQ *InstanceConfigDevice `json:"sdq,omitempty"`
+	SDR *InstanceConfigDevice `json:"sdr,omitempty"`
+	SDS *InstanceConfigDevice `json:"sds,omitempty"`
+	SDT *InstanceConfigDevice `json:"sdt,omitempty"`
+	SDU *InstanceConfigDevice `json:"sdu,omitempty"`
+	SDV *InstanceConfigDevice `json:"sdv,omitempty"`
+	SDW *InstanceConfigDevice `json:"sdw,omitempty"`
+	SDX *InstanceConfigDevice `json:"sdx,omitempty"`
+	SDY *InstanceConfigDevice `json:"sdy,omitempty"`
+	SDZ *InstanceConfigDevice `json:"sdz,omitempty"`
+
+	// sdaa-sdaz
+	SDAA *InstanceConfigDevice `json:"sdaa,omitempty"`
+	SDAB *InstanceConfigDevice `json:"sdab,omitempty"`
+	SDAC *InstanceConfigDevice `json:"sdac,omitempty"`
+	SDAD *InstanceConfigDevice `json:"sdad,omitempty"`
+	SDAE *InstanceConfigDevice `json:"sdae,omitempty"`
+	SDAF *InstanceConfigDevice `json:"sdaf,omitempty"`
+	SDAG *InstanceConfigDevice `json:"sdag,omitempty"`
+	SDAH *InstanceConfigDevice `json:"sdah,omitempty"`
+	SDAI *InstanceConfigDevice `json:"sdai,omitempty"`
+	SDAJ *InstanceConfigDevice `json:"sdaj,omitempty"`
+	SDAK *InstanceConfigDevice `json:"sdak,omitempty"`
+	SDAL *InstanceConfigDevice `json:"sdal,omitempty"`
+	SDAM *InstanceConfigDevice `json:"sdam,omitempty"`
+	SDAN *InstanceConfigDevice `json:"sdan,omitempty"`
+	SDAO *InstanceConfigDevice `json:"sdao,omitempty"`
+	SDAP *InstanceConfigDevice `json:"sdap,omitempty"`
+	SDAQ *InstanceConfigDevice `json:"sdaq,omitempty"`
+	SDAR *InstanceConfigDevice `json:"sdar,omitempty"`
+	SDAS *InstanceConfigDevice `json:"sdas,omitempty"`
+	SDAT *InstanceConfigDevice `json:"sdat,omitempty"`
+	SDAU *InstanceConfigDevice `json:"sdau,omitempty"`
+	SDAV *InstanceConfigDevice `json:"sdav,omitempty"`
+	SDAW *InstanceConfigDevice `json:"sdaw,omitempty"`
+	SDAX *InstanceConfigDevice `json:"sdax,omitempty"`
+	SDAY *InstanceConfigDevice `json:"sday,omitempty"`
+	SDAZ *InstanceConfigDevice `json:"sdaz,omitempty"`
+
+	// sdba-sdbl
+	SDBA *InstanceConfigDevice `json:"sdba,omitempty"`
+	SDBB *InstanceConfigDevice `json:"sdbb,omitempty"`
+	SDBC *InstanceConfigDevice `json:"sdbc,omitempty"`
+	SDBD *InstanceConfigDevice `json:"sdbd,omitempty"`
+	SDBE *InstanceConfigDevice `json:"sdbe,omitempty"`
+	SDBF *InstanceConfigDevice `json:"sdbf,omitempty"`
+	SDBG *InstanceConfigDevice `json:"sdbg,omitempty"`
+	SDBH *InstanceConfigDevice `json:"sdbh,omitempty"`
+	SDBI *InstanceConfigDevice `json:"sdbi,omitempty"`
+	SDBJ *InstanceConfigDevice `json:"sdbj,omitempty"`
+	SDBK *InstanceConfigDevice `json:"sdbk,omitempty"`
+	SDBL *InstanceConfigDevice `json:"sdbl,omitempty"`
 }
 
 // InstanceConfigHelpers are Instance Config options that control Linux distribution specific tweaks
@@ -100,6 +161,7 @@ func (i *InstanceConfig) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Updated *parseabletime.ParseableTime `json:"updated"`
 	}{
@@ -118,23 +180,27 @@ func (i *InstanceConfig) UnmarshalJSON(b []byte) error {
 
 // GetCreateOptions converts a InstanceConfig to InstanceConfigCreateOptions for use in CreateInstanceConfig
 func (i InstanceConfig) GetCreateOptions() InstanceConfigCreateOptions {
-	initrd := 0
-	if i.InitRD != nil {
-		initrd = *i.InitRD
-	}
-	return InstanceConfigCreateOptions{
+	result := InstanceConfigCreateOptions{
 		Label:       i.Label,
 		Comments:    i.Comments,
-		Devices:     *i.Devices,
 		Helpers:     i.Helpers,
 		Interfaces:  getInstanceConfigInterfacesCreateOptionsList(i.Interfaces),
 		MemoryLimit: i.MemoryLimit,
 		Kernel:      i.Kernel,
-		InitRD:      initrd,
 		RootDevice:  copyString(&i.RootDevice),
 		RunLevel:    i.RunLevel,
 		VirtMode:    i.VirtMode,
 	}
+
+	if i.InitRD != nil {
+		result.InitRD = *i.InitRD
+	}
+
+	if i.Devices != nil {
+		result.Devices = *i.Devices
+	}
+
+	return result
 }
 
 // GetUpdateOptions converts a InstanceConfig to InstanceConfigUpdateOptions for use in UpdateInstanceConfig
@@ -156,45 +222,25 @@ func (i InstanceConfig) GetUpdateOptions() InstanceConfigUpdateOptions {
 
 // ListInstanceConfigs lists InstanceConfigs
 func (c *Client) ListInstanceConfigs(ctx context.Context, linodeID int, opts *ListOptions) ([]InstanceConfig, error) {
-	response, err := getPaginatedResults[InstanceConfig](ctx, c, formatAPIPath("linode/instances/%d/configs", linodeID), opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[InstanceConfig](ctx, c, formatAPIPath("linode/instances/%d/configs", linodeID), opts)
 }
 
 // GetInstanceConfig gets the template with the provided ID
 func (c *Client) GetInstanceConfig(ctx context.Context, linodeID int, configID int) (*InstanceConfig, error) {
 	e := formatAPIPath("linode/instances/%d/configs/%d", linodeID, configID)
-	response, err := doGETRequest[InstanceConfig](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[InstanceConfig](ctx, c, e)
 }
 
 // CreateInstanceConfig creates a new InstanceConfig for the given Instance
 func (c *Client) CreateInstanceConfig(ctx context.Context, linodeID int, opts InstanceConfigCreateOptions) (*InstanceConfig, error) {
 	e := formatAPIPath("linode/instances/%d/configs", linodeID)
-	response, err := doPOSTRequest[InstanceConfig](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPOSTRequest[InstanceConfig](ctx, c, e, opts)
 }
 
 // UpdateInstanceConfig update an InstanceConfig for the given Instance
 func (c *Client) UpdateInstanceConfig(ctx context.Context, linodeID int, configID int, opts InstanceConfigUpdateOptions) (*InstanceConfig, error) {
 	e := formatAPIPath("linode/instances/%d/configs/%d", linodeID, configID)
-	response, err := doPUTRequest[InstanceConfig](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPUTRequest[InstanceConfig](ctx, c, e, opts)
 }
 
 // RenameInstanceConfig renames an InstanceConfig
@@ -205,6 +251,5 @@ func (c *Client) RenameInstanceConfig(ctx context.Context, linodeID int, configI
 // DeleteInstanceConfig deletes a Linode InstanceConfig
 func (c *Client) DeleteInstanceConfig(ctx context.Context, linodeID int, configID int) error {
 	e := formatAPIPath("linode/instances/%d/configs/%d", linodeID, configID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }

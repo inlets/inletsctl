@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/scaleway/scaleway-sdk-go/api/marketplace/v2"
+	"github.com/scaleway/scaleway-sdk-go/errors"
 	"github.com/scaleway/scaleway-sdk-go/internal/async"
-	"github.com/scaleway/scaleway-sdk-go/internal/errors"
 	"github.com/scaleway/scaleway-sdk-go/scw"
 	"github.com/scaleway/scaleway-sdk-go/validation"
 )
@@ -22,20 +22,57 @@ const (
 // CreateServer creates a server.
 func (s *API) CreateServer(req *CreateServerRequest, opts ...scw.RequestOption) (*CreateServerResponse, error) {
 	// If image is not a UUID we try to fetch it from marketplace.
-	if req.Image != "" && !validation.IsUUID(req.Image) {
+	if req.Image != nil && !validation.IsUUID(*req.Image) {
 		apiMarketplace := marketplace.NewAPI(s.client)
-		image, err := apiMarketplace.GetLocalImageByLabel(&marketplace.GetLocalImageByLabelRequest{
-			ImageLabel:     req.Image,
+
+		getLocalImageByLabelRequest := &marketplace.GetLocalImageByLabelRequest{
+			ImageLabel:     *req.Image,
 			Zone:           req.Zone,
 			CommercialType: req.CommercialType,
-		})
+		}
+
+		if bootVolumeType := getBootVolumeType(req.Volumes); bootVolumeType != nil {
+			getLocalImageByLabelRequest.Type = *bootVolumeType
+		}
+
+		image, err := apiMarketplace.GetLocalImageByLabel(getLocalImageByLabelRequest)
 		if err != nil {
 			return nil, err
 		}
-		req.Image = image.ID
+		req.Image = scw.StringPtr(image.ID)
 	}
 
 	return s.createServer(req, opts...)
+}
+
+func getBootVolumeType(volumes map[string]*VolumeServerTemplate) *marketplace.LocalImageType {
+	var bootVolumeType marketplace.LocalImageType
+	foundBootVolume := false
+
+	for _, volume := range volumes {
+		if volume.Boot == nil {
+			continue
+		}
+		if *volume.Boot {
+			foundBootVolume = true
+			switch volume.VolumeType {
+			case VolumeVolumeTypeSbsVolume:
+				bootVolumeType = marketplace.LocalImageTypeInstanceSbs
+			case VolumeVolumeTypeLSSD:
+				bootVolumeType = marketplace.LocalImageTypeInstanceLocal
+			}
+		}
+	}
+
+	if !foundBootVolume && len(volumes) > 0 {
+		switch volumes["0"].VolumeType {
+		case VolumeVolumeTypeSbsVolume:
+			bootVolumeType = marketplace.LocalImageTypeInstanceSbs
+		case VolumeVolumeTypeLSSD:
+			bootVolumeType = marketplace.LocalImageTypeInstanceLocal
+		}
+	}
+	return &bootVolumeType
 }
 
 // UpdateServer updates a server.
@@ -74,7 +111,7 @@ func (s *API) WaitForServer(req *WaitForServerRequest, opts ...scw.RequestOption
 	}
 
 	server, err := async.WaitSync(&async.WaitSyncConfig{
-		Get: func() (interface{}, bool, error) {
+		Get: func() (any, bool, error) {
 			res, err := s.GetServer(&GetServerRequest{
 				ServerID: req.ServerID,
 				Zone:     req.Zone,

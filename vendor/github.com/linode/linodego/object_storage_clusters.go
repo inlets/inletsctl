@@ -15,22 +15,12 @@ type ObjectStorageCluster struct {
 
 // ListObjectStorageClusters lists ObjectStorageClusters
 func (c *Client) ListObjectStorageClusters(ctx context.Context, opts *ListOptions) ([]ObjectStorageCluster, error) {
-	response, err := getPaginatedResults[ObjectStorageCluster](ctx, c, "object-storage/clusters", opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[ObjectStorageCluster](ctx, c, "object-storage/clusters", opts)
 }
 
 // Deprecated: GetObjectStorageCluster uses a deprecated API endpoint.
 // GetObjectStorageCluster gets the template with the provided ID
 func (c *Client) GetObjectStorageCluster(ctx context.Context, clusterID string) (*ObjectStorageCluster, error) {
 	e := formatAPIPath("object-storage/clusters/%s", clusterID)
-	response, err := doGETRequest[ObjectStorageCluster](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[ObjectStorageCluster](ctx, c, e)
 }

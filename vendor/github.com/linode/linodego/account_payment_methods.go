@@ -24,7 +24,7 @@ type PaymentMethod struct {
 	Type string `json:"type"`
 
 	// The detailed data for the Payment Method, which can be of varying types.
-	Data interface{} `json:"data"`
+	Data any `json:"data"`
 }
 
 // PaymentMethodDataCreditCard represents a PaymentMethodDataCreditCard object
@@ -96,6 +96,7 @@ func (i *PaymentMethod) UnmarshalJSON(b []byte) error {
 
 	pm := &struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Data    json.RawMessage              `json:"data"`
 	}{
@@ -113,24 +114,28 @@ func (i *PaymentMethod) UnmarshalJSON(b []byte) error {
 		if err := json.Unmarshal(pm.Data, &creditCardData); err != nil {
 			return err
 		}
+
 		i.Data = creditCardData
 	case "google_pay":
 		var googlePayData PaymentMethodDataGooglePay
 		if err := json.Unmarshal(pm.Data, &googlePayData); err != nil {
 			return err
 		}
+
 		i.Data = googlePayData
 	case "paypal":
 		var paypalData PaymentMethodDataPaypal
 		if err := json.Unmarshal(pm.Data, &paypalData); err != nil {
 			return err
 		}
+
 		i.Data = paypalData
 	default:
 		return fmt.Errorf("unknown payment method type: %s", i.Type)
 	}
 
 	i.Created = (*time.Time)(pm.Created)
+
 	return nil
 }
 
@@ -153,13 +158,11 @@ func (c *Client) DeletePaymentMethod(ctx context.Context, paymentMethodID int) e
 
 // AddPaymentMethod adds the provided payment method to the account
 func (c *Client) AddPaymentMethod(ctx context.Context, opts PaymentMethodCreateOptions) error {
-	_, err := doPOSTRequest[PaymentMethod, any](ctx, c, "account/payment-methods", opts)
-	return err
+	return doPOSTRequestNoResponseBody(ctx, c, "account/payment-methods", opts)
 }
 
 // SetDefaultPaymentMethod sets the payment method with the provided ID as the default
 func (c *Client) SetDefaultPaymentMethod(ctx context.Context, paymentMethodID int) error {
 	e := formatAPIPath("account/payment-methods/%d", paymentMethodID)
-	_, err := doPOSTRequest[PaymentMethod, any](ctx, c, e)
-	return err
+	return doPOSTRequestNoRequestResponseBody(ctx, c, e)
 }

@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	libraryVersion = "1.134.0"
+	libraryVersion = "1.184.0"
 	defaultBaseURL = "https://api.digitalocean.com/"
 	userAgent      = "godo/" + libraryVersion
 	mediaType      = "application/json"
@@ -54,48 +54,54 @@ type Client struct {
 	ratemtx sync.Mutex
 
 	// Services used for communicating with the API
-	Account                        AccountService
-	Actions                        ActionsService
-	Apps                           AppsService
-	Balance                        BalanceService
-	BillingHistory                 BillingHistoryService
-	CDNs                           CDNService
-	Certificates                   CertificatesService
-	Databases                      DatabasesService
-	Domains                        DomainsService
-	Droplets                       DropletsService
-	DropletActions                 DropletActionsService
-	DropletAutoscale               DropletAutoscaleService
-	Firewalls                      FirewallsService
-	FloatingIPs                    FloatingIPsService
-	FloatingIPActions              FloatingIPActionsService
-	Functions                      FunctionsService
-	Images                         ImagesService
-	ImageActions                   ImageActionsService
-	Invoices                       InvoicesService
-	Keys                           KeysService
-	Kubernetes                     KubernetesService
-	LoadBalancers                  LoadBalancersService
-	Monitoring                     MonitoringService
-	OneClick                       OneClickService
-	Projects                       ProjectsService
-	Regions                        RegionsService
-	Registry                       RegistryService
-	Registries                     RegistriesService
-	ReservedIPs                    ReservedIPsService
-	ReservedIPV6s                  ReservedIPV6sService
-	ReservedIPActions              ReservedIPActionsService
-	ReservedIPV6Actions            ReservedIPV6ActionsService
-	Sizes                          SizesService
-	Snapshots                      SnapshotsService
-	SpacesKeys                     SpacesKeysService
-	Storage                        StorageService
-	StorageActions                 StorageActionsService
-	Tags                           TagsService
-	UptimeChecks                   UptimeChecksService
-	VPCs                           VPCsService
-	PartnerInterconnectAttachments PartnerInterconnectAttachmentsService
-
+	Account             AccountService
+	Actions             ActionsService
+	Apps                AppsService
+	Balance             BalanceService
+	BillingHistory      BillingHistoryService
+	CDNs                CDNService
+	Certificates        CertificatesService
+	Databases           DatabasesService
+	Domains             DomainsService
+	Droplets            DropletsService
+	DropletActions      DropletActionsService
+	DropletAutoscale    DropletAutoscaleService
+	VPCNATGateways      VPCNATGatewaysService
+	Firewalls           FirewallsService
+	FloatingIPs         FloatingIPsService
+	FloatingIPActions   FloatingIPActionsService
+	Functions           FunctionsService
+	Images              ImagesService
+	ImageActions        ImageActionsService
+	Invoices            InvoicesService
+	Keys                KeysService
+	Kubernetes          KubernetesService
+	LoadBalancers       LoadBalancersService
+	Monitoring          MonitoringService
+	Security            SecurityService
+	Nfs                 NfsService
+	NfsActions          NfsActionsService
+	OneClick            OneClickService
+	Projects            ProjectsService
+	Regions             RegionsService
+	Registry            RegistryService
+	Registries          RegistriesService
+	ReservedIPs         ReservedIPsService
+	ReservedIPV6s       ReservedIPV6sService
+	ReservedIPActions   ReservedIPActionsService
+	ReservedIPV6Actions ReservedIPV6ActionsService
+	Sizes               SizesService
+	Snapshots           SnapshotsService
+	SpacesKeys          SpacesKeysService
+	Storage             StorageService
+	StorageActions      StorageActionsService
+	Tags                TagsService
+	UptimeChecks        UptimeChecksService
+	VPCs                VPCsService
+	PartnerAttachment   PartnerAttachmentService
+	GradientAI          GradientAIService
+	DedicatedInference  DedicatedInferenceService
+	BYOIPPrefixes       BYOIPPrefixesService
 	// Optional function called after every successful request made to the DO APIs
 	onRequestCompleted RequestCompletionCallback
 
@@ -144,6 +150,15 @@ type ListOptions struct {
 
 	// Whether App responses should include project_id fields. The field will be empty if false or if omitted. (ListApps)
 	WithProjects bool `url:"with_projects,omitempty"`
+
+	// This parameter is used to only list agents that are deployed in the response.
+	Deployed bool `url:"only_deployed,omitempty"`
+
+	// This parameter is used to include models that are publicly available.
+	PublicOnly bool `url:"public_only,omitempty"`
+
+	// This parameter is used to include models according to the use cases.
+	Usecases []string `url:"usecases,omitempty"`
 }
 
 // TokenListOptions specifies the optional parameters to various List methods that support token pagination.
@@ -293,6 +308,10 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Kubernetes = &KubernetesServiceOp{client: c}
 	c.LoadBalancers = &LoadBalancersServiceOp{client: c}
 	c.Monitoring = &MonitoringServiceOp{client: c}
+	c.Security = &SecurityServiceOp{client: c}
+	c.Nfs = &NfsServiceOp{client: c}
+	c.NfsActions = &NfsActionsServiceOp{client: c}
+	c.VPCNATGateways = &VPCNATGatewaysServiceOp{client: c}
 	c.OneClick = &OneClickServiceOp{client: c}
 	c.Projects = &ProjectsServiceOp{client: c}
 	c.Regions = &RegionsServiceOp{client: c}
@@ -302,6 +321,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.ReservedIPV6s = &ReservedIPV6sServiceOp{client: c}
 	c.ReservedIPActions = &ReservedIPActionsServiceOp{client: c}
 	c.ReservedIPV6Actions = &ReservedIPV6ActionsServiceOp{client: c}
+	c.BYOIPPrefixes = &BYOIPPrefixServiceOp{client: c}
 	c.Sizes = &SizesServiceOp{client: c}
 	c.Snapshots = &SnapshotsServiceOp{client: c}
 	c.SpacesKeys = &SpacesKeysServiceOp{client: c}
@@ -310,7 +330,9 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Tags = &TagsServiceOp{client: c}
 	c.UptimeChecks = &UptimeChecksServiceOp{client: c}
 	c.VPCs = &VPCsServiceOp{client: c}
-	c.PartnerInterconnectAttachments = &PartnerInterconnectAttachmentsServiceOp{client: c}
+	c.PartnerAttachment = &PartnerAttachmentServiceOp{client: c}
+	c.GradientAI = &GradientAIServiceOp{client: c}
+	c.DedicatedInference = &DedicatedInferenceServiceOp{client: c}
 
 	c.headers = make(map[string]string)
 

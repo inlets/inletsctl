@@ -168,15 +168,15 @@ When performing a `POST` or `PUT` request, multiple field related errors will be
 
 ## Tests
 
-Run `make testunit` to run the unit tests. 
+Run `make test-unit` to run the unit tests. 
 
-Run `make testint` to run the integration tests. The integration tests use fixtures.
+Run `make test-int` to run the integration tests. The integration tests use fixtures.
 
 To update the test fixtures, run `make fixtures`.  This will record the API responses into the `fixtures/` directory.
 Be careful about committing any sensitive account details.  An attempt has been made to sanitize IP addresses and
 dates, but no automated sanitization will be performed against `fixtures/*Account*.yaml`, for example.
 
-To prevent disrupting unaffected fixtures, target fixture generation like so: `make ARGS="-run TestListVolumes" fixtures`.
+To prevent disrupting unaffected fixtures, target fixture generation like so: `make TEST_ARGS="-run TestListVolumes" fixtures`.
 
 ## Discussion / Help
 

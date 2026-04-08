@@ -69,6 +69,7 @@ func (i *Stackscript) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Updated *parseabletime.ParseableTime `json:"updated"`
 	}{
@@ -111,34 +112,28 @@ func (i Stackscript) GetUpdateOptions() StackscriptUpdateOptions {
 
 // ListStackscripts lists Stackscripts
 func (c *Client) ListStackscripts(ctx context.Context, opts *ListOptions) ([]Stackscript, error) {
-	response, err := getPaginatedResults[Stackscript](ctx, c, "linode/stackscripts", opts)
-	return response, err
+	return getPaginatedResults[Stackscript](ctx, c, "linode/stackscripts", opts)
 }
 
 // GetStackscript gets the Stackscript with the provided ID
 func (c *Client) GetStackscript(ctx context.Context, scriptID int) (*Stackscript, error) {
 	e := formatAPIPath("linode/stackscripts/%d", scriptID)
-	response, err := doGETRequest[Stackscript](ctx, c, e)
-	return response, err
+	return doGETRequest[Stackscript](ctx, c, e)
 }
 
 // CreateStackscript creates a StackScript
 func (c *Client) CreateStackscript(ctx context.Context, opts StackscriptCreateOptions) (*Stackscript, error) {
-	e := "linode/stackscripts"
-	response, err := doPOSTRequest[Stackscript](ctx, c, e, opts)
-	return response, err
+	return doPOSTRequest[Stackscript](ctx, c, "linode/stackscripts", opts)
 }
 
 // UpdateStackscript updates the StackScript with the specified id
 func (c *Client) UpdateStackscript(ctx context.Context, scriptID int, opts StackscriptUpdateOptions) (*Stackscript, error) {
 	e := formatAPIPath("linode/stackscripts/%d", scriptID)
-	response, err := doPUTRequest[Stackscript](ctx, c, e, opts)
-	return response, err
+	return doPUTRequest[Stackscript](ctx, c, e, opts)
 }
 
 // DeleteStackscript deletes the StackScript with the specified id
 func (c *Client) DeleteStackscript(ctx context.Context, scriptID int) error {
 	e := formatAPIPath("linode/stackscripts/%d", scriptID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }

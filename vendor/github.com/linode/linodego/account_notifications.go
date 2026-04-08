@@ -44,16 +44,17 @@ type NotificationType string
 
 // NotificationType constants represent the actions that cause a Notification. New types may be added in the future.
 const (
-	NotificationMigrationScheduled NotificationType = "migration_scheduled"
-	NotificationMigrationImminent  NotificationType = "migration_imminent"
-	NotificationMigrationPending   NotificationType = "migration_pending"
-	NotificationRebootScheduled    NotificationType = "reboot_scheduled"
-	NotificationOutage             NotificationType = "outage"
-	NotificationPaymentDue         NotificationType = "payment_due"
-	NotificationTicketImportant    NotificationType = "ticket_important"
-	NotificationTicketAbuse        NotificationType = "ticket_abuse"
-	NotificationNotice             NotificationType = "notice"
-	NotificationMaintenance        NotificationType = "maintenance"
+	NotificationMigrationScheduled   NotificationType = "migration_scheduled"
+	NotificationMigrationImminent    NotificationType = "migration_imminent"
+	NotificationMigrationPending     NotificationType = "migration_pending"
+	NotificationRebootScheduled      NotificationType = "reboot_scheduled"
+	NotificationOutage               NotificationType = "outage"
+	NotificationPaymentDue           NotificationType = "payment_due"
+	NotificationTicketImportant      NotificationType = "ticket_important"
+	NotificationTicketAbuse          NotificationType = "ticket_abuse"
+	NotificationNotice               NotificationType = "notice"
+	NotificationMaintenance          NotificationType = "maintenance"
+	NotificationMaintenanceScheduled NotificationType = "maintenance_scheduled"
 )
 
 // ListNotifications gets a collection of Notification objects representing important,
@@ -62,12 +63,7 @@ const (
 // have been resolved. For example, if the account has an important Ticket open, a response
 // to the Ticket will dismiss the Notification.
 func (c *Client) ListNotifications(ctx context.Context, opts *ListOptions) ([]Notification, error) {
-	response, err := getPaginatedResults[Notification](ctx, c, "account/notifications", opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[Notification](ctx, c, "account/notifications", opts)
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface
@@ -76,6 +72,7 @@ func (i *Notification) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Until *parseabletime.ParseableTime `json:"until"`
 		When  *parseabletime.ParseableTime `json:"when"`
 	}{

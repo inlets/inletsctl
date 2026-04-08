@@ -1,5 +1,274 @@
 # Change Log
 
+## [1.184.0] - 2026-04-01
+
+- #984 - Change ContextWindow to string
+
+## [1.183.0] - 2026-04-01
+
+- #982 - @venkatranabothu - GenAI: Expand Model struct with metadata and modalities
+
+## [1.182.0] - 2026-03-31
+
+- #978 - @jkosanam - Add access key CRUD operations to FunctionsService
+- #980 - @kirineni-do - Add is managed field in response of list auth tokens
+
+## [1.181.0] - 2026-03-30
+
+- #972 - @v-amanjain-afk - implemented reassign workflow
+- #977 - @anitgandhi - droplets: add optional public_networking bool to create request
+
+## [1.180.0] - 2026-03-27
+
+- #975 - @venkatranabothu - Add ModelAvailability to Model struct in GradientAI
+
+## [1.179.0] - 2026-03-25
+
+- #973 - @chandrudo - Added two functions for model retrieval
+
+## [1.178.0] - 2026-03-16
+
+- #969 - @d-honeybadger - add support for DOKS SSO toggles
+- #968 - @Rachana888 - Add DI get GPUModelConfig
+- #967 - @Rachana888 - Add DI sizes/pricing
+- #966 - @Rachana888 - add DI token management operations (CreateToken, ListTokens, RevokeToken)
+- #964 - @Rachana888 - Add List operation for Dedicated Inference Accelerators
+- #963 - @Rachana888 - Add List operation for Dedicated Inference
+- #962 - @Rachana888 - Add Dedicated Inference Delete operation
+- #961 - @Rachana888 - Add Dedicated Inference Update operation
+- #958 - @Rachana888 - Add Dedicated Inference Create and Get operations
+
+## [1.177.0] - 2026-03-11
+
+- #959 - @blesswinsamuel - Add ListEvents, CancelEvent, and GetEventLogs APIs for App Platform
+- #960 - @ZachEddy - apps: Add secure_header.remove_header to app spec definition
+
+## [1.176.0] - 2026-02-26
+
+- #953 - @kamleshsahu - Add dbaas metrics client
+
+## [1.175.0] - 2026-02-12
+
+- #952 - @bentranter - security: add cspm scanning functionality for public preview
+- #951 - @v-amanjain-afk - Add performance tier in nfs model
+
+## [1.174.0] - 2026-02-09
+
+- #946 - @blesswinsamuel - apps: Update app spec to support InactivitySleep configuration
+- #949 - @lprasanth-nadiminti - Add DOSettings with ServiceCnames support for database clusters
+- #945 - @v-amanjain-afk - switch performance tier of nfs share
+- #947 - @ZachEddy - apps: Add secure header app spec field to godo
+
+## [1.173.0] - 2026-01-22
+
+- #942 - @anup-deka - Fix data type
+- #941 - @v-amanjain-afk - removed deprecated region from nfs api
+
+## [1.172.0] - 2026-01-13
+
+- #932 - @fumblehool - APPS-12654: Add CancelJobInvocation API
+- #939 - @anup-deka - Rebranding GenAI to Gradient AI
+- #914 - @brianteeman - Typo cannnot/cannot
+
+## [1.171.0] - 2025-12-17
+
+- #936 - @dillonledoux - Add fields to AgentCreateRequest for Gradient Agents
+
+## [1.170.0] - 2025-12-09
+
+- #933 - @do-joe - Nfs struct exposes Host and MountPath
+
+## [1.169.0] - 2025-11-13
+
+- #928 - @do-joe - Fix GetLogsink API Response Parsing to Match Actual API Behavior
+
+## [1.168.0] - 2025-11-06
+
+- #926 - @niket-dujari - added provision for attach and detach share
+- #927 - @m3co-code - CON-12804 - add GPU related DOKS cluster plugin options
+- #924 - @llDrLove - CON-12995 Add GPU node pool resources to node pool template response
+
+## [1.167.0] - 2025-10-18
+
+- #921 - @sreeram-venkitesh - MNFS-164: Added NFS resize and snapshot APIs
+
+## [1.166.0] - 2025-10-13
+
+- #912 - @sreeram-venkitesh - MNFS-164: Added NFS APIs
+- #913 - @fyzanshaik - Add ListAssociatedResourcesForDeletion for Droplets
+- #909 - @jvasilevsky - LBAAS-3995: add project ID to nat gateway
+
+## [1.165.1] - 2025-09-24
+
+- #906 - @do-joe - Fix Database Logsink API Response Parsing and TLS Field Marshaling
+- #904 - @SSharma-10 - Godo automate release
+- #900 - @fumblehool - APPS-12013: Add APIs for cron job
+- #905 - @harshmaru7 - new release test
+- #902 - @SSharma-10 - added comment for ListAgentVersions
+
+## [1.164.0] - 2025-09-10
+
+- #897 - @DO-rrao - List remote route | removed id field from remote route
+- #894 - @DO-rrao - GenAI : Implement Indexing Jobs Operations
+- #893 - @DO-rrao - GenAI - added changes for ListIndexingJobs for a Knowledge Base
+- #891 - @imaskm - Added prefix update method
+
+## [1.163.0] - 2025-08-14
+
+- #889 - @bhardwajRahul - Enable Support for Kafka Schema Registry in Godo
+
+## [1.162.0] - 2025-08-07
+
+- #875 - @dependabot[bot] - Bump golang.org/x/oauth2 from 0.23.0 to 0.27.0
+- #885 - @SSharma-10 - Added support for Valkey Configuration
+- #876 - @SSharma-10 - Added GenAI Additional Operations
+
+## [1.161.0] - 2025-07-28
+
+- #883 - @ElanHasson - Add GitHub Actions workflow to generate CHANGELOG.md and update godo version
+- #879 - @ElanHasson - APPS - Add Autoscale succeeded alert support
+- #880 - @DO-rrao - [APICLI-2889] removed SET partner routes for partner attachment
+
+## [v1.160.0] - 2025-07-24
+
+- #877 - @m3co-code - impl new doks cluster options
+
+## [v1.159.0] - 2025-07-17
+
+- #871 - @ShivaniKumar1 - Add VPC Integration
+
+## [v1.158.0] - 2025-07-15
+
+- #869 - @kishlay-singh-DO - Function Route Endpoints
+
+## [v1.157.0] - 2025-07-08
+
+- #866 - @ssaengs - fix: appHealth incorrectly keyed.
+- #867 - @harshmaru7 - Added OpenAI API Key Operations 
+
+## [v1.156.0] - 2025-07-07
+
+- #862 - @ssaengs - APPS: expose app health 
+- #863 - @SSharma-10 - Added Anthropic API Key Operations
+
+## [v1.155.0] - 2025-06-26
+
+- #854 - @anup-deka - Implementation for Agent Route and Agent Versions 
+- #858 - @imaskm - Fix byoip create resp
+
+## [v1.154.0] - 2025-06-23
+
+- #856 - @imaskm - Fix byoip names with byoipPrefix
+
+## [v1.153.0] - 2025-06-23
+
+- #850 - @imaskm - Add byoip APIs support
+- #851 - @guptado - [VPC-4603] godo: PNC HA support
+
+## [v1.152.0] - 2025-06-16
+
+- #846 - @harshmaru7 - GenAI Knowledgebase endpoints 
+- #849 - @danaelhe - Databases: Add mongo_user_settings
+
+## [v1.151.0] - 2025-06-03
+
+- #847 - @thearyanahmed - Apps add instance alias
+
+## [v1.150.0] - 2025-05-29
+
+- #844 - @thearyanahmed - Add App Platform Edge Control settings
+
+## [v1.149.0] - 2025-05-27
+
+- #839 - @asaha2 - Rename as vpc nat gateways
+- #841 - @d-honeybadger - expose custom Kubernetes CA expanders
+- #840 - @wez470 - partner-network-connect: Add redundancy zone
+- #836 - @asaha2 - Support gateway size config
+- #834 - @anup-deka - GenAI Agent Service
+- #835 - @asaha2 - Fix url opts encoding for egress-gateways
+
+## [v1.148.0] - 2025-05-14
+
+- #824 - @asaha2 - Introduce egress-gateway service api
+
+## [v1.147.0] - 2025-05-14
+
+- #831 - @thearyanahmed - Implement GetAppInstances - allowing users to list currently running compute instances
+
+## [v1.146.1] - 2025-05-09
+
+- #828 - @thearyanahmed - Pass GetExec() request params as query params
+
+## [v1.146.0] - 2025-05-09
+
+- #826 - @ssaengs - APPS-5889: add liveness health check, update comment
+- #820 - @thearyanahmed - Add support to exec into a specific instance
+- #823 - @blesswinsamuel - APPS-10997 Add AUTOSCALE_FAILED alert
+
+## [v1.145.0] - 2025-04-30
+
+- #821 - @greeshmapill - APPS-11076: Add support for VALKEY as a database engine option
+- #817 - @ZachEddy - Bring app spec changes for subdomain routing to godo
+
+## [v1.144.0] - 2025-04-24
+
+- #818 - @dweinshenker - Support Valkey in DatabaseOptions
+
+## [v1.143.0] - 2025-04-22
+
+- #815 - @StephenVarela - Support Load Balancers tls-cipher-policy
+
+## [v1.142.0] - 2025-03-27
+
+- #813 - @lfundaro-do - partner-network-connect: fix typo
+- #811 - @lfundaro-do - fix partner attachment rename
+- #810 - @apinonformoso - VPC-4359: remove custom unmarshaler for PNCs
+- #809 - @apinonformoso - hotfix: json field name
+- #808 - @apinonformoso - fix partner network connect json tags
+- #807 - @bentranter - Bump Go version to v1.23
+
+## [v1.141.0] - 2025-03-20
+
+- #805 - @singhsaubhikdo - BLOCK-4316: Adds region param in ListSnapshot for resource type volume
+- #802 - @apinonformoso - VPC-4312: rename partner interconnect attachment to partner network connect
+- #774 - @blesswinsamuel - APPS-10284 Remove "closed beta" note in archive feature to prep for GA release
+- #797 - @kperath - add support for cluster status messages
+
+## [v1.140.0] - 2025-03-14
+
+- #800 - @lee-aaron - support Spaces Keys GET by Access Key ID
+
+## [v1.139.0] - 2025-03-12
+
+- #798 - @dylanrhysscott - Fix: Update godo to use simplified template response and provide consistent struct naming
+- #796 - @apinonformoso - fix partner interconnect attachment json request response
+- #795 - @dylanrhysscott - CON-11904 Ensure taints are correctly returned via node template endpoint
+- #794 - @brunograsselli - Update partner interconnect attachment comments
+- #793 - @apinonformoso - add auth_key field
+- #789 - @guptado - [VPC-3917] Update get service key response model
+
+## [v1.138.0] - 2025-02-18
+
+- #785 - @guptado - Support partner interconnect GetBgpAuthKey and RegenerateServiceKey operations
+- #787 - @andrewsomething - ci: upgrade to actions/cache@v4
+- #786 - @m3co-code - add flags for doks routing-agent plugin
+- #784 - @asaha2 - Support name and id filters for list op
+
+## [v1.137.0] - 2025-02-12
+
+- #782 - @apinonformoso - fix partner interconnect json tag
+- #781 - @dylanrhysscott - CON-11810 Implement GetNodePoolTemplate endpoint for DOKS godo client
+
+## [v1.136.0] - 2025-01-28
+
+- #776 - @danaelhe - Databases: Support online-migrations
+- #777 - @apinonformoso - update bgp to be a pointer
+
+##  [v1.135.0] - 2025-01-27
+- #766 - @dhij - kubernetes: add cluster autoscaler config
+- #775 - @jvasilevsky - LBASA-3620: add network_stack field to load balancers model
+- #773 - @blesswinsamuel - Add field to customize the offline page during app maintenance
+
 ##  [v1.134.0] - 2025-01-15
 - #771 - @d-honeybadger - add ID field to KubernetesClusterUser response
 - #768 - @lee-aaron - support Spaces Keys API

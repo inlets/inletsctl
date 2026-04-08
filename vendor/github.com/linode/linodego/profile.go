@@ -66,19 +66,15 @@ func (i Profile) GetUpdateOptions() (o ProfileUpdateOptions) {
 	o.TwoFactorAuth = copyBool(&i.TwoFactorAuth)
 	o.Restricted = copyBool(&i.Restricted)
 
-	return
+	return o
 }
 
 // GetProfile returns the Profile of the authenticated user
 func (c *Client) GetProfile(ctx context.Context) (*Profile, error) {
-	e := "profile"
-	response, err := doGETRequest[Profile](ctx, c, e)
-	return response, err
+	return doGETRequest[Profile](ctx, c, "profile")
 }
 
 // UpdateProfile updates the Profile with the specified id
 func (c *Client) UpdateProfile(ctx context.Context, opts ProfileUpdateOptions) (*Profile, error) {
-	e := "profile"
-	response, err := doPUTRequest[Profile](ctx, c, e, opts)
-	return response, err
+	return doPUTRequest[Profile](ctx, c, "profile", opts)
 }

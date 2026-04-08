@@ -47,6 +47,7 @@ func (i *Promotion) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		ExpirationDate *parseabletime.ParseableTime `json:"date"`
 	}{
 		Mask: (*Mask)(i),
@@ -63,5 +64,5 @@ func (i *Promotion) UnmarshalJSON(b []byte) error {
 
 // AddPromoCode adds the provided promo code to the account
 func (c *Client) AddPromoCode(ctx context.Context, opts PromoCodeCreateOptions) (*Promotion, error) {
-	return doPOSTRequest[Promotion, any](ctx, c, "account/promo-codes", opts)
+	return doPOSTRequest[Promotion](ctx, c, "account/promo-codes", opts)
 }

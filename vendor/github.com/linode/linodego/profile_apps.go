@@ -38,6 +38,7 @@ func (pa *ProfileApp) UnmarshalJSON(b []byte) error {
 
 	l := struct {
 		*Mask
+
 		Created *parseabletime.ParseableTime `json:"created"`
 		Expiry  *parseabletime.ParseableTime `json:"expiry"`
 	}{
@@ -68,6 +69,5 @@ func (c *Client) ListProfileApps(ctx context.Context, opts *ListOptions) ([]Prof
 // DeleteProfileApp revokes the given ProfileApp's access to the account
 func (c *Client) DeleteProfileApp(ctx context.Context, appID int) error {
 	e := formatAPIPath("profile/apps/%d", appID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }

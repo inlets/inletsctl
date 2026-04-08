@@ -29,7 +29,7 @@ type InvoiceTaxSummary struct {
 type InvoiceItem struct {
 	Label     string     `json:"label"`
 	Type      string     `json:"type"`
-	UnitPrice float32    `json:"unit_price"`
+	UnitPrice string     `json:"unit_price"`
 	Quantity  int        `json:"quantity"`
 	Amount    float32    `json:"amount"`
 	Tax       float32    `json:"tax"`
@@ -41,12 +41,7 @@ type InvoiceItem struct {
 
 // ListInvoices gets a paginated list of Invoices against the Account
 func (c *Client) ListInvoices(ctx context.Context, opts *ListOptions) ([]Invoice, error) {
-	response, err := getPaginatedResults[Invoice](ctx, c, "account/invoices", opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[Invoice](ctx, c, "account/invoices", opts)
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface
@@ -55,6 +50,7 @@ func (i *Invoice) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Date *parseabletime.ParseableTime `json:"date"`
 	}{
 		Mask: (*Mask)(i),
@@ -75,6 +71,7 @@ func (i *InvoiceItem) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		From *parseabletime.ParseableTime `json:"from"`
 		To   *parseabletime.ParseableTime `json:"to"`
 	}{
@@ -94,20 +91,10 @@ func (i *InvoiceItem) UnmarshalJSON(b []byte) error {
 // GetInvoice gets a single Invoice matching the provided ID
 func (c *Client) GetInvoice(ctx context.Context, invoiceID int) (*Invoice, error) {
 	e := formatAPIPath("account/invoices/%d", invoiceID)
-	response, err := doGETRequest[Invoice](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[Invoice](ctx, c, e)
 }
 
 // ListInvoiceItems gets the invoice items associated with a specific Invoice
 func (c *Client) ListInvoiceItems(ctx context.Context, invoiceID int, opts *ListOptions) ([]InvoiceItem, error) {
-	response, err := getPaginatedResults[InvoiceItem](ctx, c, formatAPIPath("account/invoices/%d/items", invoiceID), opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[InvoiceItem](ctx, c, formatAPIPath("account/invoices/%d/items", invoiceID), opts)
 }

@@ -8,7 +8,9 @@ import (
 	"github.com/linode/linodego/internal/parseabletime"
 )
 
-// The details and enrollment information of a Beta program that an account is enrolled in.
+// AccountBetaProgram represents an enrolled Account Beta Program object,
+// which contains the details and enrollment information of a Beta program
+// that an account is enrolled in.
 type AccountBetaProgram struct {
 	Label       string     `json:"label"`
 	ID          string     `json:"id"`
@@ -31,6 +33,7 @@ func (cBeta *AccountBetaProgram) UnmarshalJSON(b []byte) error {
 
 	p := struct {
 		*Mask
+
 		Started  *parseabletime.ParseableTime `json:"started"`
 		Ended    *parseabletime.ParseableTime `json:"ended"`
 		Enrolled *parseabletime.ParseableTime `json:"enrolled"`
@@ -51,33 +54,16 @@ func (cBeta *AccountBetaProgram) UnmarshalJSON(b []byte) error {
 
 // ListAccountBetaPrograms lists all beta programs an account is enrolled in.
 func (c *Client) ListAccountBetaPrograms(ctx context.Context, opts *ListOptions) ([]AccountBetaProgram, error) {
-	response, err := getPaginatedResults[AccountBetaProgram](ctx, c, "/account/betas", opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return getPaginatedResults[AccountBetaProgram](ctx, c, "/account/betas", opts)
 }
 
 // GetAccountBetaProgram gets the details of a beta program an account is enrolled in.
 func (c *Client) GetAccountBetaProgram(ctx context.Context, betaID string) (*AccountBetaProgram, error) {
-	b := formatAPIPath("/account/betas/%s", betaID)
-
-	response, err := doGETRequest[AccountBetaProgram](ctx, c, b)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	e := formatAPIPath("/account/betas/%s", betaID)
+	return doGETRequest[AccountBetaProgram](ctx, c, e)
 }
 
 // JoinBetaProgram enrolls an account into a beta program.
 func (c *Client) JoinBetaProgram(ctx context.Context, opts AccountBetaProgramCreateOpts) (*AccountBetaProgram, error) {
-	e := "account/betas"
-	response, err := doPOSTRequest[AccountBetaProgram](ctx, c, e, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doPOSTRequest[AccountBetaProgram](ctx, c, "account/betas", opts)
 }

@@ -25,10 +25,5 @@ type StatsTraffic struct {
 // GetNodeBalancerStats gets the template with the provided ID
 func (c *Client) GetNodeBalancerStats(ctx context.Context, nodebalancerID int) (*NodeBalancerStats, error) {
 	e := formatAPIPath("nodebalancers/%d/stats", nodebalancerID)
-	response, err := doGETRequest[NodeBalancerStats](ctx, c, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
+	return doGETRequest[NodeBalancerStats](ctx, c, e)
 }

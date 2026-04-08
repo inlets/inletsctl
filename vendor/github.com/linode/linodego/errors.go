@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -143,28 +144,12 @@ func coupleAPIErrorsHTTP(resp *http.Response, err error) (*http.Response, error)
 }
 
 func (e APIError) Error() string {
-	x := []string{}
+	x := make([]string, 0, len(e.Errors))
 	for _, msg := range e.Errors {
 		x = append(x, msg.Error())
 	}
 
 	return strings.Join(x, "; ")
-}
-
-func (err Error) Error() string {
-	return fmt.Sprintf("[%03d] %s", err.Code, err.Message)
-}
-
-func (err Error) StatusCode() int {
-	return err.Code
-}
-
-func (err Error) Is(target error) bool {
-	if x, ok := target.(interface{ StatusCode() int }); ok || errors.As(target, &x) {
-		return err.StatusCode() == x.StatusCode()
-	}
-
-	return false
 }
 
 // NewError creates a linodego.Error with a Code identifying the source err type,
@@ -203,6 +188,22 @@ func NewError(err any) *Error {
 	}
 }
 
+func (err Error) Error() string {
+	return fmt.Sprintf("[%03d] %s", err.Code, err.Message)
+}
+
+func (err Error) StatusCode() int {
+	return err.Code
+}
+
+func (err Error) Is(target error) bool {
+	if x, ok := target.(interface{ StatusCode() int }); ok || errors.As(target, &x) {
+		return err.StatusCode() == x.StatusCode()
+	}
+
+	return false
+}
+
 // IsNotFound indicates if err indicates a 404 Not Found error from the Linode API.
 func IsNotFound(err error) bool {
 	return ErrHasStatus(err, http.StatusNotFound)
@@ -225,11 +226,8 @@ func ErrHasStatus(err error, code ...int) bool {
 	if !errors.As(err, &e) {
 		return false
 	}
+
 	ec := e.StatusCode()
-	for _, c := range code {
-		if ec == c {
-			return true
-		}
-	}
-	return false
+
+	return slices.Contains(code, ec)
 }

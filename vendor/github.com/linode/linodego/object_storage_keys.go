@@ -48,34 +48,28 @@ type ObjectStorageKeyUpdateOptions struct {
 
 // ListObjectStorageKeys lists ObjectStorageKeys
 func (c *Client) ListObjectStorageKeys(ctx context.Context, opts *ListOptions) ([]ObjectStorageKey, error) {
-	response, err := getPaginatedResults[ObjectStorageKey](ctx, c, "object-storage/keys", opts)
-	return response, err
+	return getPaginatedResults[ObjectStorageKey](ctx, c, "object-storage/keys", opts)
 }
 
 // CreateObjectStorageKey creates a ObjectStorageKey
 func (c *Client) CreateObjectStorageKey(ctx context.Context, opts ObjectStorageKeyCreateOptions) (*ObjectStorageKey, error) {
-	e := "object-storage/keys"
-	response, err := doPOSTRequest[ObjectStorageKey](ctx, c, e, opts)
-	return response, err
+	return doPOSTRequest[ObjectStorageKey](ctx, c, "object-storage/keys", opts)
 }
 
 // GetObjectStorageKey gets the object storage key with the provided ID
 func (c *Client) GetObjectStorageKey(ctx context.Context, keyID int) (*ObjectStorageKey, error) {
 	e := formatAPIPath("object-storage/keys/%d", keyID)
-	response, err := doGETRequest[ObjectStorageKey](ctx, c, e)
-	return response, err
+	return doGETRequest[ObjectStorageKey](ctx, c, e)
 }
 
 // UpdateObjectStorageKey updates the object storage key with the specified id
 func (c *Client) UpdateObjectStorageKey(ctx context.Context, keyID int, opts ObjectStorageKeyUpdateOptions) (*ObjectStorageKey, error) {
 	e := formatAPIPath("object-storage/keys/%d", keyID)
-	response, err := doPUTRequest[ObjectStorageKey](ctx, c, e, opts)
-	return response, err
+	return doPUTRequest[ObjectStorageKey](ctx, c, e, opts)
 }
 
 // DeleteObjectStorageKey deletes the ObjectStorageKey with the specified id
 func (c *Client) DeleteObjectStorageKey(ctx context.Context, keyID int) error {
 	e := formatAPIPath("object-storage/keys/%d", keyID)
-	err := doDELETERequest(ctx, c, e)
-	return err
+	return doDELETERequest(ctx, c, e)
 }
