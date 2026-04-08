@@ -19,7 +19,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const inletsProDefaultVersion = "0.11.5"
+// AE: Find version with the following:
+// crane ls ghcr.io/inlets/inlets-pro |tail -n 1
+const inletsProDefaultVersion = "0.11.8"
 const inletsProControlPort = 8123
 
 func init() {
