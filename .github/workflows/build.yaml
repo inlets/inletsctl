@@ -15,7 +15,7 @@ jobs:
       cancel-in-progress: true
     runs-on: actuated-8cpu-12gb
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 1
       - name: Install Go
