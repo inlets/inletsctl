@@ -25,7 +25,7 @@ func init() {
 	kfwdCmd.Flags().StringP("if", "i", "", "The address of your laptop, for the inlets Pro server to connect to")
 	kfwdCmd.Flags().StringP("namespace", "n", "default", "Source service namespace")
 	kfwdCmd.Flags().String("license", "", "Inlets PRO license key")
-	kfwdCmd.Flags().Bool("tcp", false, "Use inlets Pro in TCP mode, or if set to false, in HTTP mode")
+	kfwdCmd.Flags().Bool("tcp", false, "Use inlets Pro in TCP/UDP mode, or if set to false, in HTTP mode")
 }
 
 // clientCmd represents the client sub command.
@@ -119,6 +119,7 @@ Hit Control+C to cancel.
 	serverTask := v2.ExecTask{
 		Command: "inlets-pro",
 		Args: []string{
+			"tcp",
 			"server",
 			"--token=" + inletsToken,
 			"--auto-tls-san=" + eth,
@@ -187,7 +188,7 @@ func runKfwd(cmd *cobra.Command, _ []string) error {
 	}
 
 	if tcp, _ := cmd.Flags().GetBool("tcp"); tcp {
-		fmt.Println("Forwarding in TCP mode")
+		fmt.Println("Forwarding in TCP/UDP mode")
 		return fwdTCP(cmd, eth, port, upstream, ns, inletsToken, license)
 	}
 
@@ -296,7 +297,7 @@ spec:
     spec:
       containers:
       - name: inlets-pro-client
-        image: ghcr.io/inlets/inlets-pro:0.9.40
+        image: ghcr.io/inlets/inlets-pro:%s
         imagePullPolicy: IfNotPresent
         command: ["inlets-pro"]
         args:
@@ -308,7 +309,7 @@ spec:
         - "--ports=%s"
         - "--token=%s"
         - "--license=%s"
-`, upstream, ns, remote, upstream, ports, inletsToken, license)
+`, upstream, ns, inletsProDefaultVersion, remote, upstream, ports, inletsToken, license)
 }
 
 func makeHTTPDeployment(remote, port, upstream, ns, inletsToken, license string) string {
@@ -330,7 +331,7 @@ spec:
     spec:
       containers:
       - name: inlets
-        image: ghcr.io/inlets/inlets-pro:0.9.40
+        image: ghcr.io/inlets/inlets-pro:%s
         imagePullPolicy: IfNotPresent
         command: ["inlets-pro"]
         args:
@@ -341,5 +342,5 @@ spec:
         - "--upstream=http://%s:%s"
         - "--token=%s"
         - "--license=%s"
-`, upstream, ns, remote, upstream, port, inletsToken, license)
+`, upstream, ns, inletsProDefaultVersion, remote, upstream, port, inletsToken, license)
 }

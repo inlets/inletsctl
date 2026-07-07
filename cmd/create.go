@@ -21,7 +21,7 @@ import (
 
 // AE: Find version with the following:
 // crane ls ghcr.io/inlets/inlets-pro |tail -n 1
-const inletsProDefaultVersion = "0.11.8"
+const inletsProDefaultVersion = "0.11.13"
 const inletsProControlPort = 8123
 
 func init() {
@@ -51,7 +51,7 @@ func init() {
 	createCmd.Flags().String("endpoint", "ovh-eu", "API endpoint (ovh), default: ovh-eu")
 	createCmd.Flags().String("consumer-key", "", "The Consumer Key for using the OVH API")
 
-	createCmd.Flags().Bool("tcp", false, `Provision an exit-server with inlets running as a TCP server`)
+	createCmd.Flags().Bool("tcp", false, `Provision an exit-server with inlets running as a TCP/UDP server`)
 	createCmd.Flags().String("aws-key-name", "", "The name of an existing SSH key on AWS to be used to access the EC2 instance for maintenance (optional)")
 
 	createCmd.Flags().StringArray("letsencrypt-domain", []string{}, `Domains you want to get a Let's Encrypt certificate for`)
@@ -78,7 +78,7 @@ project docs.`,
     tunnel-richardcase \
     --letsencrypt-domain inlets.example.com
 
-  # Create a TCP tunnel server with a VM name of ssh-tunnel
+  # Create a TCP/UDP tunnel server with a VM name of ssh-tunnel
   inletsctl create \
     ssh-tunnel \
 	--tcp \
@@ -285,7 +285,7 @@ func runCreate(cmd *cobra.Command, _ []string) error {
 	letsencryptIssuer, _ := cmd.Flags().GetString("letsencrypt-issuer")
 
 	if len(letsencryptDomains) == 0 && !tcp {
-		return fmt.Errorf("either --letsencrypt-domain (for a HTTPS tunnel) or --tcp (for a TCP tunnel) must be set")
+		return fmt.Errorf("either --letsencrypt-domain (for a HTTPS tunnel) or --tcp (for a TCP/UDP tunnel) must be set")
 	}
 
 	if len(letsencryptDomains) > 0 {

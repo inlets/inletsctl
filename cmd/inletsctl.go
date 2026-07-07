@@ -41,9 +41,9 @@ For HTTPS tunnels (L7):
 The tunnel server will terminate TLS for you, just include the 
 --letsencrypt-domain flag for each domain you want to expose via the exit-node.
 
-For TCP tunnels (L4):
-Use the --tcp flag to create a TCP tunnel via inletsctl create. This is
-best suited to SSH, TLS, reverse proxies, databases, etc.
+For TCP/UDP tunnels (L4):
+Use the --tcp flag to create a TCP/UDP-capable tunnel via inletsctl create.
+This is best suited to SSH, DNS, TLS, reverse proxies, databases, etc.
 
 See also: inlets-operator which automates L4 TCP tunnels for any
 Kubernetes LoadBalancer services found in a cluster.
