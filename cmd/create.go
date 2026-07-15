@@ -21,7 +21,7 @@ import (
 
 // AE: Find version with the following:
 // crane ls ghcr.io/inlets/inlets-pro |tail -n 1
-const inletsProDefaultVersion = "0.11.13"
+const inletsProDefaultVersion = "0.11.14"
 const inletsProControlPort = 8123
 
 func init() {
