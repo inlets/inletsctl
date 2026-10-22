@@ -1,6 +1,6 @@
 module github.com/inlets/inletsctl
 
-go 1.25.0
+go 1.27.0
 
 require (
 	github.com/alexellis/go-execute/v2 v2.2.1
