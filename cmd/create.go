@@ -371,7 +371,7 @@ inlets-pro http client --url "wss://%s:%d" \
   --upstream http://127.0.0.1:8080
 
 To delete:
-  inletsctl delete --provider %s --id "%s"
+  %s
 `,
 					inletsProVersion,
 					hostStatus.IP,
@@ -380,8 +380,7 @@ To delete:
 					hostStatus.IP,
 					inletsProControlPort,
 					inletsToken,
-					provider,
-					hostStatus.ID)
+					sampleDeleteCommand(provider, hostStatus.ID, subscriptionIDFromAzureAuth(subscriptionID, accessToken)))
 
 				return nil
 			} else {
@@ -397,7 +396,7 @@ inlets-pro tcp client --url "wss://%s:%d" \
   --ports 2222
 
 To delete:
-  inletsctl delete --provider %s --id "%s"
+  %s
 `,
 					inletsProVersion,
 					hostStatus.IP,
@@ -405,8 +404,7 @@ To delete:
 					hostStatus.IP,
 					inletsProControlPort,
 					inletsToken,
-					provider,
-					hostStatus.ID)
+					sampleDeleteCommand(provider, hostStatus.ID, subscriptionIDFromAzureAuth(subscriptionID, accessToken)))
 
 				return nil
 			}

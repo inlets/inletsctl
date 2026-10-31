@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -11,6 +12,31 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 )
+
+func subscriptionIDFromAzureAuth(subscriptionID, authContents string) string {
+	if len(subscriptionID) > 0 {
+		return subscriptionID
+	}
+
+	if len(authContents) == 0 {
+		return ""
+	}
+
+	authMap := map[string]string{}
+	if err := json.Unmarshal([]byte(authContents), &authMap); err != nil {
+		return ""
+	}
+
+	return authMap["subscriptionId"]
+}
+
+func sampleDeleteCommand(provider, hostID, subscriptionID string) string {
+	cmd := fmt.Sprintf("inletsctl delete --provider %s --id \"%s\"", provider, hostID)
+	if provider == "azure" && len(subscriptionID) > 0 {
+		cmd += fmt.Sprintf(" --subscription-id %q", subscriptionID)
+	}
+	return cmd
+}
 
 func getFileOrString(flags *pflag.FlagSet, file, value string, required bool) (string, error) {
 	var val string
